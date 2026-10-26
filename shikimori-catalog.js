@@ -1,5 +1,5 @@
 /**
- * Shikimori Catalog v1.1.0
+ * Shikimori Catalog v1.2.0
  * Каталог онгоингов с Shikimori в боковом меню Lampa.
  * По нажатию на постер находит тайтл в TMDB и открывает встроенную карточку Lampa
  * (со всеми её кнопками: онлайн, торренты, трейлеры, закладки).
@@ -16,6 +16,9 @@
  * История просмотра: после сопоставления карточка каталога получает поля TMDB,
  * поэтому на ней видно, на какой серии остановились (как на обычных карточках).
  *
+ * Долгое нажатие на карточку: открыть, скрыть из каталога, подобрать TMDB вручную.
+ * Скрытые возвращаются в Настройки -> Shikimori -> «Скрытые аниме».
+ *
  * Поддерживает Lampa 3.x (Lampa.Maker) и 2.x (InteractionCategory).
  * ES5 — совместимость с WebOS 3–4 и Tizen 2.4.
  */
@@ -23,7 +26,7 @@
     'use strict';
 
     var ID = 'shikimori_catalog';
-    var VERSION = '1.1.0';
+    var VERSION = '1.2.0';
     var COMPONENT = 'shikimori_catalog';
 
     /** Зеркала Shikimori: при сетевой ошибке пробуем следующее. */
@@ -207,11 +210,13 @@
     function loadPage(net, page, modern, ok, fail) {
         shikimori(net, listPath(page), function (json, host) {
             var list = isArray(json) ? json : [];
+            var hidden = hiddenAll();
             var results = [];
 
             for (var i = 0; i < list.length && i < PAGE_LIMIT; i++) {
                 var anime = list[i];
-                if (anime && anime.id && (anime.episodes_aired || 0) > 0) results.push(toCard(anime, host, modern));
+                if (!anime || !anime.id || hidden[anime.id]) continue;
+                if ((anime.episodes_aired || 0) > 0) results.push(toCard(anime, host, modern));
             }
 
             ok({
@@ -388,6 +393,67 @@
         var all = cacheAll();
         delete all[shikimoriId];
         Lampa.Storage.set(key('map'), all);
+    }
+
+    /* ------------------------------------------------------------------ *
+     * Скрытые аниме: { [shikimoriId]: {title, time} }
+     * ------------------------------------------------------------------ */
+
+    function hiddenAll() {
+        var all = Lampa.Storage.get(key('hidden'), '{}');
+        return all && typeof all === 'object' ? all : {};
+    }
+
+    function hideAnime(card) {
+        var all = hiddenAll();
+        all[card.shikimori.id] = { title: card.title, time: Date.now() };
+        Lampa.Storage.set(key('hidden'), all);
+    }
+
+    function unhideAnime(shikimoriId) {
+        var all = hiddenAll();
+        delete all[shikimoriId];
+        Lampa.Storage.set(key('hidden'), all);
+    }
+
+    /** Список скрытых из настроек: выбор возвращает тайтл в каталог. */
+    function showHidden() {
+        var controller = Lampa.Controller.enabled().name;
+        var all = hiddenAll();
+        var ids = [];
+        var id;
+
+        for (id in all) ids.push(id);
+
+        if (!ids.length) {
+            Lampa.Noty.show('Скрытых аниме нет');
+            return;
+        }
+
+        ids.sort(function (a, b) { return (all[b].time || 0) - (all[a].time || 0); });
+
+        var items = [];
+
+        if (ids.length > 1) items.push({ title: 'Вернуть все (' + ids.length + ')', all: true });
+
+        for (var i = 0; i < ids.length; i++) {
+            items.push({ title: escape(all[ids[i]].title || 'Shikimori #' + ids[i]), id: ids[i] });
+        }
+
+        Lampa.Select.show({
+            title: 'Скрытые аниме',
+            items: items,
+            onSelect: function (item) {
+                if (item.all) Lampa.Storage.set(key('hidden'), {});
+                else unhideAnime(item.id);
+
+                Lampa.Noty.show('Вернётся в каталог при следующем открытии');
+                Lampa.Controller.toggle(controller);
+            },
+            onBack: function () {
+                Lampa.Controller.toggle(controller);
+            }
+        });
     }
 
     /* ------------------------------------------------------------------ *
@@ -815,13 +881,18 @@
         });
     }
 
-    function showMenu(card) {
+    /**
+     * Меню по долгому нажатию.
+     * onHide(): убрать карточку с экрана — у Lampa 3 и 2 это делается по-разному.
+     */
+    function showMenu(card, onHide) {
         var controller = Lampa.Controller.enabled().name;
         var anime = card.shikimori;
         var cached = cacheGet(anime.id);
 
         var items = [
             { title: 'Открыть карточку', action: 'open' },
+            { title: 'Скрыть', subtitle: 'Вернуть можно в Настройки → Shikimori', action: 'hide' },
             { title: 'Подобрать в TMDB вручную', subtitle: 'Если открылось не то аниме', action: 'manual' }
         ];
 
@@ -841,6 +912,11 @@
 
                 if (item.action === 'open') openCard(card);
                 if (item.action === 'manual') chooseManually(card);
+                if (item.action === 'hide') {
+                    hideAnime(card);
+                    if (onHide) onHide();
+                    Lampa.Noty.show('«' + escape(card.title) + '» скрыто');
+                }
                 if (item.action === 'reset') {
                     cacheRemove(anime.id);
                     unlinkCard(card);
@@ -880,6 +956,35 @@
         };
     }
 
+    /**
+     * Lampa 3: убрать карточку из сетки на лету. Готового метода в категории нет,
+     * поэтому чистим её списки (items, pages) сами: иначе навигация пультом
+     * и подгрузка страниц продолжали бы видеть удалённый элемент.
+     * Фокус переходит на соседнюю карточку.
+     */
+    function removeItem(comp, item, controller) {
+        var index = comp.items ? comp.items.indexOf(item) : -1;
+        if (index < 0) return;
+
+        var neighbour = comp.items[index + 1] || comp.items[index - 1] || null;
+
+        comp.items.splice(index, 1);
+
+        for (var page in comp.pages) {
+            var list = comp.pages[page].items;
+            var at = list.indexOf(item);
+            if (at >= 0) list.splice(at, 1);
+        }
+
+        item.destroy();
+
+        comp.last = neighbour ? neighbour.render(true) : null;
+        comp.active = neighbour ? comp.items.indexOf(neighbour) : 0;
+
+        // Контроллер категории пересобирает коллекцию из DOM и фокусирует comp.last.
+        Lampa.Controller.toggle(controller);
+    }
+
     /** Lampa 3.x: модульная категория (как «Релизы» в самой Lampa). */
     function componentModern(object) {
         var comp = Lampa.Maker.make('Category', object);
@@ -900,6 +1005,8 @@
                 }, reject.bind(this));
             },
             onInstance: function (item, card) {
+                var self = this;
+
                 item.use({
                     onCreate: function () {
                         addBadge(this.html, card);
@@ -917,7 +1024,11 @@
                         openCard(card);
                     },
                     onLong: function () {
-                        showMenu(card);
+                        var controller = Lampa.Controller.enabled().name;
+
+                        showMenu(card, function () {
+                            removeItem(self, item, controller);
+                        });
                     }
                 });
             },
@@ -927,6 +1038,26 @@
         });
 
         return comp;
+    }
+
+    /**
+     * Lampa 2: список карточек старой категории закрыт в замыкании, и удалённый
+     * элемент остался бы в навигации — фокус мог бы уйти на невидимую карточку.
+     * Поэтому только гасим её; при следующем открытии каталога её не будет.
+     */
+    function fadeHidden(root) {
+        if (!root || !root.querySelector) return;
+
+        root.style.opacity = '0.3';
+
+        var view = root.querySelector('.card__view');
+        if (!view || view.querySelector('.' + ID + '__hidden')) return;
+
+        var marker = document.createElement('div');
+        marker.className = 'card__marker card__marker--thrown ' + ID + '__hidden';
+        marker.appendChild(document.createElement('span'));
+        marker.firstChild.textContent = 'Скрыто';
+        view.appendChild(marker);
     }
 
     /** Lampa 2.x: классическая категория. */
@@ -950,7 +1081,9 @@
             var focus = item.onFocus;
 
             item.onEnter = function () { openCard(card); };
-            item.onMenu = function () { showMenu(card); };
+            item.onMenu = function () {
+                showMenu(card, function () { fadeHidden(item.render(true)); });
+            };
             item.onFocus = function (target, data) {
                 refreshProgress(item.render(true), card);
                 if (focus) focus.call(item, target, data);
@@ -1032,6 +1165,8 @@
             });
         param('arm', 'trigger', true, 'Точное сопоставление через ARM',
             'Ищет TMDB по id MyAnimeList (arm.haglund.dev). Выключите, если сервис недоступен');
+        param('hidden', 'button', '', 'Скрытые аниме',
+            'Вернуть в каталог то, что скрыто долгим нажатием на карточку', undefined, showHidden);
         param('reset', 'button', '', 'Сбросить все сопоставления',
             'Карточки будут заново найдены в TMDB', undefined, function () {
                 Lampa.Storage.set(key('map'), {});
