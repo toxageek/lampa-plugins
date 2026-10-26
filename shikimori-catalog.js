@@ -1,5 +1,5 @@
 /**
- * Shikimori Catalog v1.2.0
+ * Shikimori Catalog v1.3.0
  * Каталог онгоингов с Shikimori в боковом меню Lampa.
  * По нажатию на постер находит тайтл в TMDB и открывает встроенную карточку Lampa
  * (со всеми её кнопками: онлайн, торренты, трейлеры, закладки).
@@ -17,6 +17,7 @@
  * поэтому на ней видно, на какой серии остановились (как на обычных карточках).
  *
  * Долгое нажатие на карточку: открыть, скрыть из каталога, подобрать TMDB вручную.
+ * Фильтр (жанры, год, оценка) — кнопка в шапке каталога или пункт долгого нажатия.
  * Скрытые возвращаются в Настройки -> Shikimori -> «Скрытые аниме».
  *
  * Поддерживает Lampa 3.x (Lampa.Maker) и 2.x (InteractionCategory).
@@ -26,7 +27,7 @@
     'use strict';
 
     var ID = 'shikimori_catalog';
-    var VERSION = '1.2.0';
+    var VERSION = '1.3.0';
     var COMPONENT = 'shikimori_catalog';
 
     /** Зеркала Shikimori: при сетевой ошибке пробуем следующее. */
@@ -53,11 +54,33 @@
         all: 'tv,ona,ova,movie,special,tv_special'
     };
 
+    var KIND_NAMES = {
+        tv: 'Только TV-сериалы',
+        tv_ona: 'TV + ONA (веб-сериалы)',
+        all: 'Все, включая фильмы и OVA'
+    };
+
     var ORDERS = {
         popularity: 'По популярности',
         ranked: 'По рейтингу',
         aired_on: 'По дате выхода'
     };
+
+    /** Минимальная оценка: Shikimori принимает целое 1–9 (score >= N). */
+    var SCORES = ['9', '8', '7', '6', '5'];
+
+    /**
+     * Жанры v2, которые Shikimori прячет при censored=true (GenreV2::CENSORED_IDS,
+     * аниме): эротика, хентай, яой, юри, сёнэн-ай, сёдзё-ай. С включённым
+     * «Скрывать 18+» выбор такого жанра дал бы пустой каталог.
+     */
+    var CENSORED_GENRES = ['539', '12', '33', '34', '133', '129'];
+
+    var SEASON_NAMES = { winter: 'зима', spring: 'весна', summer: 'лето', fall: 'осень' };
+    var SEASON_ORDER = ['winter', 'spring', 'summer', 'fall'];
+
+    /** Список жанров меняется редко — держим неделю. */
+    var GENRES_TTL = 1000 * 60 * 60 * 24 * 7;
 
     var ICON = '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><g fill="currentColor">' +
         '<circle cx="12" cy="5.6" r="3.6"/><circle cx="18.1" cy="10" r="3.6"/><circle cx="15.8" cy="17.2" r="3.6"/>' +
@@ -112,16 +135,17 @@
         return list;
     }
 
-    function request(net, url, timeout, ok, fail) {
+    /** post — объект формы: jQuery отправит его как x-www-form-urlencoded. */
+    function request(net, url, timeout, ok, fail, post) {
         net.timeout(timeout);
-        net.silent(url, ok, fail);
+        net.silent(url, ok, fail, post);
     }
 
     /**
      * GET к API Shikimori с перебором зеркал.
      * На 404/422 зеркала не перебираем: ответ осмысленный, другой домен его не изменит.
      */
-    function shikimori(net, path, ok, fail) {
+    function shikimori(net, path, ok, fail, post) {
         var list = mirrorList();
         var index = 0;
 
@@ -139,7 +163,7 @@
 
                 if (retry && index < list.length) attempt();
                 else fail(xhr);
-            });
+            }, post);
         }
 
         attempt();
@@ -170,6 +194,13 @@
         ];
 
         if (get('censored', true)) params.push('censored=true');
+
+        var filter = filterState();
+
+        // genre_v2: жанры, которые сейчас использует сайт; несколько id — «все сразу».
+        if (filter.genres.length) params.push('genre_v2=' + filter.genres.join(','));
+        if (filter.season) params.push('season=' + filter.season);
+        if (filter.score) params.push('score=' + filter.score);
 
         return '/api/animes?' + params.join('&');
     }
@@ -454,6 +485,377 @@
                 Lampa.Controller.toggle(controller);
             }
         });
+    }
+
+    /* ------------------------------------------------------------------ *
+     * Фильтры каталога
+     *
+     * Хранятся в Storage, а не в объекте активности: каталог открывается
+     * из меню, и выбранные фильтры должны сохраняться между запусками.
+     * Сортировка и формат — те же ключи, что в настройках плагина.
+     * ------------------------------------------------------------------ */
+
+    /** Сезон Shikimori, к которому относится дата: 'fall_2026'. */
+    function seasonOf(date) {
+        return SEASON_ORDER[Math.floor(date.getMonth() / 3)] + '_' + date.getFullYear();
+    }
+
+    function previousSeason(code) {
+        var parts = code.split('_');
+        var index = SEASON_ORDER.indexOf(parts[0]) - 1;
+        var year = parseInt(parts[1], 10);
+
+        return index < 0 ? 'fall_' + (year - 1) : SEASON_ORDER[index] + '_' + year;
+    }
+
+    function seasonLabel(code) {
+        var parts = code.split('_');
+        return SEASON_NAMES[parts[0]] + ' ' + parts[1];
+    }
+
+    /** Варианты «Год начала»: текущий и прошлый сезон, 6 последних лет и диапазоны. */
+    function seasonOptions() {
+        var now = new Date();
+        var year = now.getFullYear();
+        var current = seasonOf(now);
+        var previous = previousSeason(current);
+        var list = [
+            { value: '', title: 'Любой' },
+            { value: current, title: 'Текущий сезон (' + seasonLabel(current) + ')' },
+            { value: previous, title: 'Прошлый сезон (' + seasonLabel(previous) + ')' }
+        ];
+
+        for (var i = 0; i < 6; i++) list.push({ value: String(year - i), title: String(year - i) });
+
+        list.push({ value: (year - 10) + '_' + (year - 6), title: (year - 10) + '–' + (year - 6) });
+        list.push({ value: '2000_' + (year - 11), title: '2000–' + (year - 11) });
+        list.push({ value: '1900_1999', title: 'До 2000' });
+
+        return list;
+    }
+
+    /** Форматы season, которые понимает Shikimori (Animes::Filters::BySeason). */
+    function validSeason(value) {
+        return /^([a-z]+_\d{4}|\d{4}|\d{4}_\d{4}|\d{3}x|ancient)$/.test(value);
+    }
+
+    function seasonTitle(value) {
+        var options = seasonOptions();
+
+        for (var i = 0; i < options.length; i++) {
+            if (options[i].value === value) return options[i].title.replace(/^Текущий сезон \((.+)\)$/, '$1').replace(/^Прошлый сезон \((.+)\)$/, '$1');
+        }
+
+        // Сохранённый сезон мог выпасть из списка (сменился год) — показываем как есть.
+        if (/^[a-z]+_\d{4}$/.test(value) && SEASON_NAMES[value.split('_')[0]]) return seasonLabel(value);
+
+        return value.replace('_', '–');
+    }
+
+    function scoreTitle(value) {
+        return value ? 'от ' + value : 'Любой';
+    }
+
+    function filterState() {
+        var raw = String(get('genres', '') || '');
+        var genres = [];
+        var parts = raw ? raw.split(',') : [];
+
+        for (var i = 0; i < parts.length; i++) {
+            if (/^\d+$/.test(parts[i]) && genres.indexOf(parts[i]) < 0) genres.push(parts[i]);
+        }
+
+        var season = String(get('season', '') || '');
+        var minScore = String(get('score', '') || '');
+
+        return {
+            genres: genres,
+            season: validSeason(season) ? season : '',
+            score: /^[1-9]$/.test(minScore) ? minScore : ''
+        };
+    }
+
+    function activeFilters() {
+        var state = filterState();
+        return state.genres.length + (state.season ? 1 : 0) + (state.score ? 1 : 0);
+    }
+
+    /** Заголовок каталога: «Shikimori — онгоинги · Драма · 2026 · от 7». */
+    function catalogTitle() {
+        var state = filterState();
+        var parts = [];
+
+        if (state.genres.length) parts.push(genreNames(state.genres));
+        if (state.season) parts.push(seasonTitle(state.season));
+        if (state.score) parts.push(scoreTitle(state.score));
+
+        return 'Shikimori — онгоинги' + (parts.length ? ' · ' + parts.join(' · ') : '');
+    }
+
+    /* ---------------------------- Жанры ------------------------------- */
+
+    var genresList = null;
+
+    function storedGenres() {
+        var stored = Lampa.Storage.get(key('genres_list'), '{}');
+        return stored && isArray(stored.list) ? stored : { time: 0, list: [] };
+    }
+
+    function genreNames(ids) {
+        var list = genresList || storedGenres().list;
+        var names = [];
+
+        for (var i = 0; i < ids.length; i++) {
+            var title = '';
+
+            for (var j = 0; j < list.length; j++) {
+                if (list[j].id === ids[i]) title = list[j].title;
+            }
+
+            if (title) names.push(title);
+        }
+
+        return names.length === ids.length ? names.join(', ') : 'выбрано: ' + ids.length;
+    }
+
+    /**
+     * Жанры v2 из GraphQL Shikimori: REST /api/genres отдаёт старые жанры (v1),
+     * а сайт и фильтр genre_v2 работают с новыми. GraphQL принимает и обычную
+     * форму (params[:query]) — без JSON-тела и без CORS preflight.
+     * done(list | null)
+     */
+    function loadGenres(net, done) {
+        var stored = storedGenres();
+
+        if (genresList) return done(genresList);
+
+        if (stored.list.length && Date.now() - stored.time < GENRES_TTL) {
+            genresList = stored.list;
+            return done(genresList);
+        }
+
+        shikimori(net, '/api/graphql', function (json) {
+            var raw = json && json.data && isArray(json.data.genres) ? json.data.genres : [];
+            var list = [];
+
+            for (var i = 0; i < raw.length; i++) {
+                var genre = raw[i];
+
+                if (genre && /^\d+$/.test(String(genre.id))) {
+                    list.push({ id: String(genre.id), title: genre.russian || genre.name, kind: genre.kind || 'genre' });
+                }
+            }
+
+            if (!list.length) return done(stored.list.length ? stored.list : null);
+
+            list.sort(function (a, b) { return String(a.title).localeCompare(String(b.title)); });
+
+            genresList = list;
+            Lampa.Storage.set(key('genres_list'), { time: Date.now(), list: list });
+            done(list);
+        }, function () {
+            // Сеть не ответила — устаревший список лучше, чем никакой.
+            done(stored.list.length ? stored.list : null);
+        }, { query: '{ genres(entryType: Anime) { id name russian kind } }' });
+    }
+
+    /* ----------------------------- Меню ------------------------------- */
+
+    /**
+     * Меню фильтра. Каждое изменение сразу сохраняется, а каталог
+     * перезагружается один раз — при выходе из меню (onApply).
+     */
+    function openFilter(onApply) {
+        var controller = Lampa.Controller.enabled().name;
+        var net = new Lampa.Reguest();
+        var changed = false;
+
+        function save(name, value) {
+            Lampa.Storage.set(key(name), value);
+            changed = true;
+        }
+
+        function close() {
+            net.clear();
+            Lampa.Controller.toggle(controller);
+            if (changed && onApply) onApply();
+        }
+
+        function single(title, options, current, name) {
+            var items = [];
+
+            for (var i = 0; i < options.length; i++) {
+                items.push({ title: options[i].title, value: options[i].value, selected: options[i].value === current });
+            }
+
+            Lampa.Select.show({
+                title: title,
+                items: items,
+                onSelect: function (item) {
+                    if (item.value !== current) save(name, item.value);
+                    main();
+                },
+                onBack: main
+            });
+        }
+
+        function genres() {
+            withLoading(function (loadNet, finish) {
+                loadGenres(loadNet, finish);
+            }, function (list) {
+                if (!list) {
+                    Lampa.Noty.show('Не удалось загрузить жанры Shikimori');
+                    return main();
+                }
+
+                showGenres(list);
+            });
+        }
+
+        /** Список жанров с чекбоксами; focus — id жанра, на котором встать. */
+        function showGenres(list, focus) {
+            var selected = filterState().genres;
+            var censored = get('censored', true);
+            var groups = [['genre', 'Жанры'], ['theme', 'Темы'], ['demographic', 'Аудитория']];
+            var items = [];
+
+            function toggle(id, checked) {
+                var at = selected.indexOf(id);
+
+                if (checked && at < 0) selected.push(id);
+                if (!checked && at >= 0) selected.splice(at, 1);
+
+                save('genres', selected.join(','));
+            }
+
+            if (selected.length) items.push({ title: 'Снять все (' + selected.length + ')', clear: true });
+
+            for (var g = 0; g < groups.length; g++) {
+                var group = [];
+
+                for (var i = 0; i < list.length; i++) {
+                    var genre = list[i];
+                    if (genre.kind !== groups[g][0]) continue;
+                    if (censored && CENSORED_GENRES.indexOf(genre.id) >= 0) continue;
+
+                    group.push({
+                        title: escape(genre.title),
+                        id: genre.id,
+                        checkbox: true,
+                        checked: selected.indexOf(genre.id) >= 0,
+                        selected: genre.id === focus
+                    });
+                }
+
+                if (group.length) items = items.concat([{ title: groups[g][1], separator: true }], group);
+            }
+
+            Lampa.Select.show({
+                title: 'Жанры: нужны все отмеченные',
+                items: items,
+                // Чекбокс переключается на месте, меню остаётся открытым.
+                onCheck: function (item) {
+                    toggle(item.id, item.checked);
+                },
+                onSelect: function (item) {
+                    if (item.clear) {
+                        save('genres', '');
+                        return main();
+                    }
+
+                    // Старый Select без чекбоксов: нажатие закрывает меню —
+                    // переключаем жанр сами и открываем список снова.
+                    if (item.id) {
+                        toggle(item.id, selected.indexOf(item.id) < 0);
+                        return showGenres(list, item.id);
+                    }
+
+                    main();
+                },
+                onBack: main
+            });
+        }
+
+        function main() {
+            var state = filterState();
+            var order = get('order', 'popularity');
+            var kind = get('kind', 'tv_ona');
+            var scores = [{ value: '', title: 'Любой' }];
+
+            for (var i = 0; i < SCORES.length; i++) scores.push({ value: SCORES[i], title: 'от ' + SCORES[i] });
+
+            var orders = [];
+            for (var o in ORDERS) orders.push({ value: o, title: ORDERS[o] });
+
+            var kinds = [];
+            for (var k in KIND_NAMES) kinds.push({ value: k, title: KIND_NAMES[k] });
+
+            var items = [
+                { title: 'Жанры и темы', subtitle: state.genres.length ? escape(genreNames(state.genres)) : 'Любые', action: 'genres' },
+                { title: 'Год начала показа', subtitle: state.season ? seasonTitle(state.season) : 'Любой', action: 'season' },
+                { title: 'Оценка Shikimori', subtitle: scoreTitle(state.score), action: 'score' },
+                { title: 'Сортировка', subtitle: ORDERS[order] || ORDERS.popularity, action: 'order' },
+                { title: 'Формат', subtitle: KIND_NAMES[kind] || KIND_NAMES.tv_ona, action: 'kind' }
+            ];
+
+            if (activeFilters()) items.push({ title: 'Сбросить фильтры', action: 'reset' });
+
+            Lampa.Select.show({
+                title: 'Фильтр',
+                items: items,
+                onSelect: function (item) {
+                    if (item.action === 'genres') genres();
+                    if (item.action === 'season') single('Год начала показа', seasonOptions(), state.season, 'season');
+                    if (item.action === 'score') single('Оценка Shikimori', scores, state.score, 'score');
+                    if (item.action === 'order') single('Сортировка', orders, order, 'order');
+                    if (item.action === 'kind') single('Формат', kinds, kind, 'kind');
+                    if (item.action === 'reset') {
+                        save('genres', '');
+                        save('season', '');
+                        save('score', '');
+                        main();
+                    }
+                },
+                onBack: close
+            });
+        }
+
+        main();
+    }
+
+    /** Применить фильтр: пересоздать текущий экран каталога с первой страницы. */
+    function applyFilter() {
+        Lampa.Activity.replace({ page: 1, title: catalogTitle() });
+    }
+
+    /**
+     * Кнопка фильтра в шапке, пока открыт каталог (как фильтр «Истории» в Lampa 3).
+     * Счётчик показывает число активных условий.
+     */
+    function addFilterButton() {
+        var count = activeFilters();
+        var button = $(
+            '<div class="head__action selector ' + ID + '__filter" style="position:relative">' +
+            '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 4h18l-7 8.5V19l-4 2v-8.5L3 4z" fill="currentColor"/></svg>' +
+            '</div>'
+        );
+
+        if (count) {
+            button.append(
+                '<span style="position:absolute;top:0;right:0;min-width:1.3em;padding:0 0.25em;border-radius:1em;' +
+                'background:#e33;color:#fff;font-size:0.7em;line-height:1.3em;text-align:center">' + count + '</span>'
+            );
+        }
+
+        var action = function () { openFilter(applyFilter); };
+
+        if (Lampa.Head && Lampa.Head.addElement) Lampa.Head.addElement(button, action);
+        else {
+            $('.head .head__actions').eq(0).prepend(button);
+            button.on('hover:enter', action);
+        }
+
+        return button;
     }
 
     /* ------------------------------------------------------------------ *
@@ -893,7 +1295,8 @@
         var items = [
             { title: 'Открыть карточку', action: 'open' },
             { title: 'Скрыть', subtitle: 'Вернуть можно в Настройки → Shikimori', action: 'hide' },
-            { title: 'Подобрать в TMDB вручную', subtitle: 'Если открылось не то аниме', action: 'manual' }
+            { title: 'Подобрать в TMDB вручную', subtitle: 'Если открылось не то аниме', action: 'manual' },
+            { title: 'Фильтр каталога', subtitle: 'Жанры, год, оценка, сортировка', action: 'filter' }
         ];
 
         if (cached) {
@@ -912,6 +1315,7 @@
 
                 if (item.action === 'open') openCard(card);
                 if (item.action === 'manual') chooseManually(card);
+                if (item.action === 'filter') openFilter(applyFilter);
                 if (item.action === 'hide') {
                     hideAnime(card);
                     if (onHide) onHide();
@@ -1032,10 +1436,34 @@
                     }
                 });
             },
+            // Кнопка фильтра живёт в шапке, пока каталог на экране.
+            onStart: function () {
+                showButton();
+            },
+            // Пустой результат: Empty подменяет start(), onStart не придёт, а кнопка
+            // нужна именно здесь — чтобы ослабить фильтр.
+            onEmpty: function () {
+                showButton();
+                if (activeFilters()) Lampa.Noty.show('Ничего не найдено — измените фильтр (кнопка в шапке)');
+            },
+            onPause: hideButton,
             onDestroy: function () {
+                hideButton();
                 net.clear();
             }
         });
+
+        var button = null;
+
+        function showButton() {
+            hideButton();
+            button = addFilterButton();
+        }
+
+        function hideButton() {
+            if (button) button.remove();
+            button = null;
+        }
 
         return comp;
     }
@@ -1093,7 +1521,40 @@
             refreshProgress(item.render(true), card);
         };
 
+        var button = null;
+        var baseStart = comp.start;
+        var pause = comp.pause;
+        var empty = comp.empty;
+
+        function showButton() {
+            hideButton();
+            button = addFilterButton();
+        }
+
+        function hideButton() {
+            if (button) button.remove();
+            button = null;
+        }
+
+        comp.start = function () {
+            showButton();
+            baseStart.call(comp);
+        };
+
+        comp.pause = function () {
+            hideButton();
+            if (pause) pause.call(comp);
+        };
+
+        // empty() подменяет this.start — кнопку ставим здесь же.
+        comp.empty = function () {
+            empty.apply(comp, arguments);
+            showButton();
+            if (activeFilters()) Lampa.Noty.show('Ничего не найдено — измените фильтр (кнопка в шапке)');
+        };
+
         comp.destroy = function () {
+            hideButton();
             net.clear();
             destroy.call(comp);
         };
@@ -1108,7 +1569,7 @@
     function openCatalog() {
         Lampa.Activity.push({
             url: '',
-            title: 'Shikimori — онгоинги',
+            title: catalogTitle(),
             component: COMPONENT,
             page: 1
         });
@@ -1153,11 +1614,7 @@
         for (var i = 0; i < MIRRORS.length; i++) domains[MIRRORS[i]] = MIRRORS[i];
 
         param('order', 'select', 'popularity', 'Сортировка', '', ORDERS);
-        param('kind', 'select', 'tv_ona', 'Форматы', '', {
-            tv: 'Только TV-сериалы',
-            tv_ona: 'TV + ONA (веб-сериалы)',
-            all: 'Все, включая фильмы и OVA'
-        });
+        param('kind', 'select', 'tv_ona', 'Форматы', '', KIND_NAMES);
         param('censored', 'trigger', true, 'Скрывать 18+');
         param('domain', 'select', MIRRORS[0], 'Домен Shikimori',
             'При недоступности автоматически пробуются остальные зеркала', domains, function () {
@@ -1205,6 +1662,7 @@
             context: searchContext,
             score: score,
             progress: progressText,
+            filter: function () { openFilter(applyFilter); },
             open: openCatalog
         };
 
