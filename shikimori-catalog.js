@@ -1,5 +1,5 @@
 /**
- * Shikimori Catalog v1.5.0
+ * Shikimori Catalog v1.5.1
  * Каталог онгоингов с Shikimori в боковом меню Lampa.
  * По нажатию на постер находит тайтл в TMDB и открывает встроенную карточку Lampa
  * (со всеми её кнопками: онлайн, торренты, трейлеры, закладки).
@@ -22,7 +22,7 @@
  *
  * Расписание: календарь Shikimori -> плашка «Сегодня 18:30» / «Завтра» / «Через 3 дня»
  * и сортировка «Скоро выйдут». Ряд онгоингов на главной и в разделе «Аниме» (Lampa 3).
- * Рейтинг Shikimori в полной карточке и на постерах любого аниме (постеры — Lampa 3).
+ * Рейтинг Shikimori в полной карточке любого аниме; на постерах каталога — подписанная оценка.
  * Скрытые возвращаются в Настройки -> Shikimori -> «Скрытые аниме».
  *
  * Поддерживает Lampa 3.x (Lampa.Maker) и 2.x (InteractionCategory).
@@ -32,7 +32,7 @@
     'use strict';
 
     var ID = 'shikimori_catalog';
-    var VERSION = '1.5.0';
+    var VERSION = '1.5.1';
     var COMPONENT = 'shikimori_catalog';
 
     /** Зеркала Shikimori: при сетевой ошибке пробуем следующее. */
@@ -96,13 +96,6 @@
     /** Рейтинг в полной карточке: найденный храним 3 дня, «не нашли» — сутки. */
     var RATING_TTL = 1000 * 60 * 60 * 24 * 3;
     var RATING_MISS_TTL = 1000 * 60 * 60 * 24;
-
-    /** Оценок для маленьких карточек накапливается больше, чем сопоставлений. */
-    var RATINGS_LIMIT = 2000;
-
-    /** Очередь поиска оценок: пауза между тайтлами и сколько задач держать. */
-    var LOOKUP_GAP = 1200;
-    var LOOKUP_STACK = 40;
 
     /** Календарь серий обновляется не чаще раза в полчаса. */
     var CALENDAR_TTL = 1000 * 60 * 30;
@@ -292,8 +285,9 @@
             shikimori: anime,
             title: anime.russian || anime.name,
             poster: image && image.indexOf('http') !== 0 ? 'https://' + host + image : image,
-            release_date: anime.aired_on || '',
-            vote_average: parseFloat(anime.score) || 0
+            // vote_average не задаём: родная плашка выглядела бы как оценка TMDB.
+            // Оценку Shikimori рисует addVote — на том же месте, с подписью.
+            release_date: anime.aired_on || ''
         };
 
         // Lampa 3: модули отрисовки, событий и «просмотренных серий» (Watched).
@@ -404,6 +398,24 @@
         }
     }
 
+    /**
+     * Оценка Shikimori справа снизу: родной класс card__vote (то же место
+     * и вид, что у оценки TMDB) плюс подпись «Shiki».
+     */
+    function addVote(root, card) {
+        if (!root || !root.querySelector || !card.shikimori) return;
+
+        var value = parseFloat(card.shikimori.score) || 0;
+        var view = root.querySelector('.card__view');
+        if (!view || !(value > 0) || view.querySelector('.' + ID + '__vote')) return;
+
+        var vote = document.createElement('div');
+        vote.className = 'card__vote ' + ID + '__vote';
+        vote.innerHTML = '<span>Shiki</span>';
+        vote.appendChild(document.createTextNode(value >= 10 ? '10' : value.toFixed(1)));
+        view.appendChild(vote);
+    }
+
     /** Плашка слева сверху: серии онгоинга, «Анонс» или число серий. */
     function badgeText(anime) {
         if (anime.status === 'anons') return 'Анонс';
@@ -424,6 +436,8 @@
         // Lampa 2 сама рисует «TV» для карточек с original_name — заменяем своей плашкой.
         var old = view.querySelector('.card__type');
         if (old) old.parentNode.removeChild(old);
+
+        addVote(root, card);
 
         var text = badgeText(anime);
         if (!text) return;
@@ -1570,9 +1584,9 @@
 
         for (var k in all) keys.push(k);
 
-        if (keys.length > RATINGS_LIMIT) {
+        if (keys.length > CACHE_LIMIT) {
             keys.sort(function (a, b) { return (all[a].time || 0) - (all[b].time || 0); });
-            for (var i = 0; i < keys.length - RATINGS_LIMIT; i++) delete all[keys[i]];
+            for (var i = 0; i < keys.length - CACHE_LIMIT; i++) delete all[keys[i]];
         }
 
         Lampa.Storage.set(key('ratings'), all);
@@ -1708,152 +1722,13 @@
         });
     }
 
-    /* ------------------------------------------------------------------ *
-     * Рейтинг Shikimori на маленьких карточках аниме по всей Lampa
-     *
-     * Lampa 3 не шлёт события о создании карточки, но разрешает подменять
-     * методы модулей (Lampa.Maker.map). Оборачиваем onCreate модуля Ratting —
-     * он есть у всех обычных карточек. Подмена действует и на уже созданные:
-     * Lampa ищет обработчик в момент вызова.
-     *
-     * Сеть: у Shikimori лимит 90 запросов в минуту, а на экране бывают
-     * десятки аниме. Поэтому ищем только для карточек, появившихся на экране,
-     * строго по одному с паузой, и сначала — последние появившиеся.
-     * ------------------------------------------------------------------ */
-
-    var lookups = { stack: [], waiting: {}, busy: false, net: null };
-
-    /** Аниме ли карточка TMDB — без сети, по жанру «Анимация» и языку. */
-    function isAnimeCard(data) {
-        var lang = data.original_language;
-        var genres = data.genre_ids || data.genres || [];
-        var animation = false;
-
-        for (var i = 0; i < genres.length; i++) {
-            if (genres[i] === 16 || (genres[i] && genres[i].id === 16)) animation = true;
-        }
-
-        return animation && (lang === 'ja' || lang === 'zh' || lang === 'ko');
-    }
-
-    function lookupRating(method, data, done) {
-        var k = ratingKey(method, data.id);
-
-        if (lookups.waiting[k]) return lookups.waiting[k].push(done);
-
-        lookups.waiting[k] = [done];
-        lookups.stack.push({ key: k, method: method, data: data });
-
-        // Быстро пролистали — старые задачи не нужны, держим только свежие.
-        while (lookups.stack.length > LOOKUP_STACK) {
-            var dropped = lookups.stack.shift();
-            delete lookups.waiting[dropped.key];
-        }
-
-        pumpLookups();
-    }
-
-    function pumpLookups() {
-        if (lookups.busy) return;
-
-        var task = lookups.stack.pop();
-        if (!task) return;
-
-        lookups.busy = true;
-        lookups.net = lookups.net || new Lampa.Reguest();
-
-        findOnShikimori(lookups.net, task.data, function (anime, failed) {
-            var value = anime ? parseFloat(anime.score) || 0 : 0;
-            var callbacks = lookups.waiting[task.key] || [];
-
-            delete lookups.waiting[task.key];
-
-            if (anime || !failed) ratingSave(task.method, task.data.id, { shikimori: anime ? anime.id : 0, score: value });
-
-            for (var i = 0; i < callbacks.length; i++) callbacks[i](value);
-
-            // Ошибка (часто 429 — лимит) — пауза длиннее.
-            setTimeout(function () {
-                lookups.busy = false;
-                pumpLookups();
-            }, failed ? LOOKUP_GAP * 5 : LOOKUP_GAP);
-        });
-    }
-
-    function smallRating(root, value) {
-        if (!root || !root.querySelector || !(value > 0)) return;
-
-        var view = root.querySelector('.card__view');
-        if (!view || view.querySelector('.' + ID + '__rate')) return;
-
-        var badge = document.createElement('div');
-        badge.className = ID + '__rate';
-        badge.innerHTML = '<span>Shiki</span>';
-        badge.appendChild(document.createTextNode(' ' + (value >= 10 ? '10' : String(value))));
-        view.appendChild(badge);
-    }
-
-    /** Вызывается из onCreate модуля Ratting для каждой карточки Lampa 3. */
-    function decorateCard(card) {
-        var data = card.data;
-
-        if (!get('card_rating', true) || !data || data.shikimori || !data.id) return;
-        if (data.source && data.source !== 'tmdb' && data.source !== 'cub') return;
-        if (!isAnimeCard(data)) return;
-
-        var method = data.original_name ? 'tv' : 'movie';
-        var cached = ratingCached(method, data.id);
-
-        if (cached) return smallRating(card.html, cached.score);
-
-        var asked = false;
-
-        card.use({
-            onVisible: function () {
-                if (asked) return;
-                asked = true;
-
-                lookupRating(method, data, function (value) {
-                    smallRating(card.html, value);
-                });
-            }
-        });
-    }
-
-    function patchCards() {
-        if (!isModern() || !Lampa.Maker.map) return;
-
-        var map = Lampa.Maker.map('Card');
-        var module = map && map.Ratting;
-
-        if (!module || module.__shikimori) return;
-
-        var create = module.onCreate;
-
-        module.onCreate = function () {
-            if (create) create.apply(this, arguments);
-
-            try {
-                decorateCard(this);
-            }
-            catch (error) {
-                console.log('Shikimori', 'card rating error', error);
-            }
-        };
-
-        module.__shikimori = true;
-    }
-
-    /** Стиль плашки: справа сверху, там у карточек Lampa свободно. */
+    /** Подпись «Shiki» внутри родной плашки оценки — отличить от оценки TMDB. */
     function addStyles() {
         if (document.getElementById(ID + '_style')) return;
 
         var style = document.createElement('style');
         style.id = ID + '_style';
-        style.textContent =
-            '.' + ID + '__rate{position:absolute;top:0.4em;right:0.4em;z-index:2;padding:0.15em 0.45em;' +
-            'border-radius:0.4em;background:rgba(0,0,0,0.65);color:#fff;font-size:0.85em;font-weight:600;line-height:1.4}' +
-            '.' + ID + '__rate span{font-size:0.75em;font-weight:400;opacity:0.75}';
+        style.textContent = '.' + ID + '__vote span{font-size:0.55em;font-weight:400;opacity:0.75;margin-right:0.3em}';
 
         document.head.appendChild(style);
     }
@@ -2379,8 +2254,6 @@
         param('censored', 'trigger', true, 'Скрывать 18+');
         param('full_rating', 'trigger', true, 'Рейтинг Shikimori в карточке',
             'Оценка Shikimori рядом с TMDB и IMDb в полной карточке аниме');
-        param('card_rating', 'trigger', true, 'Рейтинг Shikimori на постерах',
-            'Плашка с оценкой на карточках аниме по всей Lampa (Lampa 3)');
         param('domain', 'select', MIRRORS[0], 'Домен Shikimori',
             'При недоступности автоматически пробуются остальные зеркала', domains, function () {
                 aliveMirror = '';
@@ -2431,10 +2304,9 @@
 
         try {
             addStyles();
-            patchCards();
         }
         catch (error) {
-            console.log('Shikimori', 'card patch error', error);
+            console.log('Shikimori', 'style error', error);
         }
 
         try {
