@@ -1,5 +1,5 @@
 /**
- * Shikimori Catalog v1.3.0
+ * Shikimori Catalog v1.4.0
  * Каталог онгоингов с Shikimori в боковом меню Lampa.
  * По нажатию на постер находит тайтл в TMDB и открывает встроенную карточку Lampa
  * (со всеми её кнопками: онлайн, торренты, трейлеры, закладки).
@@ -17,7 +17,12 @@
  * поэтому на ней видно, на какой серии остановились (как на обычных карточках).
  *
  * Долгое нажатие на карточку: открыть, скрыть из каталога, подобрать TMDB вручную.
- * Фильтр (жанры, год, оценка) — кнопка в шапке каталога или пункт долгого нажатия.
+ * Фильтр (раздел, жанры, год, оценка) — кнопка в шапке каталога или пункт долгого нажатия.
+ * Разделы: онгоинги, анонсы, недавно завершённые, топ.
+ *
+ * Расписание: календарь Shikimori -> плашка «Сегодня 18:30» / «Завтра» / «Через 3 дня»
+ * и сортировка «Скоро выйдут». Ряд онгоингов на главной и в разделе «Аниме» (Lampa 3).
+ * Рейтинг Shikimori в полной карточке любого аниме.
  * Скрытые возвращаются в Настройки -> Shikimori -> «Скрытые аниме».
  *
  * Поддерживает Lampa 3.x (Lampa.Maker) и 2.x (InteractionCategory).
@@ -27,7 +32,7 @@
     'use strict';
 
     var ID = 'shikimori_catalog';
-    var VERSION = '1.3.0';
+    var VERSION = '1.4.0';
     var COMPONENT = 'shikimori_catalog';
 
     /** Зеркала Shikimori: при сетевой ошибке пробуем следующее. */
@@ -63,8 +68,37 @@
     var ORDERS = {
         popularity: 'По популярности',
         ranked: 'По рейтингу',
-        aired_on: 'По дате выхода'
+        aired_on: 'По дате выхода',
+        soon: 'Скоро выйдут (по календарю)'
     };
+
+    var SECTIONS = {
+        ongoing: 'Онгоинги',
+        anons: 'Анонсы',
+        released: 'Недавно завершённые',
+        top: 'Топ'
+    };
+
+    /** status для раздела; у «Топа» — всё, что уже выходит или вышло. */
+    var STATUSES = {
+        ongoing: 'ongoing',
+        anons: 'anons',
+        released: 'released',
+        top: 'ongoing,released'
+    };
+
+    /** Карточек в ряду на главной. */
+    var ROW_LIMIT = 20;
+
+    /** «Скоро выйдут» собирает список целиком: не больше 10 страниц по 50. */
+    var SOON_MAX_PAGES = 10;
+
+    /** Рейтинг в полной карточке: найденный храним 3 дня, «не нашли» — сутки. */
+    var RATING_TTL = 1000 * 60 * 60 * 24 * 3;
+    var RATING_MISS_TTL = 1000 * 60 * 60 * 24;
+
+    /** Календарь серий обновляется не чаще раза в полчаса. */
+    var CALENDAR_TTL = 1000 * 60 * 30;
 
     /** Минимальная оценка: Shikimori принимает целое 1–9 (score >= N). */
     var SCORES = ['9', '8', '7', '6', '5'];
@@ -182,25 +216,60 @@
      * Каталог Shikimori
      * ------------------------------------------------------------------ */
 
-    function listPath(page) {
+    /** Текущий раздел каталога. */
+    function currentSection() {
+        var section = get('section', 'ongoing');
+        return SECTIONS[section] ? section : 'ongoing';
+    }
+
+    /**
+     * Сортировка для раздела. «Топ» — всегда по рейтингу (в этом его смысл),
+     * «Скоро выйдут» — только там, где есть календарь: онгоинги и анонсы.
+     */
+    function orderFor(section) {
         var order = get('order', 'popularity');
+
+        if (section === 'top') return 'ranked';
+        if (order === 'soon' && section !== 'ongoing' && section !== 'anons') return 'popularity';
+
+        return ORDERS[order] ? order : 'popularity';
+    }
+
+    /** Последние два сезона: «недавно завершённые» без своего фильтра года. */
+    function recentSeasons() {
+        var current = seasonOf(new Date());
+        return previousSeason(current) + ',' + current;
+    }
+
+    /**
+     * Запрос списка Shikimori.
+     * options.section — раздел (по умолчанию текущий), options.plain — без
+     * пользовательских фильтров (ряд на главной), options.order — своя сортировка.
+     */
+    function listPath(page, options) {
+        options = options || {};
+
+        var section = options.section || currentSection();
+        var order = options.order || orderFor(section);
+        var filter = options.plain ? { genres: [], season: '', score: '' } : filterState();
 
         var params = [
             'page=' + page,
             'limit=' + PAGE_LIMIT,
-            'status=ongoing',
-            'order=' + (ORDERS[order] ? order : 'popularity'),
+            // «Скоро выйдут» сортируется у нас по календарю, сервер отдаёт по популярности.
+            'order=' + (order === 'soon' ? 'popularity' : order),
             'kind=' + (KINDS[get('kind', 'tv_ona')] || KINDS.tv_ona)
         ];
 
+        if (STATUSES[section]) params.push('status=' + STATUSES[section]);
         if (get('censored', true)) params.push('censored=true');
-
-        var filter = filterState();
 
         // genre_v2: жанры, которые сейчас использует сайт; несколько id — «все сразу».
         if (filter.genres.length) params.push('genre_v2=' + filter.genres.join(','));
-        if (filter.season) params.push('season=' + filter.season);
         if (filter.score) params.push('score=' + filter.score);
+
+        if (filter.season) params.push('season=' + filter.season);
+        else if (section === 'released') params.push('season=' + recentSeasons());
 
         return '/api/animes?' + params.join('&');
     }
@@ -234,20 +303,30 @@
     }
 
     /**
+     * Подходит ли тайтл разделу. Онгоинги без вышедших серий не показываем —
+     * смотреть там пока нечего.
+     */
+    function fits(anime, hidden, section) {
+        if (!anime || !anime.id || hidden[anime.id]) return false;
+        if (section === 'ongoing') return (anime.episodes_aired || 0) > 0;
+        return true;
+    }
+
+    /**
      * Страница каталога в формате Lampa: {results, page, more}.
      * Shikimori не отдаёт общее количество, поэтому признак «есть ещё» —
-     * полная страница. Онгоинги без вышедших серий не показываем.
+     * полная страница.
      */
-    function loadPage(net, page, modern, ok, fail) {
-        shikimori(net, listPath(page), function (json, host) {
+    function loadPage(net, page, modern, ok, fail, options) {
+        var section = (options && options.section) || currentSection();
+
+        shikimori(net, listPath(page, options), function (json, host) {
             var list = isArray(json) ? json : [];
             var hidden = hiddenAll();
             var results = [];
 
             for (var i = 0; i < list.length && i < PAGE_LIMIT; i++) {
-                var anime = list[i];
-                if (!anime || !anime.id || hidden[anime.id]) continue;
-                if ((anime.episodes_aired || 0) > 0) results.push(toCard(anime, host, modern));
+                if (fits(list[i], hidden, section)) results.push(toCard(list[i], host, modern));
             }
 
             ok({
@@ -258,7 +337,75 @@
         }, fail);
     }
 
-    /** Плашка «вышло/всего серий» поверх постера. */
+    /**
+     * «Скоро выйдут»: сервер не умеет сортировать по следующей серии, поэтому
+     * забираем весь отфильтрованный список (онгоингов — несколько страниц)
+     * и сортируем по календарю. Без даты в календаре — в конце, по популярности.
+     * done(cards) — все карточки сразу, по страницам режет pager.
+     */
+    function loadSoon(net, modern, done, fail) {
+        var section = currentSection();
+        var hidden = hiddenAll();
+        var collected = [];
+        var page = 1;
+        var host = '';
+
+        loadCalendar(net, function (map) {
+            function next() {
+                shikimori(net, listPath(page), function (json, answered) {
+                    var list = isArray(json) ? json : [];
+                    host = answered;
+
+                    for (var i = 0; i < list.length && i < PAGE_LIMIT; i++) {
+                        if (fits(list[i], hidden, section)) collected.push(list[i]);
+                    }
+
+                    if (list.length >= PAGE_LIMIT && page < SOON_MAX_PAGES) {
+                        page++;
+                        next();
+                    }
+                    else finish(map);
+                }, function (xhr) {
+                    // Первая страница не пришла — это ошибка, последующие — просто конец.
+                    if (collected.length) finish(map);
+                    else fail(xhr);
+                });
+            }
+
+            next();
+        });
+
+        function finish(map) {
+            var order = [];
+
+            for (var i = 0; i < collected.length; i++) {
+                var entry = map[collected[i].id];
+                order.push({ anime: collected[i], at: entry && entry.at > Date.now() ? entry.at : Infinity, index: i });
+            }
+
+            // Сортировка устойчивая вручную: Array.sort в старых движках не обязан её сохранять.
+            order.sort(function (a, b) {
+                if (a.at !== b.at) return a.at < b.at ? -1 : 1;
+                return a.index - b.index;
+            });
+
+            var cards = [];
+            for (var j = 0; j < order.length; j++) cards.push(toCard(order[j].anime, host, modern));
+
+            done(cards);
+        }
+    }
+
+    /** Плашка слева сверху: серии онгоинга, «Анонс» или число серий. */
+    function badgeText(anime) {
+        if (anime.status === 'anons') return 'Анонс';
+        if (anime.kind === 'movie') return 'Фильм';
+        if (anime.status === 'ongoing') return (anime.episodes_aired || 0) + (anime.episodes ? '/' + anime.episodes : '') + ' эп.';
+
+        var total = anime.episodes || anime.episodes_aired;
+        return total ? total + ' эп.' : '';
+    }
+
     function addBadge(root, card) {
         if (!root || !root.querySelector) return;
 
@@ -270,10 +417,152 @@
         var old = view.querySelector('.card__type');
         if (old) old.parentNode.removeChild(old);
 
+        var text = badgeText(anime);
+        if (!text) return;
+
         var badge = document.createElement('div');
         badge.className = 'card__type';
-        badge.textContent = (anime.episodes_aired || 0) + (anime.episodes ? '/' + anime.episodes : '') + ' эп.';
+        badge.textContent = text;
         view.appendChild(badge);
+    }
+
+    /* ------------------------------------------------------------------ *
+     * Расписание серий: календарь Shikimori
+     *
+     * /api/calendar одним запросом отдаёт онгоинги и ближайшие анонсы (TV/ONA)
+     * с next_episode и next_episode_at. Грузится в фоне и не задерживает
+     * каталог: плашки дорисовываются, когда карточка снова появляется на экране.
+     * ------------------------------------------------------------------ */
+
+    var calendar = { map: null, time: 0, waiting: [] };
+
+    /**
+     * ISO-дата Shikimori («2026-10-27T18:30:00.000+03:00») в мс.
+     * Свой разбор: Date.parse со смещением ненадёжен в старых движках ТВ.
+     */
+    function parseIso(value) {
+        var m = /^(\d{4})-(\d\d)-(\d\d)T(\d\d):(\d\d)(?::(\d\d))?(?:\.\d+)?(Z|([+-])(\d\d):?(\d\d))?$/.exec(String(value || ''));
+        if (!m) return NaN;
+
+        var time = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +(m[6] || 0));
+
+        if (m[8]) time -= (m[8] === '-' ? -1 : 1) * ((+m[9]) * 60 + (+m[10])) * 60000;
+
+        return time;
+    }
+
+    /** done(map) — {[shikimoriId]: {episode, at}}; при ошибке — пустой или прошлый. */
+    function loadCalendar(net, done) {
+        if (calendar.map && Date.now() - calendar.time < CALENDAR_TTL) return done(calendar.map);
+
+        calendar.waiting.push(done);
+        if (calendar.waiting.length > 1) return;
+
+        function resolve(map) {
+            var waiting = calendar.waiting;
+            calendar.waiting = [];
+            for (var i = 0; i < waiting.length; i++) waiting[i](map);
+        }
+
+        shikimori(net, '/api/calendar' + (get('censored', true) ? '?censored=true' : ''), function (json) {
+            var map = {};
+            var list = isArray(json) ? json : [];
+
+            for (var i = 0; i < list.length; i++) {
+                var entry = list[i];
+                var at = entry ? parseIso(entry.next_episode_at) : NaN;
+
+                if (entry && entry.anime && entry.anime.id && !isNaN(at)) {
+                    map[entry.anime.id] = { episode: entry.next_episode || 0, at: at };
+                }
+            }
+
+            calendar.map = map;
+            calendar.time = Date.now();
+            resolve(map);
+        }, function () {
+            resolve(calendar.map || {});
+        });
+    }
+
+    var MONTHS = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
+
+    function plural(n, one, few, many) {
+        var mod10 = n % 10;
+        var mod100 = n % 100;
+
+        if (mod10 === 1 && mod100 !== 11) return one;
+        if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return few;
+        return many;
+    }
+
+    function pad(n) {
+        return (n < 10 ? '0' : '') + n;
+    }
+
+    /** «Сегодня 18:30», «Завтра», «Через 3 дня», «12 ноя». */
+    function whenText(at, now) {
+        var date = new Date(at);
+        var today = new Date(now);
+        var days = Math.round((
+            new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime() -
+            new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime()
+        ) / 86400000);
+
+        if (days <= 0) return 'Сегодня ' + pad(date.getHours()) + ':' + pad(date.getMinutes());
+        if (days === 1) return 'Завтра';
+        if (days < 7) return 'Через ' + days + ' ' + plural(days, 'день', 'дня', 'дней');
+
+        return date.getDate() + ' ' + MONTHS[date.getMonth()] + (date.getFullYear() !== today.getFullYear() ? ' ' + date.getFullYear() : '');
+    }
+
+    /** Текст плашки расписания или '' (нечего показать). */
+    function scheduleText(anime, now) {
+        now = now || Date.now();
+
+        if (anime.status !== 'ongoing' && anime.status !== 'anons') return '';
+
+        var entry = calendar.map ? calendar.map[anime.id] : null;
+        var prefix = anime.status === 'anons' ? 'Старт ' : '';
+
+        if (entry && entry.at > now) {
+            var text = whenText(entry.at, now);
+            return prefix ? prefix + text.charAt(0).toLowerCase() + text.slice(1) : text;
+        }
+
+        // Анонс без даты в календаре (дальше месяца) — по дате начала показа.
+        if (anime.status === 'anons' && /^\d{4}-\d\d-\d\d$/.test(anime.aired_on || '')) {
+            var parts = anime.aired_on.split('-');
+            var startAt = new Date(+parts[0], +parts[1] - 1, +parts[2]).getTime();
+
+            if (startAt > now) return prefix + whenText(startAt, now).toLowerCase().replace(/^сегодня.*/, 'сегодня');
+        }
+
+        return '';
+    }
+
+    /** Жёлтая плашка расписания: место «качества», у аниме оно свободно. */
+    function refreshSchedule(root, card) {
+        if (!root || !root.querySelector || !card.shikimori) return;
+
+        var view = root.querySelector('.card__view');
+        if (!view) return;
+
+        var text = scheduleText(card.shikimori);
+        var badge = view.querySelector('.' + ID + '__schedule');
+
+        if (!text) {
+            if (badge) badge.parentNode.removeChild(badge);
+            return;
+        }
+
+        if (!badge) {
+            badge = document.createElement('div');
+            badge.className = 'card__quality ' + ID + '__schedule';
+            view.appendChild(badge);
+        }
+
+        badge.textContent = text;
     }
 
     /* ------------------------------------------------------------------ *
@@ -355,6 +644,12 @@
         catch (error) {}
 
         return '';
+    }
+
+    /** Обновить плашки, зависящие от времени и истории: прогресс и расписание. */
+    function refreshCard(root, card) {
+        refreshProgress(root, card);
+        refreshSchedule(root, card);
     }
 
     /** Постоянная метка «на какой серии остановился» внизу постера. */
@@ -589,7 +884,11 @@
         if (state.season) parts.push(seasonTitle(state.season));
         if (state.score) parts.push(scoreTitle(state.score));
 
-        return 'Shikimori — онгоинги' + (parts.length ? ' · ' + parts.join(' · ') : '');
+        var section = currentSection();
+
+        if (orderFor(section) === 'soon') parts.unshift('скоро выйдут');
+
+        return 'Shikimori — ' + SECTIONS[section].toLowerCase() + (parts.length ? ' · ' + parts.join(' · ') : '');
     }
 
     /* ---------------------------- Жанры ------------------------------- */
@@ -778,25 +1077,41 @@
 
         function main() {
             var state = filterState();
-            var order = get('order', 'popularity');
+            var section = currentSection();
+            var order = orderFor(section);
             var kind = get('kind', 'tv_ona');
             var scores = [{ value: '', title: 'Любой' }];
 
             for (var i = 0; i < SCORES.length; i++) scores.push({ value: SCORES[i], title: 'от ' + SCORES[i] });
 
+            var sections = [];
+            for (var n in SECTIONS) sections.push({ value: n, title: SECTIONS[n] });
+
+            // «Скоро выйдут» есть только у разделов с календарём.
+            var calendarSection = section === 'ongoing' || section === 'anons';
             var orders = [];
-            for (var o in ORDERS) orders.push({ value: o, title: ORDERS[o] });
+            for (var o in ORDERS) {
+                if (o !== 'soon' || calendarSection) orders.push({ value: o, title: ORDERS[o] });
+            }
 
             var kinds = [];
             for (var k in KIND_NAMES) kinds.push({ value: k, title: KIND_NAMES[k] });
 
             var items = [
+                { title: 'Раздел', subtitle: SECTIONS[section], action: 'section' },
                 { title: 'Жанры и темы', subtitle: state.genres.length ? escape(genreNames(state.genres)) : 'Любые', action: 'genres' },
-                { title: 'Год начала показа', subtitle: state.season ? seasonTitle(state.season) : 'Любой', action: 'season' },
-                { title: 'Оценка Shikimori', subtitle: scoreTitle(state.score), action: 'score' },
-                { title: 'Сортировка', subtitle: ORDERS[order] || ORDERS.popularity, action: 'order' },
-                { title: 'Формат', subtitle: KIND_NAMES[kind] || KIND_NAMES.tv_ona, action: 'kind' }
+                {
+                    title: 'Год начала показа',
+                    subtitle: state.season ? seasonTitle(state.season) : section === 'released' ? 'Два последних сезона' : 'Любой',
+                    action: 'season'
+                },
+                { title: 'Оценка Shikimori', subtitle: scoreTitle(state.score), action: 'score' }
             ];
+
+            // У «Топа» сортировка одна — по рейтингу.
+            if (section !== 'top') items.push({ title: 'Сортировка', subtitle: ORDERS[order], action: 'order' });
+
+            items.push({ title: 'Формат', subtitle: KIND_NAMES[kind] || KIND_NAMES.tv_ona, action: 'kind' });
 
             if (activeFilters()) items.push({ title: 'Сбросить фильтры', action: 'reset' });
 
@@ -804,6 +1119,7 @@
                 title: 'Фильтр',
                 items: items,
                 onSelect: function (item) {
+                    if (item.action === 'section') single('Раздел', sections, section, 'section');
                     if (item.action === 'genres') genres();
                     if (item.action === 'season') single('Год начала показа', seasonOptions(), state.season, 'season');
                     if (item.action === 'score') single('Оценка Shikimori', scores, state.score, 'score');
@@ -823,9 +1139,15 @@
         main();
     }
 
-    /** Применить фильтр: пересоздать текущий экран каталога с первой страницы. */
+    /**
+     * Применить фильтр: пересоздать экран каталога с первой страницы.
+     * Фильтр открыли не из каталога (ряд на главной) — открываем каталог.
+     */
     function applyFilter() {
-        Lampa.Activity.replace({ page: 1, title: catalogTitle() });
+        var active = Lampa.Activity.active();
+
+        if (active && active.component === COMPONENT) Lampa.Activity.replace({ page: 1, title: catalogTitle() });
+        else openCatalog();
     }
 
     /**
@@ -1157,6 +1479,9 @@
 
         opened = catalogCard ? { card: catalogCard, id: match.id } : null;
 
+        // Оценку тайтла из каталога знаем точно — полной карточке не придётся искать.
+        if (catalogCard && catalogCard.shikimori) rememberRating(match.method, match.id, catalogCard.shikimori);
+
         Lampa.Activity.push({
             url: '',
             component: 'full',
@@ -1188,6 +1513,164 @@
             method: movie.original_name ? 'tv' : 'movie',
             title: movie.name || movie.title || entry.title,
             original: original
+        });
+    }
+
+    /* ------------------------------------------------------------------ *
+     * Рейтинг Shikimori в полной карточке
+     *
+     * Для тайтлов из каталога оценка известна сразу. Для аниме, открытых
+     * откуда угодно ещё (поиск, история, раздел «Аниме»), ищем на Shikimori
+     * по оригинальному названию и году. Результат — и «не нашли» тоже —
+     * кэшируется, чтобы не ходить в сеть при каждом открытии.
+     * ------------------------------------------------------------------ */
+
+    function ratingKey(method, id) {
+        return method + '_' + id;
+    }
+
+    function ratingsAll() {
+        var all = Lampa.Storage.get(key('ratings'), '{}');
+        return all && typeof all === 'object' ? all : {};
+    }
+
+    function ratingSave(method, id, value) {
+        var all = ratingsAll();
+        var keys = [];
+
+        value.time = Date.now();
+        all[ratingKey(method, id)] = value;
+
+        for (var k in all) keys.push(k);
+
+        if (keys.length > CACHE_LIMIT) {
+            keys.sort(function (a, b) { return (all[a].time || 0) - (all[b].time || 0); });
+            for (var i = 0; i < keys.length - CACHE_LIMIT; i++) delete all[keys[i]];
+        }
+
+        Lampa.Storage.set(key('ratings'), all);
+    }
+
+    function rememberRating(method, id, anime) {
+        var value = parseFloat(anime.score) || 0;
+        if (value > 0) ratingSave(method, id, { shikimori: anime.id, score: value });
+    }
+
+    function isAnimeMovie(movie) {
+        var lang = movie.original_language;
+        var genres = movie.genres || [];
+        var animation = false;
+
+        for (var i = 0; i < genres.length; i++) {
+            if (genres[i] === 16 || (genres[i] && genres[i].id === 16)) animation = true;
+        }
+
+        return animation && (lang === 'ja' || lang === 'zh' || lang === 'ko');
+    }
+
+    /**
+     * Лучший кандидат из поиска Shikimori. Год обязан совпасть (±1 — сдвиг
+     * премьеры между странами), дальше очки за название, тип и позицию в выдаче.
+     * Для сериала из нескольких сезонов это первый сезон — его год и есть год TMDB.
+     */
+    function pickShikimori(list, movie) {
+        var serial = !!movie.original_name;
+        var year = yearOf(movie.first_air_date || movie.release_date);
+        var names = {};
+        var best = null;
+        var bestPoints = 0;
+
+        var titles = [movie.original_name, movie.original_title, movie.name, movie.title];
+        for (var t = 0; t < titles.length; t++) {
+            var n = normalize(titles[t]);
+            if (n) names[n] = true;
+        }
+
+        for (var i = 0; i < list.length; i++) {
+            var anime = list[i];
+            if (!anime || !anime.id) continue;
+
+            var aired = yearOf(anime.aired_on);
+            if (!year || !aired || Math.abs(aired - year) > 1) continue;
+
+            var points = aired === year ? 2 : 0;
+
+            if (names[normalize(anime.russian)] || names[normalize(anime.name)]) points += 3;
+            if ((anime.kind === 'movie') === !serial) points += 1;
+            if (i === 0) points += 1;
+
+            if (points > bestPoints) {
+                best = anime;
+                bestPoints = points;
+            }
+        }
+
+        return bestPoints >= 3 ? best : null;
+    }
+
+    /** done(anime | null). Сначала оригинальное (японское) название, потом локализованное. */
+    function findOnShikimori(net, movie, done) {
+        var queries = [];
+        var candidates = [movie.original_name || movie.original_title, movie.name || movie.title];
+
+        for (var i = 0; i < candidates.length; i++) {
+            var q = String(candidates[i] || '').trim();
+            if (q.length >= 2 && queries.indexOf(q) < 0) queries.push(q);
+        }
+
+        function next() {
+            var query = queries.shift();
+            if (!query) return done(null);
+
+            shikimori(net, '/api/animes?limit=10&search=' + encodeURIComponent(query) +
+                (get('censored', true) ? '&censored=true' : ''), function (json) {
+                var found = pickShikimori(isArray(json) ? json : [], movie);
+                if (found) done(found);
+                else next();
+            }, next);
+        }
+
+        next();
+    }
+
+    function showRating(render, value) {
+        var root = $(render);
+        var line = root.find('.full-start-new__rate-line');
+        if (!line.length) line = root.find('.full-start__rate-line');
+        if (!line.length || line.find('.rate--shikimori').length) return;
+
+        // Разметка как у родных TMDB/IMDB/KP — стили Lampa подхватят.
+        var rate = $('<div class="full-start__rate rate--shikimori"><div></div><div class="source--name">Shikimori</div></div>');
+        rate.find('div').eq(0).text(value >= 10 ? '10' : String(value));
+
+        line.removeClass('hide').append(rate);
+    }
+
+    function onFullRating(e) {
+        if (!get('full_rating', true)) return;
+
+        var movie = e.data && e.data.movie;
+        if (!movie || !movie.id) return;
+
+        var render = e.body || (e.object && e.object.activity && e.object.activity.render());
+        if (!render) return;
+
+        var method = movie.original_name ? 'tv' : 'movie';
+        var cached = ratingsAll()[ratingKey(method, movie.id)];
+        var ttl = cached && cached.score ? RATING_TTL : RATING_MISS_TTL;
+
+        if (cached && Date.now() - (cached.time || 0) < ttl) {
+            if (cached.score) showRating(render, cached.score);
+            return;
+        }
+
+        if (!isAnimeMovie(movie)) return;
+
+        findOnShikimori(new Lampa.Reguest(), movie, function (anime) {
+            var value = anime ? parseFloat(anime.score) || 0 : 0;
+
+            ratingSave(method, movie.id, { shikimori: anime ? anime.id : 0, score: value });
+            if (value > 0) showRating(render, value);
         });
     }
 
@@ -1348,9 +1831,30 @@
      */
     function pager(net, modern) {
         var ended = false;
+        var soon = orderFor(currentSection()) === 'soon';
+        var all = null;
+
+        // Календарь — в фоне: плашки расписания появятся, когда он придёт.
+        if (!soon) loadCalendar(net, function () {});
+
+        function slice(page) {
+            var results = all.slice((page - 1) * PAGE_LIMIT, page * PAGE_LIMIT);
+            ended = page * PAGE_LIMIT >= all.length;
+
+            return { results: results, page: page, total_pages: ended ? page : page + 100 };
+        }
 
         return function (page, ok, fail) {
             if (ended) return ok({ results: [], page: page, total_pages: page });
+
+            if (soon) {
+                if (all) return ok(slice(page));
+
+                return loadSoon(net, modern, function (cards) {
+                    all = cards;
+                    ok(slice(page));
+                }, fail);
+            }
 
             loadPage(net, page, modern, function (data) {
                 ended = !data.more;
@@ -1414,14 +1918,14 @@
                 item.use({
                     onCreate: function () {
                         addBadge(this.html, card);
-                        refreshProgress(this.html, card);
+                        refreshCard(this.html, card);
                     },
                     // Watched шлёт update, когда меняется прогресс просмотра.
                     onUpdate: function () {
-                        refreshProgress(this.html, card);
+                        refreshCard(this.html, card);
                     },
                     onFocus: function () {
-                        refreshProgress(this.html, card);
+                        refreshCard(this.html, card);
                         Lampa.Background.change(Lampa.Utils.cardImgBackground(card));
                     },
                     onEnter: function () {
@@ -1513,12 +2017,12 @@
                 showMenu(card, function () { fadeHidden(item.render(true)); });
             };
             item.onFocus = function (target, data) {
-                refreshProgress(item.render(true), card);
+                refreshCard(item.render(true), card);
                 if (focus) focus.call(item, target, data);
             };
 
             addBadge(item.render(true), card);
-            refreshProgress(item.render(true), card);
+            refreshCard(item.render(true), card);
         };
 
         var button = null;
@@ -1575,6 +2079,78 @@
         });
     }
 
+    /**
+     * Ряд «Онгоинги Shikimori» на главной и вверху встроенного раздела «Аниме»
+     * (Lampa 3, ContentRows). Lampa сама добавляет для ряда переключатель
+     * в Настройки -> «Каналы». Нажатие на карточку и «Ещё» перехватываем
+     * через onlyEnter/onlyMore: иначе Lampa открыла бы их как карточки TMDB.
+     */
+    function addMainRow() {
+        if (!isModern() || !Lampa.ContentRows || !Lampa.ContentRows.add) return;
+
+        Lampa.ContentRows.add({
+            name: ID + '_ongoing',
+            title: 'Shikimori: онгоинги',
+            index: 1,
+            screen: ['main', 'category'],
+            call: function (params, screen) {
+                if (screen === 'category' && (!params || params.url !== 'anime')) return;
+
+                return function (call) {
+                    var net = new Lampa.Reguest();
+
+                    loadCalendar(net, function () {});
+
+                    loadPage(net, 1, true, function (data) {
+                        var results = data.results.slice(0, ROW_LIMIT);
+
+                        for (var i = 0; i < results.length; i++) results[i].params.emit = rowEmit(results[i]);
+
+                        call({
+                            title: 'Онгоинги Shikimori',
+                            results: results,
+                            // total_pages > 1 — Lampa покажет «Ещё».
+                            total_pages: 2,
+                            params: { emit: { onlyMore: openOngoing } }
+                        });
+                    }, function () {
+                        call({ title: 'Онгоинги Shikimori', results: [] });
+                    }, { section: 'ongoing', order: 'popularity', plain: true });
+                };
+            }
+        });
+    }
+
+    /** «Ещё» у ряда онгоингов ведёт именно в онгоинги, а не в последний раздел. */
+    function openOngoing() {
+        Lampa.Storage.set(key('section'), 'ongoing');
+        openCatalog();
+    }
+
+    /** Обработчики карточки ряда: те же, что в каталоге. */
+    function rowEmit(card) {
+        return {
+            onCreate: function () {
+                addBadge(this.html, card);
+                refreshCard(this.html, card);
+            },
+            onUpdate: function () {
+                refreshCard(this.html, card);
+            },
+            onFocus: function () {
+                refreshCard(this.html, card);
+            },
+            onlyEnter: function () {
+                openCard(card);
+            },
+            onlyLong: function () {
+                var html = this.html;
+
+                showMenu(card, function () { fadeHidden(html); });
+            }
+        };
+    }
+
     function addMenu() {
         if ($('.menu .menu__item[data-action="' + ID + '"]').length) return;
 
@@ -1613,9 +2189,12 @@
         var domains = {};
         for (var i = 0; i < MIRRORS.length; i++) domains[MIRRORS[i]] = MIRRORS[i];
 
+        param('section', 'select', 'ongoing', 'Раздел каталога', '', SECTIONS);
         param('order', 'select', 'popularity', 'Сортировка', '', ORDERS);
         param('kind', 'select', 'tv_ona', 'Форматы', '', KIND_NAMES);
         param('censored', 'trigger', true, 'Скрывать 18+');
+        param('full_rating', 'trigger', true, 'Рейтинг Shikimori в карточке',
+            'Оценка Shikimori рядом с TMDB и IMDb в полной карточке аниме');
         param('domain', 'select', MIRRORS[0], 'Домен Shikimori',
             'При недоступности автоматически пробуются остальные зеркала', domains, function () {
                 aliveMirror = '';
@@ -1642,10 +2221,27 @@
         Lampa.Component.add(COMPONENT, isModern() ? componentModern : componentLegacy);
 
         Lampa.Listener.follow('full', function (e) {
-            if (e.type === 'complite' && e.data) onFullLoaded(e.data.movie);
+            if (e.type !== 'complite' || !e.data) return;
+
+            onFullLoaded(e.data.movie);
+
+            try {
+                onFullRating(e);
+            }
+            catch (error) {
+                // Карточка не должна падать из-за рейтинга.
+                console.log('Shikimori', 'rating error', error);
+            }
         });
 
         addMenu();
+
+        try {
+            addMainRow();
+        }
+        catch (error) {
+            console.log('Shikimori', 'row error', error);
+        }
 
         try {
             addSettings();
@@ -1663,6 +2259,10 @@
             score: score,
             progress: progressText,
             filter: function () { openFilter(applyFilter); },
+            badge: badgeText,
+            schedule: scheduleText,
+            when: whenText,
+            parseIso: parseIso,
             open: openCatalog
         };
 
