@@ -1,5 +1,5 @@
 /**
- * Shikimori Catalog v1.0.0
+ * Shikimori Catalog v1.1.0
  * Каталог онгоингов с Shikimori в боковом меню Lampa.
  * По нажатию на постер находит тайтл в TMDB и открывает встроенную карточку Lampa
  * (со всеми её кнопками: онлайн, торренты, трейлеры, закладки).
@@ -13,6 +13,9 @@
  *      живут внутри одного сериала, а на Shikimori — отдельными тайтлами.
  *   4. Уверенного совпадения нет — показываем список кандидатов.
  *
+ * История просмотра: после сопоставления карточка каталога получает поля TMDB,
+ * поэтому на ней видно, на какой серии остановились (как на обычных карточках).
+ *
  * Поддерживает Lampa 3.x (Lampa.Maker) и 2.x (InteractionCategory).
  * ES5 — совместимость с WebOS 3–4 и Tizen 2.4.
  */
@@ -20,7 +23,7 @@
     'use strict';
 
     var ID = 'shikimori_catalog';
-    var VERSION = '1.0.0';
+    var VERSION = '1.1.0';
     var COMPONENT = 'shikimori_catalog';
 
     /** Зеркала Shikimori: при сетевой ошибке пробуем следующее. */
@@ -172,7 +175,8 @@
         var image = anime.image ? anime.image.original || anime.image.preview || '' : '';
 
         var card = {
-            // Строковый id: числовой мог бы совпасть с id TMDB и подхватить чужие закладки.
+            // Пока нет сопоставления — строковый id: числовой мог бы совпасть
+            // с id TMDB и подхватить чужие закладки. После — настоящий id TMDB (linkCard).
             id: 'shikimori_' + anime.id,
             shikimori: anime,
             title: anime.russian || anime.name,
@@ -181,12 +185,16 @@
             vote_average: parseFloat(anime.score) || 0
         };
 
-        // Lampa 3: только модули отрисовки и событий. Без избранного, истории
-        // и контекстного меню — они рассчитаны на карточки TMDB.
+        // Lampa 3: модули отрисовки, событий и «просмотренных серий» (Watched).
+        // Без избранного и контекстного меню: до сопоставления они бы писали
+        // в закладки данные Shikimori вместо TMDB.
         if (modern) {
             var mask = Lampa.Maker.module('Card');
-            card.params = { module: mask.only('Card', 'Release', 'Ratting', 'Style', 'Callback') };
+            card.params = { module: mask.only('Card', 'Release', 'Ratting', 'Style', 'Watched', 'Callback') };
         }
+
+        var cached = cacheGet(anime.id);
+        if (cached) linkCard(card, cached);
 
         return card;
     }
@@ -222,10 +230,121 @@
         var anime = card.shikimori;
         if (!view || !anime) return;
 
+        // Lampa 2 сама рисует «TV» для карточек с original_name — заменяем своей плашкой.
+        var old = view.querySelector('.card__type');
+        if (old) old.parentNode.removeChild(old);
+
         var badge = document.createElement('div');
         badge.className = 'card__type';
         badge.textContent = (anime.episodes_aired || 0) + (anime.episodes ? '/' + anime.episodes : '') + ' эп.';
         view.appendChild(badge);
+    }
+
+    /* ------------------------------------------------------------------ *
+     * История просмотра
+     *
+     * Прогресс в Lampa привязан к карточке TMDB: Timeline ищет по id и хэшу
+     * оригинального названия, онлайн-плагины пишут последнюю серию в
+     * online_watched_last по хэшу original_name (фильм — original_title).
+     * Поэтому сопоставленной карточке отдаём поля TMDB — и родной модуль
+     * Watched, и наша метка читают те же данные, что и у обычных карточек.
+     * ------------------------------------------------------------------ */
+
+    function linkCard(card, entry) {
+        if (!entry || !entry.original) return;
+
+        card.id = entry.id;
+        card.source = cardSource();
+        card.original_title = entry.original;
+
+        // original_name есть только у сериалов: по нему Lampa отличает их от фильмов.
+        if (entry.method === 'tv') card.original_name = entry.original;
+        else delete card.original_name;
+    }
+
+    function unlinkCard(card) {
+        card.id = 'shikimori_' + card.shikimori.id;
+        delete card.source;
+        delete card.original_name;
+        delete card.original_title;
+    }
+
+    function isLinked(card) {
+        return typeof card.id === 'number' && !!card.original_title;
+    }
+
+    var watchedLast = null;
+    var watchedLastTime = 0;
+
+    /**
+     * online_watched_last целиком: Storage.get каждый раз парсит JSON, а метка
+     * обновляется при каждом появлении карточки — держим копию пару секунд.
+     */
+    function readWatchedLast() {
+        var now = Date.now();
+
+        if (!watchedLast || now - watchedLastTime > 2000) {
+            var all = Lampa.Storage.get('online_watched_last', '{}');
+            watchedLast = all && typeof all === 'object' ? all : {};
+            watchedLastTime = now;
+        }
+
+        return watchedLast;
+    }
+
+    /** Текст метки прогресса или '' — если карточку ещё не смотрели. */
+    function progressText(card) {
+        if (!isLinked(card)) return '';
+
+        var serial = !!card.original_name;
+        var saved = readWatchedLast()[Lampa.Utils.hash(card.original_title)];
+
+        if (serial && saved && saved.episode) {
+            return (saved.season > 1 ? 'S' + saved.season + ' · ' : '') + 'Эп. ' + saved.episode;
+        }
+
+        if (!Lampa.Timeline || !Lampa.Timeline.watched) return '';
+
+        try {
+            if (serial) {
+                // Серии 1-го сезона с прогрессом: [{ep, view}] — берём последнюю.
+                var list = Lampa.Timeline.watched(card, true);
+                if (isArray(list) && list.length) return 'Эп. ' + list[list.length - 1].ep;
+            }
+            else {
+                var time = Lampa.Timeline.watched(card, true);
+                if (time && time.percent) return time.percent >= 90 ? 'Просмотрено' : time.percent + '%';
+            }
+        }
+        catch (error) {}
+
+        return '';
+    }
+
+    /** Постоянная метка «на какой серии остановился» внизу постера. */
+    function refreshProgress(root, card) {
+        if (!root || !root.querySelector) return;
+
+        var view = root.querySelector('.card__view');
+        if (!view) return;
+
+        var text = progressText(card);
+        var marker = view.querySelector('.' + ID + '__progress');
+
+        if (!text) {
+            if (marker) marker.parentNode.removeChild(marker);
+            return;
+        }
+
+        if (!marker) {
+            // Родные классы маркера закладок: так метка выглядит как «Смотрю» у обычных карточек.
+            marker = document.createElement('div');
+            marker.className = 'card__marker card__marker--look ' + ID + '__progress';
+            marker.appendChild(document.createElement('span'));
+            view.appendChild(marker);
+        }
+
+        marker.firstChild.textContent = text;
     }
 
     /* ------------------------------------------------------------------ *
@@ -246,7 +365,14 @@
         var all = cacheAll();
         var ids = [];
 
-        all[shikimoriId] = { id: match.id, method: match.method, title: match.title || '', time: Date.now() };
+        all[shikimoriId] = {
+            id: match.id,
+            method: match.method,
+            title: match.title || '',
+            // Оригинальное название TMDB — ключ истории просмотра (см. linkCard).
+            original: match.original || '',
+            time: Date.now()
+        };
 
         for (var id in all) ids.push(id);
 
@@ -546,11 +672,22 @@
      * Открытие карточки
      * ------------------------------------------------------------------ */
 
-    function openFull(match) {
+    /** Карточка каталога, для которой открыта полная карточка TMDB (см. onFullLoaded). */
+    var opened = null;
+
+    /** Запомнить сопоставление и сразу привязать карточку каталога к TMDB. */
+    function remember(card, match) {
+        cacheSet(card.shikimori.id, match);
+        linkCard(card, cacheGet(card.shikimori.id));
+    }
+
+    function openFull(match, catalogCard) {
         var source = cardSource();
         var card = match.card || { id: match.id };
 
         card.source = source;
+
+        opened = catalogCard ? { card: catalogCard, id: match.id } : null;
 
         Lampa.Activity.push({
             url: '',
@@ -559,6 +696,30 @@
             method: match.method,
             card: card,
             source: source
+        });
+    }
+
+    /**
+     * Полная карточка загрузилась: дописываем в кэш оригинальное название.
+     * Нужно, когда TMDB id пришёл без названия (ARM -> сезон или фильм)
+     * или сопоставление сохранено старой версией плагина.
+     */
+    function onFullLoaded(movie) {
+        if (!opened || !movie || movie.id !== opened.id) return;
+
+        var card = opened.card;
+        var original = movie.original_name || movie.original_title;
+        var entry = cacheGet(card.shikimori.id);
+
+        opened = null;
+
+        if (!entry || entry.id !== movie.id || !original || entry.original === original) return;
+
+        remember(card, {
+            id: movie.id,
+            method: movie.original_name ? 'tv' : 'movie',
+            title: movie.name || movie.title || entry.title,
+            original: original
         });
     }
 
@@ -603,8 +764,8 @@
             title: 'TMDB: ' + card.title,
             items: items,
             onSelect: function (item) {
-                cacheSet(card.shikimori.id, item.match);
-                openFull(item.match);
+                remember(card, item.match);
+                openFull(item.match, card);
             },
             onBack: function () {
                 Lampa.Controller.toggle(controller);
@@ -620,7 +781,7 @@
         var anime = card.shikimori;
         var cached = cacheGet(anime.id);
 
-        if (cached) return openFull(cached);
+        if (cached) return openFull(cached, card);
 
         withLoading(function (net, finish) {
             searchByArm(net, anime, function (match) {
@@ -635,8 +796,8 @@
             });
         }, function (result) {
             if (result.match) {
-                cacheSet(anime.id, result.match);
-                openFull(result.match);
+                remember(card, result.match);
+                openFull(result.match, card);
             }
             else if (result.list.length) chooseMatch(card, result.list);
             else notFound(card);
@@ -682,6 +843,7 @@
                 if (item.action === 'manual') chooseManually(card);
                 if (item.action === 'reset') {
                     cacheRemove(anime.id);
+                    unlinkCard(card);
                     Lampa.Noty.show('Сопоставление сброшено');
                 }
             },
@@ -741,8 +903,14 @@
                 item.use({
                     onCreate: function () {
                         addBadge(this.html, card);
+                        refreshProgress(this.html, card);
+                    },
+                    // Watched шлёт update, когда меняется прогресс просмотра.
+                    onUpdate: function () {
+                        refreshProgress(this.html, card);
                     },
                     onFocus: function () {
+                        refreshProgress(this.html, card);
                         Lampa.Background.change(Lampa.Utils.cardImgBackground(card));
                     },
                     onEnter: function () {
@@ -779,9 +947,17 @@
         };
 
         comp.cardRender = function (params, card, item) {
+            var focus = item.onFocus;
+
             item.onEnter = function () { openCard(card); };
             item.onMenu = function () { showMenu(card); };
+            item.onFocus = function (target, data) {
+                refreshProgress(item.render(true), card);
+                if (focus) focus.call(item, target, data);
+            };
+
             addBadge(item.render(true), card);
+            refreshProgress(item.render(true), card);
         };
 
         comp.destroy = function () {
@@ -873,6 +1049,10 @@
 
         Lampa.Component.add(COMPONENT, isModern() ? componentModern : componentLegacy);
 
+        Lampa.Listener.follow('full', function (e) {
+            if (e.type === 'complite' && e.data) onFullLoaded(e.data.movie);
+        });
+
         addMenu();
 
         try {
@@ -889,6 +1069,7 @@
             normalize: normalize,
             context: searchContext,
             score: score,
+            progress: progressText,
             open: openCatalog
         };
 
