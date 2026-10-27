@@ -1,5 +1,5 @@
 /**
- * Shikimori Catalog v1.5.1
+ * Shikimori Catalog v1.6.2
  * Каталог онгоингов с Shikimori в боковом меню Lampa.
  * По нажатию на постер находит тайтл в TMDB и открывает встроенную карточку Lampa
  * (со всеми её кнопками: онлайн, торренты, трейлеры, закладки).
@@ -22,7 +22,11 @@
  *
  * Расписание: календарь Shikimori -> плашка «Сегодня 18:30» / «Завтра» / «Через 3 дня»
  * и сортировка «Скоро выйдут». Ряд онгоингов на главной и в разделе «Аниме» (Lampa 3).
- * Рейтинг Shikimori в полной карточке любого аниме; на постерах каталога — подписанная оценка.
+ * Рейтинг Shikimori в полной карточке любого аниме; на постерах каталога — оценка Shikimori.
+ *
+ * Постеры: новые постеры Shikimori (GraphQL) вместо устаревшего поля REST, постер
+ * из Lampa (TMDB) для уже сопоставленных и цепочка запасных при ошибке загрузки.
+ * Нет постера ни там, ни там — тайтл ищется в TMDB в фоне, и ставится постер из Lampa.
  * Скрытые возвращаются в Настройки -> Shikimori -> «Скрытые аниме».
  *
  * Поддерживает Lampa 3.x (Lampa.Maker) и 2.x (InteractionCategory).
@@ -32,7 +36,7 @@
     'use strict';
 
     var ID = 'shikimori_catalog';
-    var VERSION = '1.5.1';
+    var VERSION = '1.6.2';
     var COMPONENT = 'shikimori_catalog';
 
     /** Зеркала Shikimori: при сетевой ошибке пробуем следующее. */
@@ -89,6 +93,9 @@
 
     /** Карточек в ряду на главной. */
     var ROW_LIMIT = 20;
+
+    /** Пауза между фоновыми поисками постеров в TMDB. */
+    var POSTER_GAP = 400;
 
     /** «Скоро выйдут» собирает список целиком: не больше 10 страниц по 50. */
     var SOON_MAX_PAGES = 10;
@@ -276,7 +283,8 @@
     }
 
     function toCard(anime, host, modern) {
-        var image = anime.image ? anime.image.original || anime.image.preview || '' : '';
+        var cached = cacheGet(anime.id);
+        var chain = posterChain(anime, host, cached);
 
         var card = {
             // Пока нет сопоставления — строковый id: числовой мог бы совпасть
@@ -284,10 +292,14 @@
             id: 'shikimori_' + anime.id,
             shikimori: anime,
             title: anime.russian || anime.name,
-            poster: image && image.indexOf('http') !== 0 ? 'https://' + host + image : image,
-            // vote_average не задаём: родная плашка выглядела бы как оценка TMDB.
-            // Оценку Shikimori рисует addVote — на том же месте, с подписью.
-            release_date: anime.aired_on || ''
+            poster: chain[0] || '',
+            // Запасные постеры: следующий пробуется, если текущий не загрузился.
+            poster_chain: chain.slice(1),
+            // Ни Shikimori, ни TMDB постера не знают — найдём в TMDB в фоне.
+            poster_missing: !chain.length,
+            release_date: anime.aired_on || '',
+            // Оценка Shikimori: Lampa рисует её родной плашкой справа снизу.
+            vote_average: parseFloat(anime.score) || 0
         };
 
         // Lampa 3: модули отрисовки, событий и «просмотренных серий» (Watched).
@@ -298,7 +310,6 @@
             card.params = { module: mask.only('Card', 'Release', 'Ratting', 'Style', 'Watched', 'Callback') };
         }
 
-        var cached = cacheGet(anime.id);
         if (cached) linkCard(card, cached);
 
         return card;
@@ -325,16 +336,21 @@
         shikimori(net, listPath(page, options), function (json, host) {
             var list = isArray(json) ? json : [];
             var hidden = hiddenAll();
-            var results = [];
+            var shown = [];
 
             for (var i = 0; i < list.length && i < PAGE_LIMIT; i++) {
-                if (fits(list[i], hidden, section)) results.push(toCard(list[i], host, modern));
+                if (fits(list[i], hidden, section)) shown.push(list[i]);
             }
 
-            ok({
-                results: results,
-                page: page,
-                more: list.length >= PAGE_LIMIT
+            loadPosters(net, shown, function () {
+                var results = [];
+                for (var j = 0; j < shown.length; j++) results.push(toCard(shown[j], host, modern));
+
+                ok({
+                    results: results,
+                    page: page,
+                    more: list.length >= PAGE_LIMIT
+                });
             });
         }, fail);
     }
@@ -343,9 +359,9 @@
      * «Скоро выйдут»: сервер не умеет сортировать по следующей серии, поэтому
      * забираем весь отфильтрованный список (онгоингов — несколько страниц)
      * и сортируем по календарю. Без даты в календаре — в конце, по популярности.
-     * done(cards) — все карточки сразу, по страницам режет pager.
+     * done(list, host) — все тайтлы сразу; по страницам (и с постерами) режет pager.
      */
-    function loadSoon(net, modern, done, fail) {
+    function loadSoon(net, done, fail) {
         var section = currentSection();
         var hidden = hiddenAll();
         var collected = [];
@@ -391,29 +407,226 @@
                 return a.index - b.index;
             });
 
-            var cards = [];
-            for (var j = 0; j < order.length; j++) cards.push(toCard(order[j].anime, host, modern));
+            var list = [];
+            for (var j = 0; j < order.length; j++) list.push(order[j].anime);
 
-            done(cards);
+            done(list, host);
         }
     }
 
+    /* ------------------------------------------------------------------ *
+     * Постеры
+     *
+     * REST /api/animes отдаёт в image старое вложение. У тайтлов, чей постер
+     * загружен только в новую систему Shikimori (Poster, CDN), там заглушка
+     * или несуществующий файл — отсюда «404» на карточках. Новые постеры
+     * берём из GraphQL одним запросом на страницу. mainAlt — формат исходника
+     * (обычно JPEG): main — WebP, его не показывают старые Tizen и WebOS.
+     * ------------------------------------------------------------------ */
+
+    /** id Shikimori -> URL нового постера ('' — нет). На сессию. */
+    var posters = {};
+
+    /** done() — всегда, даже при ошибке: тогда останутся старые постеры. */
+    function loadPosters(net, list, done) {
+        var ids = [];
+
+        for (var i = 0; i < list.length; i++) {
+            if (list[i] && list[i].id && !(list[i].id in posters)) ids.push(list[i].id);
+        }
+
+        if (!ids.length) return done();
+
+        shikimori(net, '/api/graphql', function (json) {
+            var found = json && json.data && isArray(json.data.animes) ? json.data.animes : [];
+
+            for (var j = 0; j < found.length; j++) {
+                var anime = found[j];
+                var url = anime && anime.poster && anime.poster.mainAltUrl;
+
+                if (anime && anime.id) posters[anime.id] = typeof url === 'string' && /^https?:\/\//.test(url) ? url : '';
+            }
+
+            // Не вернулся — значит, постера нет; не спрашиваем снова.
+            for (var k = 0; k < ids.length; k++) {
+                if (!(ids[k] in posters)) posters[ids[k]] = '';
+            }
+
+            done();
+        }, function () {
+            done();
+        }, { query: '{ animes(ids: "' + ids.join(',') + '", limit: ' + ids.length + ') { id poster { mainAltUrl } } }' });
+    }
+
+    /** Старый постер из REST; заглушку missing_* сразу отбрасываем. */
+    function legacyPoster(anime, host) {
+        var image = anime.image ? anime.image.original || anime.image.preview || '' : '';
+
+        if (!image || /\/missing_/.test(image)) return '';
+
+        return image.indexOf('http') === 0 ? image : 'https://' + host + image;
+    }
+
+    /** Постер из Lampa: TMDB, если тайтл уже сопоставлен (см. cacheSet). */
+    function tmdbPoster(cached) {
+        if (!cached || !cached.poster || !Lampa.Api || !Lampa.Api.img) return '';
+        return Lampa.Api.img(cached.poster);
+    }
+
     /**
-     * Оценка Shikimori справа снизу: родной класс card__vote (то же место
-     * и вид, что у оценки TMDB) плюс подпись «Shiki».
+     * Постеры по порядку предпочтения, без пустых и повторов.
+     * «Shikimori»: новый -> старый -> TMDB. «Lampa»: TMDB -> новый -> старый.
      */
-    function addVote(root, card) {
-        if (!root || !root.querySelector || !card.shikimori) return;
+    function posterChain(anime, host, cached) {
+        var fresh = posters[anime.id] || '';
+        var legacy = legacyPoster(anime, host);
+        var lampa = tmdbPoster(cached);
+        var order = get('posters', 'shikimori') === 'tmdb' ? [lampa, fresh, legacy] : [fresh, legacy, lampa];
+        var chain = [];
 
-        var value = parseFloat(card.shikimori.score) || 0;
-        var view = root.querySelector('.card__view');
-        if (!view || !(value > 0) || view.querySelector('.' + ID + '__vote')) return;
+        for (var i = 0; i < order.length; i++) {
+            if (order[i] && chain.indexOf(order[i]) < 0) chain.push(order[i]);
+        }
 
-        var vote = document.createElement('div');
-        vote.className = 'card__vote ' + ID + '__vote';
-        vote.innerHTML = '<span>Shiki</span>';
-        vote.appendChild(document.createTextNode(value >= 10 ? '10' : value.toFixed(1)));
-        view.appendChild(vote);
+        return chain;
+    }
+
+    /**
+     * Постер не загрузился — пробуем следующий из цепочки, и только когда
+     * она кончилась, отдаём ошибку Lampa (её заглушка с «404»).
+     * Обёртываем onerror, который Lampa ставит картинке при создании карточки.
+     */
+    function posterFallback(img, card) {
+        if (!img || img.__shikimori_fallback) return;
+
+        var original = img.onerror;
+
+        img.__shikimori_fallback = true;
+        img.onerror = function () {
+            var next = card.poster_chain && card.poster_chain.shift();
+
+            if (next) {
+                // Lampa при повторе берёт data.poster — держим его в согласии.
+                card.poster = next;
+                img.src = next;
+                return;
+            }
+
+            // Все источники не загрузились — последняя надежда на TMDB.
+            requestPoster(card, img);
+
+            if (original) original.apply(this, arguments);
+        };
+
+        if (card.poster_missing) requestPoster(card, img);
+    }
+
+    /* ------------------------------------------------------------------ *
+     * Постер из Lampa (TMDB) для тайтлов без постера на Shikimori
+     *
+     * У свежих анонсов и продолжений постера на Shikimori часто ещё нет
+     * (их заглушка — картинка «404 not found»), а в TMDB продолжения живут
+     * внутри основного сериала, и постер там есть. Находим тайтл тем же
+     * сопоставлением, что и при открытии (только уверенные совпадения),
+     * сохраняем его — заодно потом карточка откроется сразу и появится
+     * история просмотра. Очередь по одному: часть запросов идёт в Shikimori.
+     * ------------------------------------------------------------------ */
+
+    var posterQueue = { ids: [], tasks: {}, misses: {}, busy: false, net: null };
+
+    function requestPoster(card, img) {
+        var id = card.shikimori && card.shikimori.id;
+        if (!id || posterQueue.misses[id]) return;
+
+        if (!posterQueue.tasks[id]) {
+            posterQueue.tasks[id] = [];
+            posterQueue.ids.push(id);
+        }
+
+        posterQueue.tasks[id].push({ card: card, img: img });
+        pumpPosters();
+    }
+
+    function pumpPosters() {
+        if (posterQueue.busy) return;
+
+        var id = posterQueue.ids.shift();
+        if (!id) return;
+
+        var tasks = posterQueue.tasks[id] || [];
+        if (!tasks.length) return pumpPosters();
+
+        posterQueue.busy = true;
+        posterQueue.net = posterQueue.net || new Lampa.Reguest();
+
+        resolvePoster(posterQueue.net, tasks[0].card.shikimori, function (path) {
+            delete posterQueue.tasks[id];
+
+            if (path) {
+                var url = Lampa.Api.img(path);
+                var entry = cacheGet(id);
+
+                for (var i = 0; i < tasks.length; i++) {
+                    var task = tasks[i];
+
+                    task.card.poster = url;
+                    task.card.poster_missing = false;
+                    if (entry) linkCard(task.card, entry);
+                    if (task.img) task.img.src = url;
+                }
+            }
+            else posterQueue.misses[id] = true;
+
+            setTimeout(function () {
+                posterQueue.busy = false;
+                pumpPosters();
+            }, POSTER_GAP);
+        });
+    }
+
+    /** done(poster_path | ''). Сопоставление сохраняется в кэш. */
+    function resolvePoster(net, anime, done) {
+        var cached = cacheGet(anime.id);
+
+        if (cached && cached.poster) return done(cached.poster);
+
+        function save(match, path) {
+            cacheSet(anime.id, {
+                id: match.id,
+                method: match.method,
+                title: match.title || '',
+                original: match.original || '',
+                poster: path
+            });
+
+            done(path);
+        }
+
+        function withMatch(match) {
+            if (!match) return done('');
+
+            if (match.card && match.card.poster_path && match.original) return save(match, match.card.poster_path);
+
+            // Нет постера или названия (ARM -> сезон, старый кэш) — карточка TMDB.
+            tmdb(net, match.method + '/' + encodeURIComponent(match.id), function (json) {
+                if (!json || !json.id) return done('');
+
+                save({
+                    id: json.id,
+                    method: match.method,
+                    title: json.name || json.title || match.title,
+                    original: json.original_name || json.original_title || match.original
+                }, json.poster_path || '');
+            }, function () {
+                done('');
+            });
+        }
+
+        if (cached) return withMatch(cached);
+
+        autoMatch(net, anime, function (result) {
+            withMatch(result.match);
+        });
     }
 
     /** Плашка слева сверху: серии онгоинга, «Анонс» или число серий. */
@@ -436,8 +649,6 @@
         // Lampa 2 сама рисует «TV» для карточек с original_name — заменяем своей плашкой.
         var old = view.querySelector('.card__type');
         if (old) old.parentNode.removeChild(old);
-
-        addVote(root, card);
 
         var text = badgeText(anime);
         if (!text) return;
@@ -724,6 +935,8 @@
             title: match.title || '',
             // Оригинальное название TMDB — ключ истории просмотра (см. linkCard).
             original: match.original || '',
+            // Постер TMDB — «постер из Lampa» для каталога (см. posterChain).
+            poster: match.poster || (match.card && match.card.poster_path) || '',
             time: Date.now()
         };
 
@@ -1515,26 +1728,29 @@
     }
 
     /**
-     * Полная карточка загрузилась: дописываем в кэш оригинальное название.
-     * Нужно, когда TMDB id пришёл без названия (ARM -> сезон или фильм)
-     * или сопоставление сохранено старой версией плагина.
+     * Полная карточка загрузилась: дописываем в кэш оригинальное название
+     * и постер TMDB. Нужно, когда TMDB id пришёл без них (ARM -> сезон
+     * или фильм) или сопоставление сохранено старой версией плагина.
      */
     function onFullLoaded(movie) {
         if (!opened || !movie || movie.id !== opened.id) return;
 
         var card = opened.card;
         var original = movie.original_name || movie.original_title;
+        var poster = movie.poster_path || '';
         var entry = cacheGet(card.shikimori.id);
 
         opened = null;
 
-        if (!entry || entry.id !== movie.id || !original || entry.original === original) return;
+        if (!entry || entry.id !== movie.id || !original) return;
+        if (entry.original === original && (entry.poster === poster || !poster)) return;
 
         remember(card, {
             id: movie.id,
             method: movie.original_name ? 'tv' : 'movie',
             title: movie.name || movie.title || entry.title,
-            original: original
+            original: original,
+            poster: poster || entry.poster
         });
     }
 
@@ -1722,17 +1938,6 @@
         });
     }
 
-    /** Подпись «Shiki» внутри родной плашки оценки — отличить от оценки TMDB. */
-    function addStyles() {
-        if (document.getElementById(ID + '_style')) return;
-
-        var style = document.createElement('style');
-        style.id = ID + '_style';
-        style.textContent = '.' + ID + '__vote span{font-size:0.55em;font-weight:400;opacity:0.75;margin-right:0.3em}';
-
-        document.head.appendChild(style);
-    }
-
     /**
      * Долгая операция под слоем загрузки с отменой по «Назад».
      * work(net, finish): finish срабатывает один раз; после отмены результат игнорируется.
@@ -1787,6 +1992,23 @@
         Lampa.Noty.show('Не нашёл «' + escape(card.title) + '» в TMDB');
     }
 
+    /**
+     * Сопоставление без участия пользователя: ARM, затем поиск по названиям.
+     * done({match, list}) — match только уверенный (ARM или очки >= ACCEPT).
+     */
+    function autoMatch(net, anime, done) {
+        searchByArm(net, anime, function (match) {
+            if (match) return done({ match: match, list: [] });
+
+            loadDetails(net, anime, function (full) {
+                searchByTitles(net, full, true, function (list) {
+                    var best = list[0];
+                    done({ match: best && best.score >= ACCEPT ? best : null, list: list });
+                });
+            });
+        });
+    }
+
     function openCard(card) {
         var anime = card.shikimori;
         var cached = cacheGet(anime.id);
@@ -1794,16 +2016,7 @@
         if (cached) return openFull(cached, card);
 
         withLoading(function (net, finish) {
-            searchByArm(net, anime, function (match) {
-                if (match) return finish({ match: match, list: [] });
-
-                loadDetails(net, anime, function (full) {
-                    searchByTitles(net, full, true, function (list) {
-                        var best = list[0];
-                        finish({ match: best && best.score >= ACCEPT ? best : null, list: list });
-                    });
-                });
-            });
+            autoMatch(net, anime, finish);
         }, function (result) {
             if (result.match) {
                 remember(card, result.match);
@@ -1892,26 +2105,34 @@
         var ended = false;
         var soon = orderFor(currentSection()) === 'soon';
         var all = null;
+        var host = '';
 
         // Календарь — в фоне: плашки расписания появятся, когда он придёт.
         if (!soon) loadCalendar(net, function () {});
 
-        function slice(page) {
-            var results = all.slice((page - 1) * PAGE_LIMIT, page * PAGE_LIMIT);
+        /** Страница «Скоро выйдут»: постеры — только для её тайтлов. */
+        function slice(page, ok) {
+            var part = all.slice((page - 1) * PAGE_LIMIT, page * PAGE_LIMIT);
             ended = page * PAGE_LIMIT >= all.length;
 
-            return { results: results, page: page, total_pages: ended ? page : page + 100 };
+            loadPosters(net, part, function () {
+                var results = [];
+                for (var i = 0; i < part.length; i++) results.push(toCard(part[i], host, modern));
+
+                ok({ results: results, page: page, total_pages: ended ? page : page + 100 });
+            });
         }
 
         return function (page, ok, fail) {
             if (ended) return ok({ results: [], page: page, total_pages: page });
 
             if (soon) {
-                if (all) return ok(slice(page));
+                if (all) return slice(page, ok);
 
-                return loadSoon(net, modern, function (cards) {
-                    all = cards;
-                    ok(slice(page));
+                return loadSoon(net, function (list, answered) {
+                    all = list;
+                    host = answered;
+                    slice(page, ok);
                 }, fail);
             }
 
@@ -1976,6 +2197,7 @@
 
                 item.use({
                     onCreate: function () {
+                        posterFallback(this.img, card);
                         addBadge(this.html, card);
                         refreshCard(this.html, card);
                     },
@@ -2080,6 +2302,7 @@
                 if (focus) focus.call(item, target, data);
             };
 
+            posterFallback(item.img, card);
             addBadge(item.render(true), card);
             refreshCard(item.render(true), card);
         };
@@ -2190,6 +2413,7 @@
     function rowEmit(card) {
         return {
             onCreate: function () {
+                posterFallback(this.img, card);
                 addBadge(this.html, card);
                 refreshCard(this.html, card);
             },
@@ -2251,6 +2475,11 @@
         param('section', 'select', 'ongoing', 'Раздел каталога', '', SECTIONS);
         param('order', 'select', 'popularity', 'Сортировка', '', ORDERS);
         param('kind', 'select', 'tv_ona', 'Форматы', '', KIND_NAMES);
+        param('posters', 'select', 'shikimori', 'Постеры', 'Lampa (TMDB) — для аниме, которые уже открывались. ' +
+            'Если постер не загрузился, пробуется другой источник', {
+            shikimori: 'Shikimori',
+            tmdb: 'Lampa (TMDB), если найдено'
+        });
         param('censored', 'trigger', true, 'Скрывать 18+');
         param('full_rating', 'trigger', true, 'Рейтинг Shikimori в карточке',
             'Оценка Shikimori рядом с TMDB и IMDb в полной карточке аниме');
@@ -2300,13 +2529,6 @@
         }
         catch (error) {
             console.log('Shikimori', 'row error', error);
-        }
-
-        try {
-            addStyles();
-        }
-        catch (error) {
-            console.log('Shikimori', 'style error', error);
         }
 
         try {
