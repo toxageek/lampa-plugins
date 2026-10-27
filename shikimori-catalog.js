@@ -1,5 +1,5 @@
 /**
- * Shikimori Catalog v1.6.1
+ * Shikimori Catalog v1.6.2
  * Каталог онгоингов с Shikimori в боковом меню Lampa.
  * По нажатию на постер находит тайтл в TMDB и открывает встроенную карточку Lampa
  * (со всеми её кнопками: онлайн, торренты, трейлеры, закладки).
@@ -22,7 +22,7 @@
  *
  * Расписание: календарь Shikimori -> плашка «Сегодня 18:30» / «Завтра» / «Через 3 дня»
  * и сортировка «Скоро выйдут». Ряд онгоингов на главной и в разделе «Аниме» (Lampa 3).
- * Рейтинг Shikimori в полной карточке любого аниме; на постерах каталога — подписанная оценка.
+ * Рейтинг Shikimori в полной карточке любого аниме; на постерах каталога — оценка Shikimori.
  *
  * Постеры: новые постеры Shikimori (GraphQL) вместо устаревшего поля REST, постер
  * из Lampa (TMDB) для уже сопоставленных и цепочка запасных при ошибке загрузки.
@@ -36,7 +36,7 @@
     'use strict';
 
     var ID = 'shikimori_catalog';
-    var VERSION = '1.6.1';
+    var VERSION = '1.6.2';
     var COMPONENT = 'shikimori_catalog';
 
     /** Зеркала Shikimori: при сетевой ошибке пробуем следующее. */
@@ -297,9 +297,9 @@
             poster_chain: chain.slice(1),
             // Ни Shikimori, ни TMDB постера не знают — найдём в TMDB в фоне.
             poster_missing: !chain.length,
-            // vote_average не задаём: родная плашка выглядела бы как оценка TMDB.
-            // Оценку Shikimori рисует addVote — на том же месте, с подписью.
-            release_date: anime.aired_on || ''
+            release_date: anime.aired_on || '',
+            // Оценка Shikimori: Lampa рисует её родной плашкой справа снизу.
+            vote_average: parseFloat(anime.score) || 0
         };
 
         // Lampa 3: модули отрисовки, событий и «просмотренных серий» (Watched).
@@ -629,24 +629,6 @@
         });
     }
 
-    /**
-     * Оценка Shikimori справа снизу: родной класс card__vote (то же место
-     * и вид, что у оценки TMDB) плюс подпись «Shiki».
-     */
-    function addVote(root, card) {
-        if (!root || !root.querySelector || !card.shikimori) return;
-
-        var value = parseFloat(card.shikimori.score) || 0;
-        var view = root.querySelector('.card__view');
-        if (!view || !(value > 0) || view.querySelector('.' + ID + '__vote')) return;
-
-        var vote = document.createElement('div');
-        vote.className = 'card__vote ' + ID + '__vote';
-        vote.innerHTML = '<span>Shiki</span>';
-        vote.appendChild(document.createTextNode(value >= 10 ? '10' : value.toFixed(1)));
-        view.appendChild(vote);
-    }
-
     /** Плашка слева сверху: серии онгоинга, «Анонс» или число серий. */
     function badgeText(anime) {
         if (anime.status === 'anons') return 'Анонс';
@@ -667,8 +649,6 @@
         // Lampa 2 сама рисует «TV» для карточек с original_name — заменяем своей плашкой.
         var old = view.querySelector('.card__type');
         if (old) old.parentNode.removeChild(old);
-
-        addVote(root, card);
 
         var text = badgeText(anime);
         if (!text) return;
@@ -1958,17 +1938,6 @@
         });
     }
 
-    /** Подпись «Shiki» внутри родной плашки оценки — отличить от оценки TMDB. */
-    function addStyles() {
-        if (document.getElementById(ID + '_style')) return;
-
-        var style = document.createElement('style');
-        style.id = ID + '_style';
-        style.textContent = '.' + ID + '__vote span{font-size:0.55em;font-weight:400;opacity:0.75;margin-right:0.3em}';
-
-        document.head.appendChild(style);
-    }
-
     /**
      * Долгая операция под слоем загрузки с отменой по «Назад».
      * work(net, finish): finish срабатывает один раз; после отмены результат игнорируется.
@@ -2560,13 +2529,6 @@
         }
         catch (error) {
             console.log('Shikimori', 'row error', error);
-        }
-
-        try {
-            addStyles();
-        }
-        catch (error) {
-            console.log('Shikimori', 'style error', error);
         }
 
         try {
