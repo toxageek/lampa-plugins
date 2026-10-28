@@ -1,35 +1,31 @@
 /**
- * BWA Button v3.1.0
- * Кнопка-ярлык в карточке фильма для запуска плагина BwaRC (bwa.ad/rc).
+ * BWA Button v3.2.0
+ * Кнопка-ярлык в карточке фильма для запуска плагина BWA Online (bwa.ad/rc).
  *
  * Логика выбора источника:
- *   1. Для карточки уже сохранён балансер в online_last_balanser -> не трогаем,
- *      BwaRC возьмёт его сам.
- *   2. Не сохранён -> пишем в online_balanser значение по типу контента
- *      (аниме -> animebesst, остальное -> filmix), BwaRC подхватит его как фолбэк.
+ *   1. Для карточки уже сохранён балансер в bwa_title_src -> не трогаем,
+ *      BWA возьмёт его сам.
+ *   2. Не сохранён -> пишем в bwa_title_src[movie.id] значение по типу контента
+ *      (аниме -> animevost, остальное -> filmix).
  *
- * Написано под BwaRC 1.7.1. ES5 — совместимость с WebOS 3–4 и Tizen 2.4.
+ * Написано под BWA 2.27.34. ES5 — совместимость с WebOS 3–4 и Tizen 2.4.
  */
 (function () {
     'use strict';
 
     var ID = 'bwa_button';
-    var VERSION = '3.1.2';
+    var VERSION = '3.2.0';
 
-    /** Компонент BwaRC: Lampa.Component.add('bwarch', component). */
-    var COMPONENT = 'bwarch';
+    /** Компонент BWA: Lampa.Component.add('bwa_online', component). */
+    var COMPONENT = 'bwa_online';
 
-    /** Родная кнопка BwaRC в карточке. */
-    var NATIVE_BUTTON = '.lampac--button';
+    /** Родная кнопка BWA в карточке. */
+    var NATIVE_BUTTON = '.view--bwa';
 
-    /** Ключи BwaRC, с которыми работаем. */
-    var K_LAST = 'online_last_balanser';   // { [movie.id]: 'balanser' } — приоритетный
-    var K_GLOBAL = 'online_balanser';      // 'balanser' — фолбэк
+    /** Ключ BWA: { [movie.id]: 'balanser' } — источник, выбранный для карточки. */
+    var K_LAST = 'bwa_title_src';
 
-    /**
-     * Источники BwaRC — строки из balansers_sync в rc.js
-     * (сервер отдаёт их как balanser || name.split(' ')[0] в нижнем регистре).
-     */
+    /** Источники BWA — поле balanser из ответа сервера /lite/events. */
     var SOURCES = {
         filmix: 'Filmix',
         collaps: 'Collaps',
@@ -140,7 +136,7 @@
     }
 
     function hasAnimeKeyword(movie) {
-        // Тот же признак, что BwaRC шлёт на сервер параметром anime=1.
+        // Тот же признак, что старый BwaRC слал на сервер параметром anime=1.
         if (!movie.keywords || !movie.keywords.results) return false;
 
         for (var i = 0; i < movie.keywords.results.length; i++) {
@@ -166,38 +162,27 @@
     /* ------------------------------------------------------------------ *
      * Выбор источника
      *
-     * BwaRC.startSource():
-     *   online_last_balanser[movie.id]  ->  online_balanser  ->  filter_sources[0]
+     * BWA при старте:
+     *   bwa_title_src[movie.id]  ->  peregon  ->  bwa_balanser  ->  первый доступный
      *
-     * Поэтому для «источника по умолчанию» достаточно записать online_balanser:
-     * если у карточки есть своя запись, она перебьёт наш фолбэк автоматически.
-     * Историю не читаем на запись и не мутируем — только смотрим, есть ли запись.
+     * peregon перебивает общий bwa_balanser, поэтому пишем прямо в запись карточки.
+     * Если источника для тайтла нет, BWA проигнорирует запись и пойдёт дальше по цепочке.
+     * Ручной выбор источника в BWA перезаписывает эту запись.
      * ------------------------------------------------------------------ */
 
-    function savedSource(movie) {
-        var last = Lampa.Storage.get(K_LAST, '{}');
-        return last[movie.id] || '';
-    }
-
     function applySource(movie) {
-        var saved = savedSource(movie);
-        var force = get('force', false);
+        var last = Lampa.Storage.get(K_LAST, '{}') || {};
+        var saved = last[movie.id] || '';
 
-        if (saved && !force) return saved;
+        if (saved && !get('force', false)) return saved;
 
         var type = detectType(movie);
         var fallback = get('src_' + type, DEFAULTS[type] || '');
 
         if (!fallback) return saved;
 
-        Lampa.Storage.set(K_GLOBAL, fallback);
-
-        // Принудительный режим: перебиваем и персональную запись карточки.
-        if (force && saved) {
-            var last = Lampa.Storage.get(K_LAST, '{}');
-            last[movie.id] = fallback;
-            Lampa.Storage.set(K_LAST, last);
-        }
+        last[movie.id] = fallback;
+        Lampa.Storage.set(K_LAST, last);
 
         return fallback;
     }
@@ -212,39 +197,34 @@
     }
 
     /**
-     * Прямой push. Повторяет то, что делает сам BwaRC, включая clarification_search.
-     * object.balanser НЕ передаём: в BwaRC он включает режим прямой ссылки
-     * (требует object.url) и ломает обычный поиск.
-     * lampac_custom_select не даёт сбросить источник, помеченный сервером как show:false.
+     * Прямой push. Повторяет то, что делает родная кнопка BWA, включая
+     * уточнённый поиск из bwa_clarify (ключ 's:<id>' для сериалов, 'm:<id>' для фильмов).
      */
-    function push(movie, source) {
-        var hash = Lampa.Utils.hash(movie.number_of_seasons ? movie.original_name : movie.original_title);
-        var clarification = Lampa.Storage.get('clarification_search', '{}');
+    function push(movie) {
+        var serial = movie.name || movie.first_air_date || movie.number_of_seasons || movie.seasons;
+        var clarify = (Lampa.Storage.get('bwa_clarify', '{}') || {})[(serial ? 's:' : 'm:') + movie.id] || '';
 
         Lampa.Activity.push({
             url: '',
-            title: Lampa.Lang.translate('title_online'),
+            title: 'BWA',
             component: COMPONENT,
-            search: clarification[hash] ? clarification[hash] : movie.title,
+            search: clarify || movie.title || movie.name,
             search_one: movie.title,
             search_two: movie.original_title,
             movie: movie,
             page: 1,
-            clarification: clarification[hash] ? true : false,
-            lampac_custom_select: source || undefined
+            clarification: !!clarify
         });
     }
 
     function open(render, movie) {
-        if (!window.bwarch_plugin) {
-            Lampa.Noty.show('Плагин BwaRC не установлен или не загрузился');
+        if (!window.bwa_plugin) {
+            Lampa.Noty.show('Плагин BWA не установлен или не загрузился');
             return;
         }
 
-        var source = applySource(movie);
+        applySource(movie);
 
-        // Совместимый режим: BwaRC перед запуском вызывает resetTemplates(),
-        // восстанавливая свои шаблоны, если их перетёр другой lampac-совместимый плагин.
         if (get('mode', 'native') === 'native') {
             var native = nativeButton(render);
 
@@ -254,7 +234,7 @@
             }
         }
 
-        push(movie, source);
+        push(movie);
     }
 
     /* ------------------------------------------------------------------ *
@@ -405,7 +385,7 @@
             type: 'other',
             version: VERSION,
             name: 'BWA Button',
-            description: 'Кнопка быстрого запуска BwaRC с выбором источника по типу контента'
+            description: 'Кнопка быстрого запуска BWA с выбором источника по типу контента'
         };
     }
 
