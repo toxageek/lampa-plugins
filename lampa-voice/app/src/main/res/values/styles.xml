@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Системные темы без AppCompat: ноль зависимостей, APK ~30 КБ. -->
+    <style name="AppTheme" parent="@android:style/Theme.DeviceDefault.NoActionBar" />
+
+    <!-- Прозрачное окно: поверх текущего приложения видны только системный распознаватель и диалог. -->
+    <style name="VoiceTheme" parent="@android:style/Theme.Translucent.NoTitleBar">
+        <item name="android:windowAnimationStyle">@null</item>
+    </style>
+</resources>

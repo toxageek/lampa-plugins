@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Lampa Voice</string>
+    <string name="voice_label">Голосовой поиск</string>
+
+    <string name="speech_prompt">Что найти?</string>
+    <string name="type_title">Распознавание речи недоступно — введите запрос</string>
+    <string name="type_ok">Искать</string>
+    <string name="cancel">Отмена</string>
+
+    <string name="choose_lampa">Искать в Lampa</string>
+    <string name="choose_youtube">Искать на YouTube</string>
+    <string name="choose_google">Google (как раньше)</string>
+    <string name="choose_again">Сказать заново</string>
+
+    <string name="err_no_lampa">Lampa не найдена. Выберите приложение в настройках Lampa Voice</string>
+    <string name="err_open_failed">Не удалось открыть %1$s</string>
+    <string name="err_no_youtube">YouTube не установлен</string>
+    <string name="err_no_google">Google Assistant недоступен</string>
+
+    <string name="settings_title">Lampa Voice</string>
+    <string name="settings_subtitle">Голосовой поиск фильмов в Lampa из системного голосового меню</string>
+    <string name="btn_test">Проверить: сказать фразу</string>
+    <string name="btn_target">Приложение Lampa: %1$s</string>
+    <string name="btn_mode">После распознавания: %1$s</string>
+    <string name="btn_language">Язык распознавания: %1$s</string>
+    <string name="target_title">Какое приложение открывать</string>
+    <string name="target_auto">автоопределение</string>
+    <string name="target_auto_found">авто (%1$s)</string>
+    <string name="target_none">не найдено</string>
+    <string name="mode_ask">спрашивать, где искать</string>
+    <string name="mode_lampa">сразу искать в Lampa</string>
+    <string name="lang_system">как в системе</string>
+    <string name="status_title">Состояние</string>
+    <string name="status_assistant_yes">✔ Lampa Voice назначен ассистентом по умолчанию</string>
+    <string name="status_assistant_no">✘ Lampa Voice ещё не ассистент по умолчанию — кнопка микрофона откроет Google</string>
+    <string name="status_assistant_unknown">\? Не удалось проверить роль ассистента (Android ниже 10)</string>
+    <string name="setup_title">Настройка (один раз)</string>
+    <string name="setup_text">1. В Lampa: Настройки → Расширения → Добавить плагин:\n%1$s\n\n2. Назначьте Lampa Voice ассистентом с компьютера (adb):\nadb shell cmd role add-role-holder android.app.role.ASSISTANT %2$s\n\nВернуть Google:\nadb shell cmd role add-role-holder android.app.role.ASSISTANT com.google.android.katniss\n\n3. Если кнопка всё равно открывает Google — назначьте долгое нажатие микрофона на «Lampa Voice → Голосовой поиск» в приложении Button Mapper.</string>
+</resources>
