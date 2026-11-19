@@ -91,8 +91,9 @@ public final class SettingsActivity extends Activity {
         language.setText(getString(R.string.btn_language, languageName(prefs.language())));
 
         Boolean assistant = isAssistant();
-        status.setText(assistant == null ? R.string.status_assistant_unknown
-                : assistant ? R.string.status_assistant_yes : R.string.status_assistant_no);
+        status.setText(getString(assistant == null ? R.string.status_assistant_unknown
+                : assistant ? R.string.status_assistant_yes : R.string.status_assistant_no)
+                + "\n" + getString(KeyService.isEnabled(this) ? R.string.status_key_yes : R.string.status_key_no));
     }
 
     private void chooseTarget() {

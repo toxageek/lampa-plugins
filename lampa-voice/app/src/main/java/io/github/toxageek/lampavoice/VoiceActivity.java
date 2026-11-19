@@ -24,12 +24,17 @@ import java.util.ArrayList;
  */
 public final class VoiceActivity extends Activity {
 
+    /** Пакет приложения, из которого нажали микрофон (передаёт {@link KeyService}). */
+    static final String EXTRA_SOURCE = "io.github.toxageek.lampavoice.SOURCE";
+
     private static final int REQUEST_SPEECH = 1;
     private static final int MAX_QUERY = 200;
     private static final String STATE_WAITING = "waiting_speech";
+    private static final String STATE_SOURCE = "source";
 
     /** Ждём результат распознавания — после поворота/пересоздания не запускаем его второй раз. */
     private boolean waitingSpeech;
+    private String source;
     private AlertDialog dialog;
 
     @Override
@@ -37,6 +42,7 @@ public final class VoiceActivity extends Activity {
         super.onCreate(savedInstanceState);
         if (savedInstanceState != null) {
             waitingSpeech = savedInstanceState.getBoolean(STATE_WAITING, false);
+            source = savedInstanceState.getString(STATE_SOURCE);
             if (!waitingSpeech) finish();
             return;
         }
@@ -55,6 +61,7 @@ public final class VoiceActivity extends Activity {
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putBoolean(STATE_WAITING, waitingSpeech);
+        outState.putString(STATE_SOURCE, source);
     }
 
     @Override
@@ -64,6 +71,7 @@ public final class VoiceActivity extends Activity {
     }
 
     private void handle(Intent intent) {
+        source = intent == null ? null : intent.getStringExtra(EXTRA_SOURCE);
         String query = extractQuery(intent);
         if (query != null) onQuery(query);
         else startRecognition();
@@ -170,7 +178,10 @@ public final class VoiceActivity extends Activity {
      * ------------------------------------------------------------------ */
 
     private void onQuery(String query) {
-        if (Prefs.of(this).mode() == Prefs.Mode.LAMPA) sendToLampa(query);
+        // Нажали микрофон в YouTube / Twitch / Lampa — ищем там же, без вопроса.
+        if (source != null && source.equals(Targets.lampaPackage(this))) sendToLampa(query);
+        else if (source != null && Targets.searchIn(this, source, query)) finish();
+        else if (Prefs.of(this).mode() == Prefs.Mode.LAMPA) sendToLampa(query);
         else choose(query);
     }
 

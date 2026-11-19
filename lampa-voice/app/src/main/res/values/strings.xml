@@ -35,6 +35,10 @@
     <string name="status_assistant_yes">✔ Lampa Voice назначен ассистентом по умолчанию</string>
     <string name="status_assistant_no">✘ Lampa Voice ещё не ассистент по умолчанию — кнопка микрофона откроет Google</string>
     <string name="status_assistant_unknown">\? Не удалось проверить роль ассистента (Android ниже 10)</string>
+    <string name="status_key_yes">✔ Перехват кнопки микрофона включён</string>
+    <string name="status_key_no">— Перехват кнопки микрофона выключен (нужен, если кнопка молчит или открывает Google)</string>
+    <string name="key_service_label">Lampa Voice: кнопка микрофона</string>
+    <string name="key_service_description">Открывает голосовой поиск Lampa Voice по кнопке микрофона на пульте. Из YouTube и Twitch фраза уходит сразу в их поиск. Служба видит только нажатия кнопок ассистента и поиска и название открытого приложения, содержимое экрана не читает.</string>
     <string name="setup_title">Настройка (один раз)</string>
-    <string name="setup_text">1. В Lampa: Настройки → Расширения → Добавить плагин:\n%1$s\n\n2. Назначьте Lampa Voice ассистентом с компьютера (adb):\nadb shell cmd role add-role-holder android.app.role.ASSISTANT %2$s\n\nВернуть Google:\nadb shell cmd role add-role-holder android.app.role.ASSISTANT com.google.android.katniss\n\n3. Если кнопка всё равно открывает Google — назначьте долгое нажатие микрофона на «Lampa Voice → Голосовой поиск» в приложении Button Mapper.</string>
+    <string name="setup_text">1. В Lampa: Настройки → Расширения → Добавить плагин:\n%1$s\n\n2. Назначьте Lampa Voice ассистентом с компьютера (adb):\nadb shell cmd role add-role-holder android.app.role.ASSISTANT %2$s\n\nВернуть Google:\nadb shell cmd role add-role-holder android.app.role.ASSISTANT com.google.android.katniss\n\n3. Если кнопка молчит или всё равно открывает Google — включите перехват кнопки (adb):\nadb shell settings put secure enabled_accessibility_services %2$s/.KeyService\n(если там уже есть другие службы — допишите через двоеточие, см. README)</string>
 </resources>
