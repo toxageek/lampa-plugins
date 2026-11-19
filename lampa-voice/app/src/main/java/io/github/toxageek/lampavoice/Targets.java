@@ -29,6 +29,8 @@ final class Targets {
             "com.google.android.youtube",
     };
 
+    private static final String TWITCH_PACKAGE = "tv.twitch.android.app";
+
     /** Katniss — Google Assistant/поиск на Android TV и Google TV; второе — Google на телефоне. */
     private static final String[] GOOGLE_PACKAGES = {
             "com.google.android.katniss",
@@ -116,6 +118,25 @@ final class Targets {
     static boolean openLampa(Context context, String pkg) {
         Intent intent = launchIntent(context, pkg);
         return intent != null && start(context, intent);
+    }
+
+    /**
+     * Поиск внутри приложения, из которого нажали микрофон. {@code false} — приложение
+     * не умеет принимать запрос снаружи (например, Apple TV открывает пустой поиск).
+     */
+    static boolean searchIn(Context context, String pkg, String query) {
+        // YouTube Music на ТВ — оболочка над разделом «Музыка» YouTube: свой запрос теряет, поиск общий.
+        if (pkg.equals("com.google.android.youtube.tvmusic")) return openYouTube(context, query);
+        for (String youtube : YOUTUBE_PACKAGES) {
+            if (pkg.equals(youtube)) return openYouTube(context, query);
+        }
+        if (pkg.equals(TWITCH_PACKAGE)) {
+            // Twitch берёт всю строку после «?» как запрос, без имени параметра.
+            Intent search = new Intent(Intent.ACTION_VIEW, Uri.parse("twitch://search?" + Uri.encode(query)))
+                    .setPackage(TWITCH_PACKAGE);
+            return startIfResolvable(context, search);
+        }
+        return false;
     }
 
     static boolean openYouTube(Context context, String query) {

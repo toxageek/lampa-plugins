@@ -74,11 +74,35 @@ adb shell cmd role add-role-holder android.app.role.ASSISTANT com.google.android
 
 Откройте Lampa Voice из списка приложений — в разделе «Состояние» будет видно, назначен ли он.
 
-### Если кнопка всё равно открывает Google
+### Если кнопка молчит или всё равно открывает Google
 
-На некоторых пультах и прошивках кнопку Assistant обрабатывает сам Google, минуя
-системную роль ассистента. Тогда переназначьте кнопку приложением **Button Mapper**:
-долгое нажатие микрофона → «Ярлык / Активность» → **Lampa Voice → Голосовой поиск**.
+На некоторых прошивках кнопку микрофона обрабатывает сам Google (лаунчер / katniss),
+минуя роль ассистента. Если Google-лаунчер отключён (например, стоит AT4K), кнопка просто молчит.
+Так ведёт себя Xiaomi Google TV: микрофон приходит как keyCode 186 со scanCode 217.
+
+Для этого в приложении есть служба специальных возможностей «Lampa Voice: кнопка микрофона».
+Она ловит кнопки ассистента и поиска (`ASSIST`, `VOICE_ASSIST`, `SEARCH` и любую со scanCode 217 —
+Linux `KEY_SEARCH`) и открывает голосовой поиск. Содержимое экрана служба не читает —
+только имя открытого приложения, чтобы искать там же:
+
+| Где нажали микрофон | Куда уходит фраза |
+|---|---|
+| YouTube, YouTube Music | поиск YouTube (YouTube Music на ТВ — раздел YouTube, свой запрос он теряет) |
+| Twitch | поиск Twitch (`twitch://search?<фраза>`) |
+| Lampa | поиск Lampa |
+| Лаунчер и остальные (Apple TV не принимает запрос снаружи) | как в настройках: спросить или сразу Lampa |
+
+Включить (служба дописывается к уже включённым, например к AT4K):
+
+```bash
+adb shell 'cur=$(settings get secure enabled_accessibility_services); \
+  svc=io.github.toxageek.lampavoice/.KeyService; \
+  case "$cur" in null|"") new=$svc;; *"$svc"*) new=$cur;; *) new="$cur:$svc";; esac; \
+  settings put secure enabled_accessibility_services "$new"; settings put secure accessibility_enabled 1'
+```
+
+Выключить — уберите `io.github.toxageek.lampavoice/.KeyService` из того же списка
+(`settings get secure enabled_accessibility_services`).
 
 ## Настройки приложения
 
