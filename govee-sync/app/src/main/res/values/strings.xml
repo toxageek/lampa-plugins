@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Govee TV Sync</string>
+    <string name="settings_title">Govee TV Sync</string>
+    <string name="settings_subtitle">Автоматическое включение и выключение подсветки Govee (H6097 и др.) вместе с телевизором</string>
+
+    <string name="btn_sync_on">Синхронизация: Включена</string>
+    <string name="btn_sync_off">Синхронизация: Выключена</string>
+    <string name="btn_api_key">API-ключ Govee: %1$s</string>
+    <string name="btn_device">Устройство: %1$s</string>
+    <string name="btn_dream_on">Выключать при заставке (Ambient): Да</string>
+    <string name="btn_dream_off">Выключать при заставке (Ambient): Нет</string>
+    <string name="btn_boot_on">Включать при загрузке ТВ: Да</string>
+    <string name="btn_boot_off">Включать при загрузке ТВ: Нет</string>
+    <string name="btn_test_on">Проверить: Включить подсветку</string>
+    <string name="btn_test_off">Проверить: Выключить подсветку</string>
+
+    <string name="value_not_set">не задан</string>
+    <string name="value_not_selected">не выбрано (нажмите для поиска)</string>
+
+    <string name="dialog_api_key_title">Govee API Key</string>
+    <string name="dialog_api_key_hint">Вставьте ключ из Govee Home → Профиль → Настройки → Apply for API Key</string>
+    <string name="dialog_save">Сохранить</string>
+    <string name="dialog_cancel">Отмена</string>
+    <string name="dialog_devices_title">Выберите устройство Govee</string>
+    <string name="dialog_loading_devices">Загрузка списка устройств Govee…</string>
+    <string name="dialog_no_devices">Устройства не найдены. Проверьте API-ключ и подключение к интернету.</string>
+    <string name="dialog_enter_key_first">Сначала укажите API-ключ Govee (удобнее вставить с телефона через веб-адрес ниже)</string>
+
+    <string name="web_title">Быстрая настройка с телефона или ПК</string>
+    <string name="web_url">Откройте в браузере (в той же Wi-Fi сети): %1$s\nСервер работает только пока открыт этот экран.</string>
+    <string name="web_unavailable">Локальный IP не найден (проверьте Wi-Fi / Ethernet).</string>
+
+    <string name="status_title">Состояние</string>
+    <string name="status_service_running">Фоновая служба: работает</string>
+    <string name="status_service_stopped">Фоновая служба: остановлена</string>
+    <string name="status_last_event">Последняя команда: %1$s</string>
+    <string name="status_none">ещё не отправлялась</string>
+
+    <string name="setup_title">Как получить API-ключ Govee</string>
+    <string name="setup_text">1. Откройте приложение Govee Home на телефоне.\n2. Профиль (значок человека) → Настройки (шестерёнка) → Apply for API Key.\n3. Ключ придёт на почту через пару минут.\n4. Откройте адрес выше в браузере телефона, вставьте ключ, выберите H6097 и нажмите «Сохранить».\n\nНастройка через adb (если нужно):\nadb shell am start -n %1$s/.SettingsActivity --es api_key &lt;КЛЮЧ&gt;</string>
+
+    <string name="notif_channel_name">Синхронизация подсветки Govee</string>
+    <string name="notif_title">Govee TV Sync активен</string>
+    <string name="notif_text">Отслеживание включения и сна телевизора</string>
+</resources>
