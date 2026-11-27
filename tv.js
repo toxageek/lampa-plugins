@@ -9799,7 +9799,7 @@
             '.tv-home__empty{padding:4em 0;font-size:1.4em;color:rgba(255,255,255,.6)}' +
             '.tv-home-row{position:relative;margin-bottom:2.1em}' +
             '.tv-home-row--first{margin-bottom:2.3em}' +
-            '.tv-home-row__head{display:-webkit-box;display:-webkit-flex;display:flex;-webkit-box-align:baseline;-webkit-align-items:baseline;align-items:baseline;margin-bottom:.9em}' +
+            '.tv-home-row__head{display:-webkit-box;display:-webkit-flex;display:flex;-webkit-box-align:baseline;-webkit-align-items:baseline;align-items:baseline;margin-bottom:1.2em}' +
             '.tv-home-row__head.hide{display:none}' +
             '.tv-home-row__title{font-size:1.38em;font-weight:700;color:#fff;letter-spacing:-.01em;margin-right:.8em}' +
             '.tv-home-row__sub{font-size:.92em;color:rgba(255,255,255,.48);font-weight:500}' +
