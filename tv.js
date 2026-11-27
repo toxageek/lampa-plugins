@@ -921,10 +921,10 @@
             be: 'Памер картак'
         },
         tv_home_card_size_descr: {
-            ru: 'Ширина постерных карточек на главном экране',
-            uk: 'Ширина постерних карток на головному екрані',
-            en: 'Poster card width on the home screen',
-            be: 'Шырыня постерных картак на галоўным экране'
+            ru: 'Ширина вертикальных и горизонтальных карточек на главном экране',
+            uk: 'Ширина вертикальних і горизонтальних карток на головному екрані',
+            en: 'Vertical and wide card width on the home screen',
+            be: 'Шырыня вертыкальных і гарызантальных картак на галоўным экране'
         },
         tv_home_card_size_small: {
             ru: 'Маленькие',
@@ -12947,6 +12947,10 @@
 
             /* Wide 16:9 Cards — Продолжить просмотр (169:3542) и Новые серии */
             '.tv-home-wide{position:relative;width:15.4em;-webkit-flex-shrink:0;flex-shrink:0;margin-right:1.2em;cursor:pointer;-webkit-transition:-webkit-transform .2s ease;transition:transform .2s ease}' +
+            '.tv-home--size-small .tv-home-wide{width:12.4em}' +
+            '.tv-home--size-default .tv-home-wide{width:15.4em}' +
+            '.tv-home--size-large .tv-home-wide{width:18.4em}' +
+            '.tv-home--size-xlarge .tv-home-wide{width:21.4em}' +
             '.tv-home-wide__box{position:relative;width:100%;padding-bottom:56.25%;border-radius:.68em;overflow:hidden;background:#191b22;box-shadow:0 6px 20px rgba(0,0,0,.38);-webkit-transition:box-shadow .18s ease;transition:box-shadow .18s ease}' +
             '.tv-home-wide.focus{-webkit-transform:scale(1.045);transform:scale(1.045);z-index:5}' +
             '.tv-home-wide.focus .tv-home-wide__box{box-shadow:0 0 0 .16em #fff,0 14px 32px rgba(0,0,0,.68)}' +
