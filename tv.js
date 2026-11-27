@@ -3513,7 +3513,7 @@
         var primaryUrl = primaryPath ? Lampa.TMDB.image('t/p/' + sizeSeg + primaryPath) : '';
 
         if (!primaryUrl) {
-            var $curBg = $activityRoot.find('.full-start__background').not('.tv-card__bg-underlay').first();
+            var $curBg = $activityRoot.find('.full-start__background').first();
             var curSrc = $curBg.length ? ($curBg.attr('src') || '') : '';
             if (curSrc) primaryUrl = curSrc;
         }
@@ -3669,11 +3669,11 @@
                 activePreload = null;
             }
             warmPreloadImg = null;
-            $activityRoot.find('.tv-card__bg-underlay').remove();
+            $activityRoot.find('.full-start__background').removeClass('tv-bg--fading');
         }
 
         function getMainBg() {
-            return $activityRoot.find('.full-start__background').not('.tv-card__bg-underlay').first();
+            return $activityRoot.find('.full-start__background').first();
         }
 
         function isCardVisibleForBg() {
@@ -3686,7 +3686,7 @@
             return true;
         }
 
-        function crossfadeBg(nextUrl) {
+        function fadeToBg(nextUrl) {
             if (stopped || isDestroyedFn()) return;
             var $bg = getMainBg();
             if (!$bg.length) {
@@ -3698,42 +3698,27 @@
             if (currentSrc === nextUrl) return;
 
             if ($('body').hasClass('no--animation') || !currentSrc || !$bg.hasClass('loaded')) {
-                $bg.attr('src', nextUrl).addClass('loaded tv-card__background');
+                $bg.removeClass('tv-bg--fading').attr('src', nextUrl).addClass('loaded tv-card__background');
                 return;
             }
 
-            clearTimeout(decodeTimer);
             clearTimeout(fadeTimer);
-            $activityRoot.find('.tv-card__bg-underlay').remove();
+            clearTimeout(decodeTimer);
 
-            var $underlay = $('<img class="full-start__background tv-card__background tv-card__bg-underlay loaded">');
-            $underlay.attr('src', currentSrc);
-            if ($bg.hasClass('dim')) $underlay.addClass('dim');
-            if ($bg.hasClass('tv-bg--hidden')) $underlay.addClass('tv-bg--hidden');
-            $bg.before($underlay);
+            // Плавное затухание текущего фона, затем подмена и плавное появление нового
+            $bg.addClass('tv-bg--fading');
 
-            // Мгновенно скрываем верхний слой, меняем src, затем плавно проявляем его поверх underlay
-            $bg.addClass('tv-bg--instant tv-bg--fade-start');
-            void $bg[0].offsetHeight;
-            $bg.attr('src', nextUrl).addClass('loaded tv-card__background');
-
-            decodeTimer = setTimeout(function () {
+            fadeTimer = setTimeout(function () {
                 if (stopped || isDestroyedFn()) {
-                    $underlay.remove();
+                    $bg.removeClass('tv-bg--fading');
                     return;
                 }
-                $underlay.toggleClass('dim', $bg.hasClass('dim'));
-                $underlay.toggleClass('tv-bg--hidden', $bg.hasClass('tv-bg--hidden'));
+                $bg.attr('src', nextUrl).addClass('loaded tv-card__background');
 
-                $bg.removeClass('tv-bg--instant');
-                void $bg[0].offsetHeight;
-                $bg.removeClass('tv-bg--fade-start');
-                $underlay.addClass('tv-bg--fade-out');
-
-                fadeTimer = setTimeout(function () {
-                    $underlay.remove();
-                }, 900);
-            }, 40);
+                decodeTimer = setTimeout(function () {
+                    $bg.removeClass('tv-bg--fading');
+                }, 60);
+            }, 680);
         }
 
         function startBackdropSlideshow(rawBackdrops) {
@@ -3752,7 +3737,7 @@
                 var initImg = new Image();
                 initImg.onload = function () {
                     if (stopped || isDestroyedFn()) return;
-                    crossfadeBg(slides[0]);
+                    fadeToBg(slides[0]);
                 };
                 initImg.src = slides[0];
             }
@@ -3798,9 +3783,9 @@
                     }
                     consecutiveErrors = 0;
                     currentIdx = nextIdx;
-                    crossfadeBg(nextUrl);
+                    fadeToBg(nextUrl);
                     warmNext(currentIdx);
-                    scheduleNext(TMDB_BACKDROP_ROTATE_MS);
+                    scheduleNext(TMDB_BACKDROP_ROTATE_MS + 1400);
                 };
 
                 img.onerror = function () {
@@ -6223,13 +6208,10 @@
             '.tv-head-hidden{display:none !important}' +
 
             /* --- Background & Trailer --- */
-            '.tv-card__background{left:0 !important;top:-5em !important;width:100% !important;height:105vh !important;object-fit:cover;z-index:-1 !important;-webkit-mask-image:-webkit-linear-gradient(top,#fff 48%,rgba(255,255,255,0) 98%) !important;mask-image:linear-gradient(to bottom,#fff 48%,rgba(255,255,255,0) 98%) !important;-webkit-transition:opacity .85s ease-out;transition:opacity .85s ease-out}' +
-            '.tv-card__background.loaded:not(.dim):not(.tv-bg--hidden):not(.tv-bg--fade-start):not(.tv-bg--fade-out){opacity:1 !important}' +
-            '.tv-card__background.tv-bg--instant{-webkit-transition:none !important;transition:none !important}' +
-            '.tv-card__background.tv-bg--fade-start{opacity:0 !important}' +
-            '.tv-card__background.tv-card__bg-underlay{pointer-events:none;-webkit-transition:opacity .85s ease-in;transition:opacity .85s ease-in}' +
-            '.tv-card__background.tv-card__bg-underlay.tv-bg--fade-out{opacity:0 !important}' +
-            '.tv-card__background.tv-bg--hidden{opacity:0 !important}' +
+            '.full-start__background.tv-card__background{left:0 !important;top:-5em !important;width:100% !important;height:105vh !important;object-fit:cover;z-index:-1 !important;-webkit-mask-image:-webkit-linear-gradient(top,#fff 48%,rgba(255,255,255,0) 98%) !important;mask-image:linear-gradient(to bottom,#fff 48%,rgba(255,255,255,0) 98%) !important;-webkit-transition:opacity .65s ease,filter .3s ease !important;transition:opacity .65s ease,filter .3s ease !important}' +
+            '.full-start__background.tv-card__background.loaded:not(.dim):not(.tv-bg--hidden):not(.tv-bg--fading){opacity:1 !important}' +
+            '.full-start__background.tv-card__background.tv-bg--fading{opacity:0 !important}' +
+            '.full-start__background.tv-card__background.tv-bg--hidden{opacity:0 !important}' +
             '.tv-bg-trailer{position:absolute;left:0;top:-5em;width:100%;height:105vh;z-index:-2;overflow:hidden;pointer-events:none;opacity:.01;-webkit-transition:opacity .7s ease;transition:opacity .7s ease;-webkit-mask-image:-webkit-linear-gradient(top,#fff 48%,rgba(255,255,255,0) 98%);mask-image:linear-gradient(to bottom,#fff 48%,rgba(255,255,255,0) 98%)}' +
             '.tv-bg-trailer.tv-bg-trailer--visible{opacity:1;z-index:-1}' +
             '.tv-bg-trailer.tv-bg-trailer--paused{opacity:0 !important;z-index:-2}' +
