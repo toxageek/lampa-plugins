@@ -777,10 +777,64 @@
 
     function formatDaysLeft(airDateStr) {
         if (!airDateStr) return null;
-        var parsed = new Date(String(airDateStr).replace(/-/g, '/'));
+        var m = String(airDateStr).match(/^(\d{4})-(\d{2})-(\d{2})/);
+        var parsed;
+        if (m) {
+            parsed = new Date(parseInt(m[1], 10), parseInt(m[2], 10) - 1, parseInt(m[3], 10));
+        } else {
+            parsed = new Date(String(airDateStr).replace(/-/g, '/'));
+        }
         if (isNaN(parsed.getTime())) return null;
-        var diff = Math.ceil((parsed.getTime() - Date.now()) / 86400000);
-        return diff;
+        var now = new Date();
+        var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        return Math.round((parsed.getTime() - today.getTime()) / 86400000);
+    }
+
+    function findNextUpcomingAirDate(movie, fullData, extraEpisodes) {
+        var bestDate = '';
+        var bestDays = null;
+
+        function consider(airDate) {
+            if (!airDate) return;
+            var d = formatDaysLeft(airDate);
+            if (d === null || d < 0) return;
+            if (bestDays === null || d < bestDays) {
+                bestDays = d;
+                bestDate = String(airDate);
+            }
+        }
+
+        if (movie && movie.next_episode_to_air && movie.next_episode_to_air.air_date) {
+            consider(movie.next_episode_to_air.air_date);
+        }
+
+        var epSources = [];
+        if (fullData && fullData.episodes && Array.isArray(fullData.episodes.episodes)) {
+            epSources.push(fullData.episodes.episodes);
+        }
+        if (Array.isArray(extraEpisodes)) {
+            epSources.push(extraEpisodes);
+        }
+        for (var s = 0; s < epSources.length; s++) {
+            var arr = epSources[s];
+            for (var i = 0; i < arr.length; i++) {
+                if (arr[i] && arr[i].air_date) consider(arr[i].air_date);
+            }
+        }
+
+        if (bestDays === null || !bestDate) return null;
+        return { air_date: bestDate, days: bestDays };
+    }
+
+    function formatNextEpisodeLine(airDateStr, days) {
+        var nextLabel = Lampa.Lang.translate('full_next_episode') || 'Следующая';
+        var leftLabel = Lampa.Lang.translate('full_episode_days_left') || 'Осталось дней';
+        var shortDate = '';
+        try {
+            shortDate = Lampa.Utils.parseTime(airDateStr)['short'] || '';
+        } catch (e) {}
+        if (!shortDate) shortDate = airDateStr;
+        return nextLabel + ': ' + shortDate + ' / ' + leftLabel + ': ' + days;
     }
 
     /* ------------------------------------------------------------------ *
@@ -4147,7 +4201,7 @@
      * Секция "series choice" под Hero (выбор сезона, озвучки и серии)
      * ------------------------------------------------------------------ */
 
-    function SeriesChoiceSection(fullLink, movie, onStateChange) {
+    function SeriesChoiceSection(fullLink, movie, onStateChange, onTmdbEpisodes) {
         var self = this;
         var callbacks = {
             onDown: null,
@@ -4276,6 +4330,9 @@
                 var targetVoiceName = v.name;
                 fetchTmdbSeason(targetSeasonNum, function (tmdbEps) {
                     if (destroyed) return;
+                    if (typeof onTmdbEpisodes === 'function' && tmdbEps && tmdbEps.length) {
+                        onTmdbEpisodes(tmdbEps);
+                    }
                     var curS = getCurrentSeason();
                     var curV = getCurrentVoice();
                     if (curS && curV && curS.num === targetSeasonNum && curV.name === targetVoiceName) {
@@ -4285,6 +4342,8 @@
                         }
                     }
                 });
+            } else if (typeof onTmdbEpisodes === 'function' && tmdbSeasonCache[s.num].length) {
+                onTmdbEpisodes(tmdbSeasonCache[s.num]);
             }
         }
 
@@ -4844,6 +4903,67 @@
 
         // 3. Настраиваем главную кнопку воспроизведения (.button--tv-play)
         var serial = isSerialMovie(movie);
+        var cardDestroyed = false;
+        var tmdbDetailsNet = new Lampa.Reguest();
+
+        // 3.1. Оформляем детали под Figma (bold для цифр сезонов/серий + "Следующая: <дата> / Осталось дней: <N>")
+        var $detailsEl = $start.find('.full-start-new__details');
+        var seasonsLbl = Lampa.Lang.translate('title_seasons') || 'Сезоны';
+        var episodesLbl = Lampa.Lang.translate('title_episodes') || 'Серии';
+        var nextLblPrefix = (Lampa.Lang.translate('full_next_episode') || 'Следующая') + ':';
+
+        $detailsEl.children('span:not(.full-start-new__split)').each(function () {
+            var $sp = $(this);
+            var txt = $sp.text().trim();
+            if (txt.indexOf(seasonsLbl + ':') === 0 || txt.indexOf(episodesLbl + ':') === 0) {
+                var colonIdx = txt.indexOf(':');
+                var labelPart = txt.slice(0, colonIdx + 1);
+                var valPart = txt.slice(colonIdx + 1).trim();
+                if (valPart) {
+                    $sp.html(escapeHtml(labelPart) + ' <span class="tv-details__val">' + escapeHtml(valPart) + '</span>');
+                }
+            } else if (txt.indexOf(nextLblPrefix) === 0) {
+                $sp.addClass('tv-next-episode');
+            }
+        });
+
+        function renderNextEpisodeBadge(nextInfo) {
+            if (!nextInfo || !nextInfo.air_date || !$detailsEl.length) return;
+            var text = formatNextEpisodeLine(nextInfo.air_date, nextInfo.days);
+            var $existing = $detailsEl.find('.tv-next-episode').first();
+            if ($existing.length) {
+                $existing.text(text);
+                return;
+            }
+            if ($detailsEl.children().length) {
+                $detailsEl.append('<span class="full-start-new__split">●</span>');
+            }
+            $detailsEl.append('<span class="tv-next-episode">' + escapeHtml(text) + '</span>');
+        }
+
+        if (serial) {
+            var nextEpInfo = findNextUpcomingAirDate(movie, e.data, null);
+            if (nextEpInfo) {
+                renderNextEpisodeBadge(nextEpInfo);
+            } else if (movie.id && Lampa.TMDB && Lampa.TMDB.api) {
+                var statusLower = String(movie.status || '').toLowerCase();
+                var mayHaveNext = (typeof movie.next_episode_to_air === 'undefined') ||
+                    (statusLower !== 'ended' && statusLower !== 'canceled');
+                if (mayHaveNext) {
+                    var tvInfoUrl = Lampa.TMDB.api('tv/' + movie.id + '?api_key=' + Lampa.TMDB.key() + '&language=' + getTmdbLang());
+                    tmdbDetailsNet.timeout(10000);
+                    tmdbDetailsNet['native'](tvInfoUrl, function (tvJson) {
+                        if (cardDestroyed || !tvJson) return;
+                        if (tvJson.next_episode_to_air && tvJson.next_episode_to_air.air_date) {
+                            movie.next_episode_to_air = tvJson.next_episode_to_air;
+                            var found = findNextUpcomingAirDate(tvJson, e.data, null);
+                            if (found) renderNextEpisodeBadge(found);
+                        }
+                    }, function () {});
+                }
+            }
+        }
+
         var $tvPlay = $start.find('.button--tv-play');
         var $tvPlayLabel = $tvPlay.find('span');
         var loadedFilmixPost = null;
@@ -4955,6 +5075,10 @@
         if (serial && link.items && link.items.length && CardSections.shouldShowSeriesChoice()) {
             seriesSection = new SeriesChoiceSection(link, movie, function () {
                 updateHeroPlayLabel();
+            }, function (tmdbEps) {
+                if (cardDestroyed || $detailsEl.find('.tv-next-episode').length) return;
+                var nextFromSeason = findNextUpcomingAirDate(movie, e.data, tmdbEps);
+                if (nextFromSeason) renderNextEpisodeBadge(nextFromSeason);
             });
 
             // Привязываем стандартные переходы как в items.js
@@ -5082,7 +5206,6 @@
         enhanceDescriptionBlock($activityRoot, movie, descrItem);
 
         // 8. Ротация задников (кеш 24ч, старт со стандартного), логотип (TMDB /images) и фоновый тихий трейлер (TMDB /videos)
-        var cardDestroyed = false;
         var tmdbImagesNet = new Lampa.Reguest();
         var tmdbImagesCtrl = loadTmdbImagesForCard(movie, e.object, $activityRoot, $start, tmdbImagesNet, function () {
             return cardDestroyed;
@@ -5140,6 +5263,7 @@
                 }
                 filmixNet.clear();
                 bwaNet.clear();
+                tmdbDetailsNet.clear();
                 tmdbImagesNet.clear();
                 if (tmdbImagesCtrl && tmdbImagesCtrl.destroy) tmdbImagesCtrl.destroy();
                 bgTrailer.destroy();
@@ -6223,6 +6347,8 @@
             '.tv-hero__details{margin-bottom:1.2em}' +
             '.full-start-new.tv-card .full-start-new__details{margin:0;font-size:1.1em;color:rgba(255,255,255,.95);display:-webkit-box;display:-webkit-flex;display:flex;-webkit-flex-wrap:wrap;flex-wrap:wrap;-webkit-box-align:center;-webkit-align-items:center;align-items:center;gap:.45em .75em;text-shadow:0 1px 4px rgba(0,0,0,.4)}' +
             '.full-start-new.tv-card .full-start-new__details>*{margin:0}' +
+            '.full-start-new.tv-card .tv-details__val{font-weight:600}' +
+            '.full-start-new.tv-card .tv-next-episode{white-space:nowrap}' +
             '.full-start-new.tv-card .full-start-new__split{font-size:.6em;color:rgba(255,255,255,.55)}' +
 
             /* --- Hero Buttons --- */
