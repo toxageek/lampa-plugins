@@ -4715,6 +4715,16 @@
         $descr.data('tv-enhanced', true);
         $descr.addClass('tv-descr');
 
+        // Заменяем заголовок "Подробно" над описанием на название фильма/сериала
+        var movieTitle = movie.title || movie.name || movie.original_title || movie.original_name || '';
+        if (movieTitle) {
+            var $lineTitle = $descr.closest('.items-line').find('.items-line__title').first();
+            if (!$lineTitle.length && descrItem && descrItem.render) {
+                $lineTitle = $(descrItem.render()).find('.items-line__title').first();
+            }
+            if ($lineTitle.length) $lineTitle.text(movieTitle);
+        }
+
         var $left = $descr.find('.full-descr__left');
         var $details = $descr.find('.full-descr__details');
         var $tags = $descr.find('.full-descr__tags');
