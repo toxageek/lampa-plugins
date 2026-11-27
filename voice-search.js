@@ -1,5 +1,5 @@
 /**
- * Voice Search v1.0.0
+ * Voice Search v1.0.1
  * Приём голосовых запросов от Android-приложения «Lampa Voice» (папка lampa-voice/).
  *
  * Как это работает:
@@ -19,7 +19,7 @@
     'use strict';
 
     var ID = 'voice_search';
-    var VERSION = '1.0.0';
+    var VERSION = '1.0.1';
 
     /** Должен совпадать с HandoffServer.PORT в APK. */
     var PORT = 39876;
@@ -28,11 +28,11 @@
     /** Запрос длиннее не принимаем: защита от мусора, Lampa всё равно не ищет по абзацам. */
     var MAX_QUERY = 200;
 
-    /** Опрос, пока Lampa на экране: соединение к закрытому порту localhost отваливается за ~1 мс. */
-    var IDLE_INTERVAL = 2500;
+    /** Частый опрос сразу после старта / возврата в Lampa — чтобы поиск открылся без заметной паузы. */
+    var BURST = [0, 300, 800, 1500, 3000, 5000];
 
-    /** Частый опрос сразу после возврата в Lampa — чтобы поиск открылся без заметной паузы. */
-    var BURST = [0, 300, 800, 1500, 2500, 4000, 6000, 9000];
+    /** Не перезапускать всплеск, если focus и visibilitychange пришли подряд. */
+    var BURST_DEBOUNCE = 400;
 
     var XHR_TIMEOUT = 1500;
 
@@ -41,11 +41,35 @@
 
     var lastId = '';
     var busySince = 0;
+    var lastBurstAt = 0;
     var burstTimers = [];
+    var xhrBlocked = false;
 
     /* ------------------------------------------------------------------ *
-     * Настройки
+     * Окружение и настройки
      * ------------------------------------------------------------------ */
+
+    /** Приложение Lampa Voice существует только на Android и открывает Android APK Lampa. */
+    function isAndroid() {
+        return typeof AndroidJS !== 'undefined' ||
+            Boolean(window.Lampa && Lampa.Platform && typeof Lampa.Platform.is === 'function' && Lampa.Platform.is('android'));
+    }
+
+    function hasNative() {
+        return typeof AndroidJS !== 'undefined' && Boolean(window.Lampa && Lampa.Reguest);
+    }
+
+    function isHttps() {
+        return Boolean(window.location && window.location.protocol === 'https:');
+    }
+
+    function canUseXhr() {
+        if (xhrBlocked) return false;
+        // С HTTPS запрос на http://127.0.0.1 блокируется как mixed content и спамит ошибками;
+        // при наличии AndroidJS сразу идём через нативный HTTP-клиент.
+        if (isHttps() && hasNative()) return false;
+        return true;
+    }
 
     function key(name) {
         return ID + '_' + name;
@@ -76,8 +100,7 @@
     }
 
     /**
-     * Обычный XHR. Тихий: ошибки сети не попадают в консоль Lampa,
-     * поэтому годится для постоянного опроса.
+     * Обычный XHR. Используется на HTTP/file-страницах, если не заблокирован WebView.
      */
     function viaXhr(url, ok, fail) {
         var done = false;
@@ -103,18 +126,17 @@
             xhr.send();
         }
         catch (e) {
+            xhrBlocked = true;
             finish(fail);
         }
     }
 
     /**
      * Нативный запрос через AndroidJS (HTTP-клиент внутри APK Lampa).
-     * Нужен на случай, если WebView блокирует http://127.0.0.1 со страницы
-     * (mixed content / Local Network Access). Пишет ошибки в консоль Lampa,
-     * поэтому используем только в коротких «всплесках», не в фоновом опросе.
+     * Обходит ограничения WebView для http://127.0.0.1 (mixed content / Local Network Access).
      */
     function viaNative(url, ok, fail) {
-        if (typeof AndroidJS === 'undefined' || !Lampa.Reguest) return fail();
+        if (!hasNative()) return fail();
 
         try {
             var network = new Lampa.Reguest();
@@ -130,6 +152,23 @@
         catch (e) {
             fail();
         }
+    }
+
+    function request(url, ok, fail) {
+        if (!canUseXhr()) {
+            viaNative(url, ok, fail);
+            return;
+        }
+
+        viaXhr(url, ok, function () {
+            if (!hasNative()) return fail();
+
+            viaNative(url, function (json) {
+                // Нативный клиент достучался, а XHR нет — значит XHR заблокирован политикой WebView.
+                xhrBlocked = true;
+                ok(json);
+            }, fail);
+        });
     }
 
     /* ------------------------------------------------------------------ *
@@ -176,13 +215,14 @@
         return true;
     }
 
-    /**
-     * Одна попытка забрать фразу.
-     * @param {boolean} withNative — пробовать нативный транспорт, если XHR не прошёл.
-     */
-    function poll(withNative) {
+    /** Одна попытка забрать фразу. */
+    function poll() {
         var now = Date.now();
         if (now - busySince < BUSY_LIMIT || !enabled() || !window.appready) return;
+        if (!canUseXhr() && !hasNative()) {
+            stopBurst();
+            return;
+        }
         busySince = now;
 
         var url = BASE + 'pending?_=' + now;
@@ -191,17 +231,10 @@
             busySince = 0;
         }
 
-        viaXhr(url, function (json) {
+        request(url, function (json) {
             release();
             handle(json);
-        }, function () {
-            if (!withNative) return release();
-
-            viaNative(url, function (json) {
-                release();
-                handle(json);
-            }, release);
-        });
+        }, release);
     }
 
     function stopBurst() {
@@ -210,11 +243,14 @@
     }
 
     function burst() {
+        if (!enabled()) return;
+        var now = Date.now();
+        if (burstTimers.length && now - lastBurstAt < BURST_DEBOUNCE) return;
+        lastBurstAt = now;
+
         stopBurst();
         for (var i = 0; i < BURST.length; i++) {
-            burstTimers.push(setTimeout(function () {
-                poll(true);
-            }, BURST[i]));
+            burstTimers.push(setTimeout(poll, BURST[i]));
         }
     }
 
@@ -223,6 +259,11 @@
      * ------------------------------------------------------------------ */
 
     function ping() {
+        if (!isAndroid()) {
+            Lampa.Noty.show('Lampa Voice работает только в приложении Lampa для Android');
+            return;
+        }
+
         var url = BASE + 'ping?_=' + Date.now();
 
         function ok(json) {
@@ -235,9 +276,7 @@
                 'скажите фразу, выберите Lampa и проверьте снова');
         }
 
-        viaXhr(url, ok, function () {
-            viaNative(url, ok, fail);
-        });
+        request(url, ok, fail);
     }
 
     function addSettings() {
@@ -285,20 +324,17 @@
             console.log('Voice Search', 'settings error', error);
         }
 
-        // Возврат в Lampa из «Lampa Voice»: страница снова видима / окно в фокусе.
-        document.addEventListener('visibilitychange', function () {
-            if (!document.hidden) burst();
-        });
-        window.addEventListener('focus', burst);
-        window.addEventListener('pageshow', burst);
+        if (isAndroid()) {
+            // Возврат в Lampa из «Lampa Voice»: страница снова видима / окно в фокусе.
+            document.addEventListener('visibilitychange', function () {
+                if (!document.hidden) burst();
+            });
+            window.addEventListener('focus', burst);
+            window.addEventListener('pageshow', burst);
 
-        // Страховка, если WebView не шлёт visibilitychange: тихий опрос, пока Lampa на экране.
-        setInterval(function () {
-            if (!document.hidden) poll(false);
-        }, IDLE_INTERVAL);
-
-        // Холодный старт: Lampa могла быть запущена самим «Lampa Voice».
-        burst();
+            // Холодный старт: Lampa могла быть запущена самим «Lampa Voice».
+            burst();
+        }
 
         Lampa.Manifest.plugins = {
             type: 'other',
