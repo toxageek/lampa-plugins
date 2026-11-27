@@ -3804,6 +3804,7 @@
         var decodeTimer = null;
         var fadeTimer = null;
         var activePreload = null;
+        var activeDecodedImg = null;
         var warmPreloadImg = null;
         var openedAt = Date.now();
 
@@ -3817,8 +3818,14 @@
                 activePreload.onerror = null;
                 activePreload = null;
             }
+            activeDecodedImg = null;
             warmPreloadImg = null;
-            $activityRoot.find('.full-start__background').removeClass('tv-bg--fading');
+            var $bg = $activityRoot.find('.full-start__background');
+            if ($bg.length && $bg[0]) {
+                $bg[0].onload = null;
+                $bg[0].onerror = null;
+            }
+            $bg.removeClass('tv-bg--fading');
         }
 
         function getMainBg() {
@@ -3835,7 +3842,60 @@
             return true;
         }
 
-        function fadeToBg(nextUrl) {
+        function preloadAndDecodeImage(url, onReady, onError) {
+            // Если уже заранее скачана и декодирована в warmPreloadImg — используем сразу
+            if (warmPreloadImg && warmPreloadImg._tvSrc === url && warmPreloadImg.complete && warmPreloadImg.naturalWidth > 0) {
+                var readyImg = warmPreloadImg;
+                if (typeof readyImg.decode === 'function') {
+                    try {
+                        var wp = readyImg.decode();
+                        if (wp && typeof wp.then === 'function') {
+                            wp.then(function () { onReady(readyImg); }, function () { onReady(readyImg); });
+                            return;
+                        }
+                    } catch (e) {}
+                }
+                onReady(readyImg);
+                return;
+            }
+
+            if (activePreload) {
+                activePreload.onload = null;
+                activePreload.onerror = null;
+            }
+            var img = new Image();
+            img._tvSrc = url;
+            activePreload = img;
+
+            img.onload = function () {
+                if (activePreload === img) activePreload = null;
+                if (stopped || isDestroyedFn()) return;
+                if (!img.naturalWidth) {
+                    onError();
+                    return;
+                }
+                if (typeof img.decode === 'function') {
+                    try {
+                        var p = img.decode();
+                        if (p && typeof p.then === 'function') {
+                            p.then(function () { onReady(img); }, function () { onReady(img); });
+                            return;
+                        }
+                    } catch (e2) {}
+                }
+                onReady(img);
+            };
+
+            img.onerror = function () {
+                if (activePreload === img) activePreload = null;
+                if (stopped || isDestroyedFn()) return;
+                onError();
+            };
+
+            img.src = url;
+        }
+
+        function fadeToBg(nextUrl, decodedImg, onRevealed) {
             if (stopped || isDestroyedFn()) return;
             var $bg = getMainBg();
             if (!$bg.length) {
@@ -3844,29 +3904,87 @@
             }
 
             var currentSrc = $bg.attr('src') || '';
-            if (currentSrc === nextUrl) return;
+            if (currentSrc === nextUrl) {
+                if (onRevealed) onRevealed();
+                return;
+            }
+
+            // Держим ссылку на декодированный Image до следующей смены, чтобы браузер не выгрузил битмап
+            if (decodedImg) activeDecodedImg = decodedImg;
 
             if ($('body').hasClass('no--animation') || !currentSrc || !$bg.hasClass('loaded')) {
                 $bg.removeClass('tv-bg--fading').attr('src', nextUrl).addClass('loaded tv-card__background');
+                if (onRevealed) onRevealed();
                 return;
             }
 
             clearTimeout(fadeTimer);
             clearTimeout(decodeTimer);
 
-            // Плавное затухание текущего фона, затем подмена и плавное появление нового
+            // 1. Плавно гасим текущий фон до opacity: 0
             $bg.addClass('tv-bg--fading');
 
+            // 2. В темноте подменяем src, дожидаемся полной готовности/декодирования на самом <img> и плавно проявляем
             fadeTimer = setTimeout(function () {
                 if (stopped || isDestroyedFn()) {
                     $bg.removeClass('tv-bg--fading');
                     return;
                 }
-                $bg.attr('src', nextUrl).addClass('loaded tv-card__background');
 
-                decodeTimer = setTimeout(function () {
-                    $bg.removeClass('tv-bg--fading');
-                }, 60);
+                var bgEl = $bg[0];
+                var revealed = false;
+
+                function revealNow() {
+                    if (revealed) return;
+                    revealed = true;
+                    clearTimeout(decodeTimer);
+                    bgEl.onload = null;
+                    bgEl.onerror = null;
+                    if (stopped || isDestroyedFn()) {
+                        $bg.removeClass('tv-bg--fading');
+                        return;
+                    }
+                    var raf = window.requestAnimationFrame || function (fn) { return setTimeout(fn, 16); };
+                    raf(function () {
+                        if (stopped || isDestroyedFn()) {
+                            $bg.removeClass('tv-bg--fading');
+                            return;
+                        }
+                        raf(function () {
+                            $bg.removeClass('tv-bg--fading');
+                            if (onRevealed) onRevealed();
+                        });
+                    });
+                }
+
+                function waitDecodeAndReveal() {
+                    if (typeof bgEl.decode === 'function') {
+                        try {
+                            var dp = bgEl.decode();
+                            if (dp && typeof dp.then === 'function') {
+                                dp.then(revealNow, revealNow);
+                                return;
+                            }
+                        } catch (e) {}
+                    }
+                    revealNow();
+                }
+
+                decodeTimer = setTimeout(revealNow, 1500);
+
+                bgEl.onload = function () {
+                    waitDecodeAndReveal();
+                };
+                bgEl.onerror = function () {
+                    revealNow();
+                };
+
+                bgEl.src = nextUrl;
+                $bg.addClass('loaded tv-card__background');
+
+                if (bgEl.complete && bgEl.naturalWidth > 0) {
+                    waitDecodeAndReveal();
+                }
             }, 680);
         }
 
@@ -3880,15 +3998,13 @@
             var currentIdx = 0;
             var consecutiveErrors = 0;
 
-            // Если у карточки вообще нет стандартного фона — показываем первый сразу
+            // Если у карточки вообще нет стандартного фона — скачиваем и показываем первый сразу
             var $initialBg = getMainBg();
             if (!$initialBg.length || !$initialBg.attr('src')) {
-                var initImg = new Image();
-                initImg.onload = function () {
+                preloadAndDecodeImage(slides[0], function (img) {
                     if (stopped || isDestroyedFn()) return;
-                    fadeToBg(slides[0]);
-                };
-                initImg.src = slides[0];
+                    fadeToBg(slides[0], img);
+                }, function () {});
             }
 
             if (slides.length <= 1) return;
@@ -3896,8 +4012,18 @@
             function warmNext(idx) {
                 var nextUrl = slides[(idx + 1) % slides.length];
                 if (!nextUrl) return;
-                warmPreloadImg = new Image();
-                warmPreloadImg.src = nextUrl;
+                var wImg = new Image();
+                wImg._tvSrc = nextUrl;
+                wImg.onload = function () {
+                    if (typeof wImg.decode === 'function') {
+                        try {
+                            var p = wImg.decode();
+                            if (p && typeof p.then === 'function') p.then(function () {}, function () {});
+                        } catch (e) {}
+                    }
+                };
+                wImg.src = nextUrl;
+                warmPreloadImg = wImg;
             }
 
             function scheduleNext(delayMs) {
@@ -3916,15 +4042,8 @@
                 var nextIdx = (currentIdx + 1) % slides.length;
                 var nextUrl = slides[nextIdx];
 
-                if (activePreload) {
-                    activePreload.onload = null;
-                    activePreload.onerror = null;
-                }
-                var img = new Image();
-                activePreload = img;
-
-                img.onload = function () {
-                    if (activePreload === img) activePreload = null;
+                // Сначала полностью скачиваем и декодируем картинку, и только потом запускаем fade-смену
+                preloadAndDecodeImage(nextUrl, function (decodedImg) {
                     if (stopped || isDestroyedFn()) return;
                     if (!isCardVisibleForBg()) {
                         scheduleNext(TMDB_BACKDROP_ROTATE_MS);
@@ -3932,25 +4051,22 @@
                     }
                     consecutiveErrors = 0;
                     currentIdx = nextIdx;
-                    fadeToBg(nextUrl);
-                    warmNext(currentIdx);
-                    scheduleNext(TMDB_BACKDROP_ROTATE_MS + 1400);
-                };
-
-                img.onerror = function () {
-                    if (activePreload === img) activePreload = null;
+                    fadeToBg(nextUrl, decodedImg, function () {
+                        if (stopped || isDestroyedFn()) return;
+                        warmNext(currentIdx);
+                        scheduleNext(TMDB_BACKDROP_ROTATE_MS + 680);
+                    });
+                }, function () {
                     if (stopped || isDestroyedFn()) return;
                     consecutiveErrors++;
                     currentIdx = nextIdx;
                     if (consecutiveErrors < slides.length) {
                         scheduleNext(1500);
                     }
-                };
-
-                img.src = nextUrl;
+                });
             }
 
-            // Стандартный фон остаётся первым; заранее греем второй слайд и меняем через 5 сек
+            // Стандартный фон остаётся первым; заранее скачиваем и декодируем второй слайд и меняем через 5 сек
             warmNext(0);
             var elapsed = Date.now() - openedAt;
             var firstDelay = Math.max(1500, TMDB_BACKDROP_ROTATE_MS - elapsed);
