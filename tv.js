@@ -134,6 +134,240 @@
             en: 'Subsections',
             be: 'Падраздзелы'
         },
+        card_sections_title: {
+            ru: 'Разделы карточки',
+            uk: 'Розділи картки',
+            en: 'Card sections',
+            be: 'Раздзелы карткі'
+        },
+        card_sections_sub_descr: {
+            ru: 'Включение, отключение и настройка порядка разделов в карточке',
+            uk: 'Увімкнення, вимкнення та зміна порядку розділів у картці',
+            en: 'Toggle visibility and reorder movie/series card sections',
+            be: 'Уключэнне, адключэнне і парадак раздзелаў у картцы'
+        },
+        card_sections_enabled: {
+            ru: 'Управление разделами',
+            uk: 'Керування розділами',
+            en: 'Manage sections',
+            be: 'Кіраванне раздзеламі'
+        },
+        card_sections_enabled_descr: {
+            ru: 'Применять настройки видимости и порядка разделов в карточке фильма и сериала',
+            uk: 'Застосовувати налаштування видимості та порядку розділів у картці фільму та серіалу',
+            en: 'Apply section visibility and order settings on movie and TV show cards',
+            be: 'Ужываць налады бачнасці і парадку раздзелаў у картцы фільма і серыяла'
+        },
+        card_sections_order: {
+            ru: 'Порядок разделов',
+            uk: 'Порядок розділів',
+            en: 'Section order',
+            be: 'Парадак раздзелаў'
+        },
+        card_sections_order_descr: {
+            ru: 'Изменить порядок отображения разделов в карточке',
+            uk: 'Змінити порядок відображення розділів у картці',
+            en: 'Change the display order of sections on the card',
+            be: 'Змяніць парадак адлюстравання раздзелаў у картцы'
+        },
+        card_sections_order_pick_hint: {
+            ru: 'Нажмите, чтобы переместить',
+            uk: 'Натисніть, щоб перемістити',
+            en: 'Select to move',
+            be: 'Націсніце, каб перамясціць'
+        },
+        card_sections_order_hidden_tag: {
+            ru: 'Скрыт',
+            uk: 'Приховано',
+            en: 'Hidden',
+            be: 'Схаваны'
+        },
+        card_sections_order_move_title: {
+            ru: 'Куда переместить:',
+            uk: 'Куди перемістити:',
+            en: 'Move to position:',
+            be: 'Куды перамясціць:'
+        },
+        card_sections_order_place_here: {
+            ru: 'Поставить на позицию',
+            uk: 'Поставити на позицію',
+            en: 'Place at position',
+            be: 'Паставіць на пазіцыю'
+        },
+        card_sections_order_cancel: {
+            ru: 'Отменить перемещение',
+            uk: 'Скасувати переміщення',
+            en: 'Cancel move',
+            be: 'Скасаваць перамяшчэнне'
+        },
+        card_sections_group_sections: {
+            ru: 'Отображаемые разделы',
+            uk: 'Відображувані розділи',
+            en: 'Visible sections',
+            be: 'Раздзелы для паказу'
+        },
+        card_sections_group_actions: {
+            ru: 'Быстрые действия',
+            uk: 'Швидкі дії',
+            en: 'Quick actions',
+            be: 'Хуткія дзеянні'
+        },
+        card_sections_name_series_choice: {
+            ru: 'Выбор серий (Filmix)',
+            uk: 'Вибір серій (Filmix)',
+            en: 'Episode picker (Filmix)',
+            be: 'Выбар серый (Filmix)'
+        },
+        card_sections_descr_series_choice: {
+            ru: 'Сезоны, озвучки и горизонтальный список серий с Filmix',
+            uk: 'Сезони, озвучки та горизонтальний список серій з Filmix',
+            en: 'Seasons, voices, and horizontal episode cards from Filmix',
+            be: 'Сезоны, агучкі і гарызантальны спіс серый з Filmix'
+        },
+        card_sections_descr_description: {
+            ru: 'Описание, дата выхода, бюджет, страны, жанры и теги',
+            uk: 'Опис, дата виходу, бюджет, країни, жанри та теги',
+            en: 'Overview, release date, budget, countries, genres and tags',
+            be: 'Апісанне, дата выхаду, бюджэт, краіны, жанры і тэгі'
+        },
+        card_sections_descr_discuss: {
+            ru: 'Комментарии и отзывы пользователей',
+            uk: 'Коментарі та відгуки користувачів',
+            en: 'User comments and reviews',
+            be: 'Каментарыі і водгукі карыстальнікаў'
+        },
+        card_sections_descr_metadata_chart: {
+            ru: 'Шкалы метаданных (юмор, напряжение, экшен и др.)',
+            uk: 'Шкали метаданих (гумор, напруга, екшен тощо)',
+            en: 'Metadata charts (humor, tension, action, etc.)',
+            be: 'Шкалы метаданых (гумар, напружанне, экшэн і інш.)'
+        },
+        card_sections_descr_metadata_tags: {
+            ru: 'Теги настроений фильма или сериала',
+            uk: 'Теги настроїв фільму або серіалу',
+            en: 'Mood tags for the movie or TV show',
+            be: 'Тэгі настрояў фільма або серыяла'
+        },
+        card_sections_descr_episodes: {
+            ru: 'Список и расписание выхода серий (для сериалов)',
+            uk: 'Список та розклад виходу серій (для серіалів)',
+            en: 'Episodes list and release schedule (for TV shows)',
+            be: 'Спіс і расклад выхаду серый (для серыялаў)'
+        },
+        card_sections_descr_directors: {
+            ru: 'Блок режиссёров',
+            uk: 'Блок режисерів',
+            en: 'Directors row',
+            be: 'Блок рэжысёраў'
+        },
+        card_sections_descr_actors: {
+            ru: 'Актёрский состав',
+            uk: 'Акторський склад',
+            en: 'Cast members row',
+            be: 'Акцёрскі склад'
+        },
+        card_sections_descr_collection: {
+            ru: 'Другие фильмы этой франшизы / серии',
+            uk: 'Інші фільми цієї франшизи / серії',
+            en: 'Other movies from the same collection',
+            be: 'Іншыя фільмы гэтай франшызы / серыі'
+        },
+        card_sections_descr_recomend: {
+            ru: 'Подборка рекомендованных фильмов и сериалов',
+            uk: 'Добірка рекомендованих фільмів та серіалів',
+            en: 'Recommended movies and TV shows',
+            be: 'Падборка рэкамендаваных фільмаў і серыялаў'
+        },
+        card_sections_descr_simular: {
+            ru: 'Похожие фильмы и сериалы в конце карточки',
+            uk: 'Подібні фільми та серіали в кінці картки',
+            en: 'Similar movies and TV shows at the bottom of the card',
+            be: 'Падобныя фільмы і серыялы ў канцы карткі'
+        },
+        card_sections_show_all: {
+            ru: 'Показать все разделы',
+            uk: 'Показати всі розділи',
+            en: 'Show all sections',
+            be: 'Паказаць усе раздзелы'
+        },
+        card_sections_show_all_descr: {
+            ru: 'Включить отображение всех разделов карточки',
+            uk: 'Увімкнути відображення всіх розділів картки',
+            en: 'Enable all movie card sections',
+            be: 'Уключыць паказ усіх раздзелаў карткі'
+        },
+        card_sections_hide_all: {
+            ru: 'Скрыть все разделы',
+            uk: 'Приховати всі розділи',
+            en: 'Hide all sections',
+            be: 'Схаваць усе раздзелы'
+        },
+        card_sections_hide_all_descr: {
+            ru: 'Оставить только главный блок с постером и кнопками',
+            uk: 'Залишити лише головний блок із постером та кнопками',
+            en: 'Keep only the main header with poster and action buttons',
+            be: 'Пакінуць толькі галоўны блок з постэрам і кнопкамі'
+        },
+        card_sections_reset_order: {
+            ru: 'Сбросить порядок разделов',
+            uk: 'Скинути порядок розділів',
+            en: 'Reset section order',
+            be: 'Скінуць парадак раздзелаў'
+        },
+        card_sections_reset_order_descr: {
+            ru: 'Вернуть стандартный порядок разделов по умолчанию',
+            uk: 'Повернути стандартний порядок розділів за замовчуванням',
+            en: 'Restore default section order',
+            be: 'Вярнуць стандартны парадак раздзелаў па змаўчанні'
+        },
+        card_sections_noty_shown: {
+            ru: 'Все разделы карточки включены',
+            uk: 'Усі розділи картки увімкнено',
+            en: 'All card sections enabled',
+            be: 'Усе раздзелы карткі ўключаны'
+        },
+        card_sections_noty_hidden: {
+            ru: 'Все дополнительные разделы карточки скрыты',
+            uk: 'Усі додаткові розділи картки приховано',
+            en: 'All extra card sections hidden',
+            be: 'Усе дадатковыя раздзелы карткі схаваны'
+        },
+        card_sections_noty_order_reset: {
+            ru: 'Порядок разделов сброшен по умолчанию',
+            uk: 'Порядок розділів скинуто за замовчуванням',
+            en: 'Section order reset to default',
+            be: 'Парадак раздзелаў скінуты па змаўчанні'
+        },
+        tv_head_title: {
+            ru: 'Настройка шапки',
+            uk: 'Налаштування шапки',
+            en: 'Header elements',
+            be: 'Налада шапкі'
+        },
+        tv_head_descr: {
+            ru: 'Отображение и скрытие кнопок и элементов в верхней панели',
+            uk: 'Відображення та приховування кнопок і елементів у верхній панелі',
+            en: 'Show or hide buttons and indicators in the top header bar',
+            be: 'Адлюстраванне і ўтойванне кнопак і элементаў у верхняй панэлі'
+        },
+        tv_head_group: {
+            ru: 'Отображать в шапке',
+            uk: 'Відображати у шапці',
+            en: 'Display in header',
+            be: 'Паказваць у шапцы'
+        },
+        tv_head_search: { ru: 'Поиск', uk: 'Пошук', en: 'Search', be: 'Пошук' },
+        tv_head_settings: { ru: 'Настройки', uk: 'Налаштування', en: 'Settings', be: 'Налады' },
+        tv_head_premium: { ru: 'Премиум', uk: 'Преміум', en: 'Premium', be: 'Прэміум' },
+        tv_head_profile: { ru: 'Профиль', uk: 'Профіль', en: 'Profile', be: 'Профіль' },
+        tv_head_feed: { ru: 'Новости', uk: 'Новини', en: 'Feed', be: 'Навіны' },
+        tv_head_notice: { ru: 'Уведомления', uk: 'Сповіщення', en: 'Notifications', be: 'Апавяшчэнні' },
+        tv_head_broadcast: { ru: 'Вещание', uk: 'Мовлення', en: 'Broadcast', be: 'Вяшчанне' },
+        tv_head_fullscreen: { ru: 'Полноэкранный режим', uk: 'Повноекранний режим', en: 'Fullscreen mode', be: 'Поўнаэкранны рэжым' },
+        tv_head_reload: { ru: 'Обновление страницы', uk: 'Оновлення сторінки', en: 'Page reload', be: 'Абнаўленне старонкі' },
+        tv_head_blackfriday: { ru: 'Черная пятница', uk: 'Чорна п’ятниця', en: 'Black Friday', be: 'Чорная пятніца' },
+        tv_head_split: { ru: 'Разделитель', uk: 'Розділювач', en: 'Divider', be: 'Падзяляльнік' },
+        tv_head_time: { ru: 'Время', uk: 'Годинник', en: 'Time', be: 'Час' },
         tv_watch: {
             ru: 'Смотреть',
             uk: 'Дивитись',
@@ -3306,7 +3540,7 @@
             for (var i = 0; i < genres.length; i++) {
                 (function (genre) {
                     if (!genre || !genre.name) return;
-                    var $pill = $('<div class="tv-genre-pill selector">' + escapeHtml(Lampa.Utils.capitalizeFirstLetter(genre.name)) + '</div>');
+                    var $pill = $('<div class="tag-count tv-genre-pill selector"><div class="tag-count__name">' + escapeHtml(Lampa.Utils.capitalizeFirstLetter(genre.name)) + '</div></div>');
                     $pill.on('hover:focus hover:hover hover:touch', function (ev) {
                         if (descrItem) descrItem.last = ev.target;
                     }).on('hover:enter', function () {
@@ -3468,8 +3702,31 @@
             Filmix.openFilmixPage(movie);
         });
 
-        // 4. Вставляем секцию "series choice" для сериалов сразу после start (перед description)
-        if (serial && link.items && link.items.length) {
+        // 4. Вставляем секцию "series choice" для сериалов с учётом настроек видимости и порядка разделов
+        var pendingSeriesInsertIndex = -1;
+
+        function mountSeriesSectionAt(insertIdx) {
+            if (!seriesSection || !link.items || !link.items.length) return;
+            var clamped = Math.max(1, Math.min(insertIdx, link.items.length));
+            var parentNode = link.items[0].render(true) && link.items[0].render(true).parentNode;
+            if (parentNode) {
+                if (clamped < link.items.length) {
+                    var refEl = link.items[clamped].render(true);
+                    parentNode.insertBefore(seriesSection.render(true), refEl || null);
+                } else {
+                    var prevEl = link.items[clamped - 1].render(true);
+                    parentNode.insertBefore(seriesSection.render(true), prevEl ? prevEl.nextSibling : null);
+                }
+            }
+            // Синхронно вставляем в link.items и link.rows, чтобы lazy-скролл full.js не пропустил ни одной секции!
+            link.items.splice(clamped, 0, seriesSection);
+            if (Array.isArray(link.rows)) {
+                link.rows.splice(clamped, 0, 'tv_series_choice_placeholder');
+            }
+            pendingSeriesInsertIndex = -1;
+        }
+
+        if (serial && link.items && link.items.length && CardSections.shouldShowSeriesChoice()) {
             seriesSection = new SeriesChoiceSection(link, movie, function () {
                 updateHeroPlayLabel();
             });
@@ -3489,16 +3746,11 @@
                 }
             });
 
-            // Вставляем в DOM сразу после start-блока
-            var startEl = link.items[0].render(true);
-            if (startEl && startEl.parentNode) {
-                startEl.parentNode.insertBefore(seriesSection.render(true), startEl.nextSibling);
-            }
-
-            // Синхронно вставляем в link.items и link.rows, чтобы lazy-скролл full.js не пропустил ни одной секции!
-            link.items.splice(1, 0, seriesSection);
-            if (Array.isArray(link.rows)) {
-                link.rows.splice(1, 0, 'tv_series_choice_placeholder');
+            var targetIdx = CardSections.getSeriesChoiceInsertIndex(link, e.data);
+            if (targetIdx <= link.items.length) {
+                mountSeriesSectionAt(targetIdx);
+            } else {
+                pendingSeriesInsertIndex = targetIdx;
             }
         }
 
@@ -3581,12 +3833,15 @@
         var bgTrailer = new BackgroundTrailer(e.object, $activityRoot, e.data);
         bgTrailer.start();
 
-        // Останавливаем фоновый трейлер при скролле вниз
+        // Останавливаем фоновый трейлер при скролле вниз и при необходимости подставляем отложенный series_choice
         if (link.scroll) {
             var origOnScroll = link.scroll.onScroll;
             link.scroll.onScroll = function (pos) {
                 if (typeof origOnScroll === 'function') origOnScroll.apply(this, arguments);
                 bgTrailer.onScrollDim(pos > 0);
+                if (pendingSeriesInsertIndex > 0 && link.items && link.items.length >= pendingSeriesInsertIndex) {
+                    mountSeriesSectionAt(pendingSeriesInsertIndex);
+                }
             };
         }
 
@@ -3653,7 +3908,7 @@
                     $btn.trigger('hover:enter', [{}]);
                 }
             };
-            if (subtitle) item.subtitle = escapeHtml(subtitle);
+            if (subtitle) item.subtitle = subtitle;
             if (iconHtml && iconHtml !== 'undefined') {
                 item.template = 'selectbox_icon';
                 item.icon = iconHtml;
@@ -3674,22 +3929,672 @@
     }
 
     /* ------------------------------------------------------------------ *
+     * Управление разделами карточки (интеграция card-sections.js)
+     * ------------------------------------------------------------------ */
+
+    var CardSections = (function () {
+        var CS_ID = 'card_sections';
+        var SUB_COMPONENT = 'tv_plugin_sections';
+
+        var SECTIONS = [
+            { id: 'series_choice', langKey: 'card_sections_name_series_choice', fallback: 'Выбор серий (Filmix)', descrKey: 'card_sections_descr_series_choice' },
+            { id: 'description', langKey: 'full_detail', fallback: 'Подробно', descrKey: 'card_sections_descr_description' },
+            { id: 'discuss', langKey: 'title_comments', fallback: 'Комментарии', descrKey: 'card_sections_descr_discuss' },
+            { id: 'metadata_chart', langKey: 'title_metadata', fallback: 'Метаданные', descrKey: 'card_sections_descr_metadata_chart' },
+            { id: 'metadata_tags', langKey: 'title_moods', fallback: 'Настроения', descrKey: 'card_sections_descr_metadata_tags' },
+            { id: 'episodes', langKey: 'full_series_release', fallback: 'Выход серий', descrKey: 'card_sections_descr_episodes' },
+            { id: 'directors', langKey: 'title_producer', fallback: 'Режиссер', descrKey: 'card_sections_descr_directors' },
+            { id: 'actors', langKey: 'title_actors', fallback: 'Актеры', descrKey: 'card_sections_descr_actors' },
+            { id: 'collection', langKey: 'title_collection', fallback: 'Коллекция', descrKey: 'card_sections_descr_collection' },
+            { id: 'recomend', langKey: 'title_recomendations', fallback: 'Рекомендации', descrKey: 'card_sections_descr_recomend' },
+            { id: 'simular', langKey: 'title_similar', fallback: 'Похожие', descrKey: 'card_sections_descr_simular' }
+        ];
+
+        var SECTIONS_BY_ID = {};
+        for (var i = 0; i < SECTIONS.length; i++) {
+            SECTIONS_BY_ID[SECTIONS[i].id] = SECTIONS[i];
+        }
+
+        function csKey(name) {
+            return CS_ID + '_' + name;
+        }
+
+        function csBool(name, def) {
+            var val = Lampa.Storage.get(csKey(name), def);
+            if (val === true || val === 'true') return true;
+            if (val === false || val === 'false') return false;
+            return !!def;
+        }
+
+        function isPluginEnabled() {
+            return csBool('enabled', true);
+        }
+
+        function isSectionEnabled(sectionId) {
+            return csBool('show_' + sectionId, true);
+        }
+
+        function shouldShowSeriesChoice() {
+            if (!isPluginEnabled()) return true;
+            return isSectionEnabled('series_choice');
+        }
+
+        function isArr(val) {
+            return Object.prototype.toString.call(val) === '[object Array]';
+        }
+
+        function hasCustomOrder() {
+            var raw = Lampa.Storage.get(csKey('order'), '');
+            if (!raw) return false;
+            if (isArr(raw)) return raw.length > 0;
+            return String(raw).replace(/\s+/g, '').length > 0;
+        }
+
+        function getOrder() {
+            var raw = Lampa.Storage.get(csKey('order'), '');
+            var parsed = [];
+            if (isArr(raw)) parsed = raw;
+            else if (raw && typeof raw === 'string') parsed = raw.split(',');
+
+            var result = [];
+            var seen = {};
+            var idx, id;
+            for (idx = 0; idx < parsed.length; idx++) {
+                id = String(parsed[idx]).replace(/^\s+|\s+$/g, '');
+                if (id && SECTIONS_BY_ID[id] && !seen[id]) {
+                    seen[id] = true;
+                    result.push(id);
+                }
+            }
+            for (idx = 0; idx < SECTIONS.length; idx++) {
+                id = SECTIONS[idx].id;
+                if (!seen[id]) {
+                    seen[id] = true;
+                    result.push(id);
+                }
+            }
+            return result;
+        }
+
+        function getOrderRankMap() {
+            var order = getOrder();
+            var rank = {};
+            for (var r = 0; r < order.length; r++) rank[order[r]] = r;
+            return rank;
+        }
+
+        function saveOrder(orderIds) {
+            Lampa.Storage.set(csKey('order'), orderIds.join(','));
+            markSettingsDirty();
+        }
+
+        function moveInOrder(fromIndex, toIndex) {
+            var order = getOrder();
+            if (fromIndex < 0 || fromIndex >= order.length) return order;
+            if (toIndex < 0 || toIndex >= order.length) return order;
+            if (fromIndex === toIndex) return order;
+            var moved = order.splice(fromIndex, 1)[0];
+            order.splice(toIndex, 0, moved);
+            saveOrder(order);
+            return order;
+        }
+
+        function sectionTitle(sectionId) {
+            var sec = SECTIONS_BY_ID[sectionId];
+            if (!sec) return sectionId;
+            return t(sec.langKey, sec.fallback);
+        }
+
+        function isDirectorList(list) {
+            if (!isArr(list) || !list.length) return false;
+            return !!(list[0] && list[0].job === 'Director');
+        }
+
+        function identifySection(name, rowData, fullData, legacyParams) {
+            if (!name || name === 'start') return null;
+            if (name === 'tv_series_choice_placeholder') return 'series_choice';
+            if (name === 'description' || name === 'descr') return 'description';
+            if (name === 'metadata_chart') return 'metadata_chart';
+            if (name === 'metadata_tags') return 'metadata_tags';
+            if (name === 'episodes') return 'episodes';
+            if (name === 'discuss' || name === 'comments') return 'discuss';
+            if (name === 'simular') return 'simular';
+
+            if (name === 'persons') {
+                var persons = fullData && fullData.persons;
+                if (rowData && !isArr(rowData)) {
+                    if (persons && rowData.results === persons.cast) return 'actors';
+                    if (rowData.title && rowData.title === t('title_producer', '')) return 'directors';
+                    if (rowData.title && rowData.title === t('title_actors', '')) return 'actors';
+                    if (isDirectorList(rowData.results)) return 'directors';
+                    return null;
+                }
+                if (persons && rowData === persons.cast) return 'actors';
+                if (legacyParams && legacyParams.title && legacyParams.title === t('title_producer', '')) return 'directors';
+                if (isDirectorList(rowData)) return 'directors';
+                if (isArr(rowData)) return 'actors';
+                return null;
+            }
+
+            if (name === 'cards' || name === 'recomend') {
+                if (fullData && rowData) {
+                    if (rowData === fullData.collection) return 'collection';
+                    if (rowData === fullData.recomend) return 'recomend';
+                    if (rowData === fullData.simular) return 'simular';
+                }
+                if (rowData && rowData.title) {
+                    if (rowData.title === t('title_collection', '')) return 'collection';
+                    if (rowData.title === t('title_recomendations', '')) return 'recomend';
+                    if (rowData.title === t('title_similar', '')) return 'simular';
+                }
+                if (name === 'recomend') return 'recomend';
+                return null;
+            }
+
+            return null;
+        }
+
+        function shouldKeepSection(sectionId, fullData) {
+            if (!sectionId) return true;
+            if (sectionId === 'description' && fullData && fullData.movie && fullData.movie.adult) return true;
+            return isSectionEnabled(sectionId);
+        }
+
+        function sortEntries(entries) {
+            var rank = getOrderRankMap();
+            var fallbackBase = SECTIONS.length + 100;
+            entries.sort(function (a, b) {
+                var ra = a.sectionId && typeof rank[a.sectionId] === 'number' ? rank[a.sectionId] : fallbackBase + a.index;
+                var rb = b.sectionId && typeof rank[b.sectionId] === 'number' ? rank[b.sectionId] : fallbackBase + b.index;
+                if (ra !== rb) return ra - rb;
+                return a.index - b.index;
+            });
+            return entries;
+        }
+
+        function processRows(rows, fullData) {
+            if (!isArr(rows)) return rows;
+            var startRows = [];
+            var entries = [];
+            var idx;
+
+            for (idx = 0; idx < rows.length; idx++) {
+                var row = rows[idx];
+                var name = isArr(row) ? row[0] : row;
+                var rowData = isArr(row) ? row[1] : null;
+                if (name === 'start') {
+                    startRows.push(row);
+                    continue;
+                }
+                var sectionId = identifySection(name, rowData, fullData, null);
+                if (shouldKeepSection(sectionId, fullData)) {
+                    entries.push({ item: row, sectionId: sectionId, index: idx });
+                }
+            }
+
+            if (hasCustomOrder()) sortEntries(entries);
+
+            var result = startRows.slice();
+            for (idx = 0; idx < entries.length; idx++) result.push(entries[idx].item);
+            return result;
+        }
+
+        function getSeriesChoiceInsertIndex(link, fullData) {
+            if (!isPluginEnabled() || !hasCustomOrder() || !link || !isArr(link.rows)) return 1;
+            var rank = getOrderRankMap();
+            var myRank = typeof rank.series_choice === 'number' ? rank.series_choice : 0;
+            var fallbackBase = SECTIONS.length + 100;
+
+            for (var idx = 1; idx < link.rows.length; idx++) {
+                var row = link.rows[idx];
+                var name = isArr(row) ? row[0] : row;
+                var rowData = isArr(row) ? row[1] : null;
+                var secId = identifySection(name, rowData, fullData, null);
+                var r = (secId && typeof rank[secId] === 'number') ? rank[secId] : (fallbackBase + idx);
+                if (r > myRank) return idx;
+            }
+            return link.rows.length;
+        }
+
+        function hookModernFull(link, fullData) {
+            if (link.__card_sections_patched) return;
+            link.__card_sections_patched = true;
+
+            var origBuild = link.build;
+            link.build = function () {
+                link.build = origBuild;
+                if (isPluginEnabled()) {
+                    try {
+                        link.rows = processRows(link.rows, fullData);
+                    } catch (err) {}
+                }
+                var limit = typeof this.view === 'number' && this.view > 0 ? this.view : link.rows.length;
+                return origBuild.call(this, link.rows.slice(0, limit));
+            };
+        }
+
+        function hookLegacyFull(comp, fullData) {
+            if (comp.__card_sections_patched) return;
+            comp.__card_sections_patched = true;
+
+            var origBuild = comp.build;
+            var origVisible = typeof comp.visible === 'function' ? comp.visible : null;
+            var useCustomOrder = hasCustomOrder() && !!origVisible;
+            var queue = [];
+            var seq = 0;
+            var flushed = false;
+
+            function restoreAndFlush() {
+                if (flushed) return;
+                flushed = true;
+                comp.build = origBuild;
+                if (origVisible) comp.visible = origVisible;
+                delete comp.__card_sections_flush;
+                if (queue.length) {
+                    sortEntries(queue);
+                    for (var q = 0; q < queue.length; q++) origBuild.apply(comp, queue[q].item);
+                    queue = [];
+                }
+            }
+
+            comp.__card_sections_flush = restoreAndFlush;
+            comp.build = function (name, rowData, params) {
+                if (!isPluginEnabled() || name === 'start') return origBuild.apply(this, arguments);
+                var sectionId = null;
+                try {
+                    sectionId = identifySection(name, rowData, fullData, params);
+                    if (!shouldKeepSection(sectionId, fullData)) return;
+                } catch (err) {}
+                if (useCustomOrder) {
+                    var argsCopy = [];
+                    for (var a = 0; a < arguments.length; a++) argsCopy.push(arguments[a]);
+                    queue.push({ item: argsCopy, sectionId: sectionId, index: seq++ });
+                    return;
+                }
+                return origBuild.apply(this, arguments);
+            };
+
+            if (useCustomOrder) {
+                comp.visible = function () {
+                    restoreAndFlush();
+                    return origVisible.apply(this, arguments);
+                };
+            }
+        }
+
+        function onFullEvent(e) {
+            if (!e) return;
+            if (e.type === 'start') {
+                if (!isPluginEnabled()) return;
+                try {
+                    if (e.link && isArr(e.link.rows) && typeof e.link.build === 'function') {
+                        hookModernFull(e.link, e.data);
+                        return;
+                    }
+                    var comp = e.object && e.object.activity && typeof e.object.activity.component === 'function'
+                        ? e.object.activity.component()
+                        : null;
+                    if (comp && typeof comp.build === 'function') hookLegacyFull(comp, e.data);
+                } catch (err) {}
+            } else if (e.type === 'complite') {
+                try {
+                    var legacyComp = !e.link && e.object && e.object.activity && typeof e.object.activity.component === 'function'
+                        ? e.object.activity.component()
+                        : null;
+                    if (legacyComp && typeof legacyComp.__card_sections_flush === 'function') {
+                        legacyComp.__card_sections_flush();
+                    }
+                } catch (err2) {}
+            }
+        }
+
+        function refreshSubsectionView(backIndex) {
+            var $body = $('.settings__body');
+            var $sels = $body.find('.selector');
+            var lastIdx = $sels.index($body.find('.selector.focus'));
+            if (lastIdx < 0) lastIdx = 0;
+            Lampa.Settings.create(SUB_COMPONENT, {
+                last_index: lastIdx,
+                onBack: function () {
+                    Lampa.Settings.create(PLUGIN_ID, { last_index: backIndex });
+                    $('.settings__title').text(t('tv_settings_title'));
+                }
+            });
+            $('.settings__title').text(t('card_sections_title'));
+        }
+
+        function rebuildSettingsParams(backIndex) {
+            try {
+                if (Lampa.SettingsApi && typeof Lampa.SettingsApi.removeParams === 'function') {
+                    Lampa.SettingsApi.removeParams(SUB_COMPONENT);
+                    addSettingsParams(backIndex);
+                    return true;
+                }
+            } catch (e) {}
+            return false;
+        }
+
+        function setAllSections(visible, backIndex) {
+            for (var s = 0; s < SECTIONS.length; s++) {
+                Lampa.Storage.set(csKey('show_' + SECTIONS[s].id), !!visible);
+            }
+            markSettingsDirty();
+            refreshSubsectionView(backIndex);
+            Lampa.Noty.show(t(visible ? 'card_sections_noty_shown' : 'card_sections_noty_hidden'));
+        }
+
+        function resetOrder(silentSettingsUpdate, backIndex) {
+            Lampa.Storage.set(csKey('order'), '');
+            markSettingsDirty();
+            if (!silentSettingsUpdate) {
+                rebuildSettingsParams(backIndex);
+                refreshSubsectionView(backIndex);
+            }
+            Lampa.Noty.show(t('card_sections_noty_order_reset'));
+        }
+
+        function openOrderEditor(pickedId, focusId, changedInModal, backIndex) {
+            if (!Lampa.Select || typeof Lampa.Select.show !== 'function') return;
+            var order = getOrder();
+            var pickedIndex = pickedId ? order.indexOf(pickedId) : -1;
+            var items = [];
+
+            for (var idx = 0; idx < order.length; idx++) {
+                (function (secId, index) {
+                    var visible = isSectionEnabled(secId);
+                    var title = (index + 1) + '. ' + sectionTitle(secId);
+                    var subtitle = '';
+
+                    if (pickedIndex >= 0) {
+                        subtitle = index === pickedIndex
+                            ? t('card_sections_order_cancel')
+                            : (t('card_sections_order_place_here') + ' ' + (index + 1));
+                    } else {
+                        subtitle = visible
+                            ? t('card_sections_order_pick_hint')
+                            : (t('card_sections_order_hidden_tag') + ' · ' + t('card_sections_order_pick_hint'));
+                    }
+
+                    items.push({
+                        title: escapeHtml(title),
+                        subtitle: escapeHtml(subtitle),
+                        selected: focusId ? secId === focusId : (pickedIndex >= 0 && index === pickedIndex),
+                        picked: pickedIndex >= 0 && index === pickedIndex,
+                        ghost: !visible,
+                        onSelect: function () {
+                            if (pickedIndex < 0) openOrderEditor(secId, secId, changedInModal, backIndex);
+                            else if (index === pickedIndex) openOrderEditor(null, secId, changedInModal, backIndex);
+                            else {
+                                moveInOrder(pickedIndex, index);
+                                openOrderEditor(null, pickedId, true, backIndex);
+                            }
+                        }
+                    });
+                })(order[idx], idx);
+            }
+
+            if (pickedIndex < 0) {
+                items.push({ title: escapeHtml(t('card_sections_group_actions')), separator: true });
+                items.push({
+                    title: escapeHtml(t('card_sections_reset_order')),
+                    subtitle: escapeHtml(t('card_sections_reset_order_descr')),
+                    onSelect: function () {
+                        resetOrder(true, backIndex);
+                        openOrderEditor(null, null, true, backIndex);
+                    }
+                });
+            }
+
+            var modalTitle = pickedIndex >= 0
+                ? (t('card_sections_order_move_title') + ' ' + sectionTitle(pickedId))
+                : t('card_sections_order');
+
+            Lampa.Select.show({
+                title: modalTitle,
+                items: items,
+                onBack: function () {
+                    if (pickedIndex >= 0) {
+                        openOrderEditor(null, pickedId, changedInModal, backIndex);
+                        return;
+                    }
+                    try { Lampa.Controller.toggle('settings_component'); } catch (e) {}
+                    if (changedInModal && rebuildSettingsParams(backIndex)) {
+                        refreshSubsectionView(backIndex);
+                    }
+                }
+            });
+        }
+
+        function addSettingsParams(backIndex) {
+            Lampa.SettingsApi.addParam({
+                component: SUB_COMPONENT,
+                param: { name: csKey('enabled'), type: 'trigger', 'default': true },
+                field: {
+                    name: t('card_sections_enabled'),
+                    description: t('card_sections_enabled_descr')
+                },
+                onChange: markSettingsDirty
+            });
+
+            Lampa.SettingsApi.addParam({
+                component: SUB_COMPONENT,
+                param: { name: csKey('order_editor'), type: 'button' },
+                field: {
+                    name: t('card_sections_order'),
+                    description: t('card_sections_order_descr')
+                },
+                onChange: function () {
+                    openOrderEditor(null, null, false, backIndex);
+                }
+            });
+
+            Lampa.SettingsApi.addParam({
+                component: SUB_COMPONENT,
+                param: { name: csKey('title_sections'), type: 'title' },
+                field: { name: t('card_sections_group_sections') }
+            });
+
+            var order = getOrder();
+            for (var idx = 0; idx < order.length; idx++) {
+                var sec = SECTIONS_BY_ID[order[idx]];
+                if (!sec) continue;
+                Lampa.SettingsApi.addParam({
+                    component: SUB_COMPONENT,
+                    param: { name: csKey('show_' + sec.id), type: 'trigger', 'default': true },
+                    field: {
+                        name: (idx + 1) + '. ' + t(sec.langKey, sec.fallback),
+                        description: t(sec.descrKey)
+                    },
+                    onChange: markSettingsDirty
+                });
+            }
+
+            Lampa.SettingsApi.addParam({
+                component: SUB_COMPONENT,
+                param: { name: csKey('title_actions'), type: 'title' },
+                field: { name: t('card_sections_group_actions') }
+            });
+
+            Lampa.SettingsApi.addParam({
+                component: SUB_COMPONENT,
+                param: { name: csKey('show_all'), type: 'button' },
+                field: {
+                    name: t('card_sections_show_all'),
+                    description: t('card_sections_show_all_descr')
+                },
+                onChange: function () { setAllSections(true, backIndex); }
+            });
+
+            Lampa.SettingsApi.addParam({
+                component: SUB_COMPONENT,
+                param: { name: csKey('hide_all'), type: 'button' },
+                field: {
+                    name: t('card_sections_hide_all'),
+                    description: t('card_sections_hide_all_descr')
+                },
+                onChange: function () { setAllSections(false, backIndex); }
+            });
+
+            Lampa.SettingsApi.addParam({
+                component: SUB_COMPONENT,
+                param: { name: csKey('reset_order'), type: 'button' },
+                field: {
+                    name: t('card_sections_reset_order'),
+                    description: t('card_sections_reset_order_descr')
+                },
+                onChange: function () { resetOrder(false, backIndex); }
+            });
+        }
+
+        return {
+            SUB_COMPONENT: SUB_COMPONENT,
+            onFullEvent: onFullEvent,
+            shouldShowSeriesChoice: shouldShowSeriesChoice,
+            getSeriesChoiceInsertIndex: getSeriesChoiceInsertIndex,
+            addSettingsParams: addSettingsParams
+        };
+    })();
+
+    /* ------------------------------------------------------------------ *
+     * Настройка элементов шапки (интеграция head_filter.js)
+     * ------------------------------------------------------------------ */
+
+    var HeadFilter = (function () {
+        var SUB_COMPONENT = 'tv_plugin_head';
+
+        var ITEMS = [
+            { key: 'head_filter_show_search', lang: 'tv_head_search', selector: '.open--search' },
+            { key: 'head_filter_show_settings', lang: 'tv_head_settings', selector: '.open--settings' },
+            { key: 'head_filter_show_premium', lang: 'tv_head_premium', selector: '.open--premium' },
+            { key: 'head_filter_show_profile', lang: 'tv_head_profile', selector: '.open--profile' },
+            { key: 'head_filter_show_feed', lang: 'tv_head_feed', selector: '.open--feed' },
+            { key: 'head_filter_show_notice', lang: 'tv_head_notice', selector: '.notice--icon' },
+            { key: 'head_filter_show_broadcast', lang: 'tv_head_broadcast', selector: '.open--broadcast' },
+            { key: 'head_filter_show_fullscreen', lang: 'tv_head_fullscreen', selector: '.full-screen' },
+            { key: 'head_filter_show_reload', lang: 'tv_head_reload', selector: '.m-reload-screen' },
+            { key: 'head_filter_show_blackfriday', lang: 'tv_head_blackfriday', selector: '.black-friday__button' },
+            { key: 'head_filter_show_split', lang: 'tv_head_split', selector: '.head__split' },
+            { key: 'head_filter_show_time', lang: 'tv_head_time', selector: '.head__time' }
+        ];
+
+        var ITEMS_BY_KEY = {};
+        for (var i = 0; i < ITEMS.length; i++) {
+            ITEMS_BY_KEY[ITEMS[i].key] = ITEMS[i];
+        }
+
+        function applyItem(item) {
+            if (!item) return;
+            var show = getBoolSetting(item.key, true);
+            $('.head ' + item.selector + ', ' + item.selector).toggleClass('tv-head-hidden', !show);
+        }
+
+        function applyAll() {
+            for (var idx = 0; idx < ITEMS.length; idx++) {
+                applyItem(ITEMS[idx]);
+            }
+        }
+
+        function init() {
+            applyAll();
+            setTimeout(applyAll, 600);
+            setTimeout(applyAll, 1500);
+
+            Lampa.Storage.listener.follow('change', function (event) {
+                try {
+                    if (!event || !event.name) return;
+                    if (event.name === 'activity') {
+                        setTimeout(applyAll, 500);
+                    } else if (ITEMS_BY_KEY[event.name]) {
+                        applyItem(ITEMS_BY_KEY[event.name]);
+                    }
+                } catch (e) {}
+            });
+
+            Lampa.Listener.follow('activity', function (event) {
+                try {
+                    if (event && event.type === 'start') {
+                        setTimeout(applyAll, 150);
+                    }
+                } catch (e) {}
+            });
+        }
+
+        function addSettingsParams() {
+            Lampa.SettingsApi.addParam({
+                component: SUB_COMPONENT,
+                param: { type: 'title' },
+                field: { name: t('tv_head_group') }
+            });
+
+            for (var idx = 0; idx < ITEMS.length; idx++) {
+                (function (item) {
+                    Lampa.SettingsApi.addParam({
+                        component: SUB_COMPONENT,
+                        param: {
+                            name: item.key,
+                            type: 'trigger',
+                            'default': true
+                        },
+                        field: {
+                            name: t(item.lang)
+                        },
+                        onChange: function () {
+                            applyItem(item);
+                        }
+                    });
+                })(ITEMS[idx]);
+            }
+        }
+
+        return {
+            SUB_COMPONENT: SUB_COMPONENT,
+            init: init,
+            applyAll: applyAll,
+            addSettingsParams: addSettingsParams
+        };
+    })();
+
+    /* ------------------------------------------------------------------ *
      * Единый раздел настроек плагина с подразделами
      * ------------------------------------------------------------------ */
 
     var settingsDirty = false;
+    var settingsRefreshTimer = null;
 
     function markSettingsDirty() {
         settingsDirty = true;
     }
 
+    function refreshFullActivities() {
+        var active = Lampa.Activity && typeof Lampa.Activity.active === 'function' ? Lampa.Activity.active() : null;
+
+        if (Lampa.Activity && typeof Lampa.Activity.all === 'function') {
+            var all = Lampa.Activity.all() || [];
+            for (var i = 0; i < all.length; i++) {
+                var item = all[i];
+                if (!item || item.component !== 'full' || !item.activity || item === active) continue;
+                try {
+                    if (typeof item.activity.refresh === 'function') item.activity.refresh();
+                    else if (typeof item.activity.needRefresh === 'function') item.activity.needRefresh();
+                } catch (e) {}
+            }
+        }
+
+        if (active && active.component === 'full') {
+            try {
+                if (typeof Lampa.Activity.replace === 'function') Lampa.Activity.replace({});
+            } catch (e2) {}
+        }
+    }
+
     function maybeRefreshActiveCard() {
         if (!settingsDirty) return;
         settingsDirty = false;
-        var active = Lampa.Activity && Lampa.Activity.active && Lampa.Activity.active();
-        if (active && active.component === 'full') {
-            Lampa.Activity.replace();
-        }
+        if (settingsRefreshTimer) clearTimeout(settingsRefreshTimer);
+        settingsRefreshTimer = setTimeout(function () {
+            settingsRefreshTimer = null;
+            refreshFullActivities();
+        }, 60);
     }
 
     function registerSettings() {
@@ -3716,6 +4621,8 @@
             '</div>');
 
         Lampa.Template.add('settings_tv_plugin_ratings', '<div></div>');
+        Lampa.Template.add('settings_tv_plugin_sections', '<div></div>');
+        Lampa.Template.add('settings_tv_plugin_head', '<div></div>');
 
         function openSubSection(subId, subTitle, backIndex) {
             Lampa.Settings.create(subId, {
@@ -3758,6 +4665,34 @@
             onRender: function (item) {
                 item.on('hover:enter', function () {
                     openSubSection('tv_plugin_ratings', t('tv_sub_ratings_title'), 1);
+                });
+            }
+        });
+
+        Lampa.SettingsApi.addParam({
+            component: PLUGIN_ID,
+            param: { type: 'static' },
+            field: {
+                name: t('card_sections_title'),
+                description: t('card_sections_sub_descr')
+            },
+            onRender: function (item) {
+                item.on('hover:enter', function () {
+                    openSubSection(CardSections.SUB_COMPONENT, t('card_sections_title'), 2);
+                });
+            }
+        });
+
+        Lampa.SettingsApi.addParam({
+            component: PLUGIN_ID,
+            param: { type: 'static' },
+            field: {
+                name: t('tv_head_title'),
+                description: t('tv_head_descr')
+            },
+            onRender: function (item) {
+                item.on('hover:enter', function () {
+                    openSubSection(HeadFilter.SUB_COMPONENT, t('tv_head_title'), 3);
                 });
             }
         });
@@ -3899,7 +4834,16 @@
             } catch (err) {}
         });
 
+        // --- Подраздел: Разделы карточки ---
+        CardSections.addSettingsParams(2);
+
+        // --- Подраздел: Настройка шапки ---
+        HeadFilter.addSettingsParams();
+
         // Обновляем открытую карточку при выходе из настроек, если что-то меняли
+        if (Lampa.Settings && Lampa.Settings.listener) {
+            Lampa.Settings.listener.follow('close', maybeRefreshActiveCard);
+        }
         Lampa.Controller.listener.follow('toggle', function (e) {
             if (e && e.name !== 'settings' && e.name !== 'settings_component' && e.name !== 'modal' && e.name !== 'keybord' && e.name !== 'select') {
                 maybeRefreshActiveCard();
@@ -3980,6 +4924,9 @@
         Lampa.Template.add('full_start_new', fullStartTpl);
 
         var css = '' +
+            /* --- Head Filter --- */
+            '.tv-head-hidden{display:none !important}' +
+
             /* --- Background & Trailer --- */
             '.tv-card__background{left:0 !important;top:-5em !important;width:100% !important;height:105vh !important;object-fit:cover;-webkit-mask-image:-webkit-linear-gradient(top,#fff 48%,rgba(255,255,255,0) 98%) !important;mask-image:linear-gradient(to bottom,#fff 48%,rgba(255,255,255,0) 98%) !important;-webkit-transition:opacity .6s ease;transition:opacity .6s ease}' +
             '.tv-card__background.loaded:not(.dim){opacity:1 !important}' +
@@ -3999,7 +4946,7 @@
             '.full-start-new.tv-card .full-start-new__head span{color:#fff}' +
             '.full-start-new.tv-card .full-start-new__title{font-size:4.1em;font-weight:600;line-height:1.15;margin-bottom:.25em;text-shadow:0 .06em .28em rgba(0,0,0,.45);max-width:100%}' +
             '.full-start-new.tv-card .full-start-new__title.tv-title--logo{display:block;overflow:visible;max-height:none;-webkit-line-clamp:unset;line-clamp:unset;margin-left:0;margin-bottom:.85em;font-size:1em}' +
-            '.tv-title-logo{display:block;max-height:5.6em;max-width:24em;width:auto;height:auto;object-fit:contain;object-position:left bottom;-webkit-filter:drop-shadow(0 .1em .35em rgba(0,0,0,.55));filter:drop-shadow(0 .1em .35em rgba(0,0,0,.55));opacity:0;-webkit-transition:opacity .35s ease;transition:opacity .35s ease}' +
+            '.tv-title-logo{display:block;max-height:10em;max-width:24em;width:auto;height:auto;object-fit:contain;object-position:left bottom;-webkit-filter:drop-shadow(0 .1em .35em rgba(0,0,0,.55));filter:drop-shadow(0 .1em .35em rgba(0,0,0,.55));opacity:0;-webkit-transition:opacity .35s ease;transition:opacity .35s ease}' +
             '.tv-title-logo.tv-title-logo--loaded{opacity:1}' +
             '.tv-hero__details{margin-bottom:1.2em}' +
             '.full-start-new.tv-card .full-start-new__details{margin:0;font-size:1.1em;color:rgba(255,255,255,.95);display:-webkit-box;display:-webkit-flex;display:flex;-webkit-flex-wrap:wrap;flex-wrap:wrap;-webkit-box-align:center;-webkit-align-items:center;align-items:center;gap:.45em .75em;text-shadow:0 1px 4px rgba(0,0,0,.4)}' +
@@ -4066,9 +5013,9 @@
             '.tv-ep-card__img{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;opacity:0;-webkit-transition:opacity .3s;transition:opacity .3s}' +
             '.tv-ep-card__img.loaded{opacity:1}' +
             '.tv-ep-card__shade{position:absolute;left:0;right:0;bottom:0;height:42%;background:-webkit-linear-gradient(top,rgba(0,0,0,0) 0%,rgba(0,0,0,.78) 100%);background:linear-gradient(to bottom,rgba(0,0,0,0) 0%,rgba(0,0,0,.78) 100%)}' +
-            '.tv-ep-card__duration{position:absolute;left:.7em;bottom:.75em;font-size:.66em;font-weight:500;color:rgba(255,255,255,.82);z-index:2}' +
-            '.tv-ep-card__upcoming-badge{position:absolute;right:.7em;bottom:.75em;font-size:.66em;font-weight:500;color:rgba(255,255,255,.84);z-index:2}' +
-            '.tv-ep-card__progress{position:absolute;left:.7em;right:.7em;bottom:.32em;height:.22em;border-radius:.22em;background:rgba(255,255,255,.24);overflow:hidden;z-index:2}' +
+            '.tv-ep-card__duration{position:absolute;left:1.06em;bottom:1.75em;font-size:.66em;font-weight:500;color:rgba(255,255,255,.86);z-index:2}' +
+            '.tv-ep-card__upcoming-badge{position:absolute;right:1.06em;bottom:1.75em;font-size:.66em;font-weight:500;color:rgba(255,255,255,.86);z-index:2}' +
+            '.tv-ep-card__progress{position:absolute;left:.7em;right:.7em;bottom:.48em;height:.22em;border-radius:.22em;background:rgba(255,255,255,.24);overflow:hidden;z-index:2}' +
             '.tv-ep-card__progress-fill{height:100%;background:#e2e2e2;border-radius:.22em}' +
             '.tv-ep-card__title{font-size:.84em;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
             '.tv-ep-card--upcoming .tv-ep-card__title{color:rgba(255,255,255,.5)}' +
@@ -4085,10 +5032,10 @@
             '.full-descr.tv-descr .full-descr__info-body{font-size:1.22em;font-weight:300;color:rgba(255,255,255,.95)}' +
             '.tv-descr__tags-area{margin-top:.6em}' +
             '.tv-descr__genres-label{font-size:1.05em;color:rgba(255,255,255,.55);margin-bottom:.6em}' +
-            '.tv-descr__tags-row{display:-webkit-box;display:-webkit-flex;display:flex;-webkit-box-align:center;-webkit-align-items:center;align-items:center;-webkit-box-pack:justify;-webkit-justify-content:space-between;justify-content:space-between;-webkit-flex-wrap:wrap;flex-wrap:wrap;gap:.65em}' +
-            '.tv-descr__genres-list,.tv-descr__other-tags{display:-webkit-box;display:-webkit-flex;display:flex;-webkit-flex-wrap:wrap;flex-wrap:wrap;-webkit-box-align:center;-webkit-align-items:center;align-items:center;gap:.55em}' +
-            '.tv-genre-pill{border-radius:.55em;background:rgba(0,0,0,.38);padding:.45em .95em;font-size:1.08em;color:#fff;-webkit-transition:background-color .15s,color .15s;transition:background-color .15s,color .15s}' +
-            '.tv-genre-pill.focus{background:#fff;color:#000}' +
+            '.tv-descr__tags-row{display:-webkit-box;display:-webkit-flex;display:flex;-webkit-box-align:stretch;-webkit-align-items:stretch;align-items:stretch;-webkit-box-pack:justify;-webkit-justify-content:space-between;justify-content:space-between;-webkit-flex-wrap:wrap;flex-wrap:wrap;gap:.65em}' +
+            '.tv-descr__genres-list,.tv-descr__other-tags{display:-webkit-box;display:-webkit-flex;display:flex;-webkit-flex-wrap:wrap;flex-wrap:wrap;-webkit-box-align:stretch;-webkit-align-items:stretch;align-items:stretch;gap:.55em}' +
+            '.tv-descr__tags-row .tag-count{margin:0;min-height:2.85em;display:-webkit-inline-box;display:-webkit-inline-flex;display:inline-flex;-webkit-box-align:center;-webkit-align-items:center;align-items:center}' +
+            '.tv-genre-pill .tag-count__name{padding-left:.85em;padding-right:.85em}' +
 
             /* --- Filmix Profile Card & List Styles --- */
             '.tv-fx-profile{margin:1em 0;padding:1em;background:rgba(255,255,255,.08);border-radius:.6em;line-height:1.35}' +
@@ -4179,10 +5126,13 @@
         }
 
         registerTemplatesAndStyles();
+        HeadFilter.init();
 
         // Подписки на события карточки фильма/сериала
         Lampa.Listener.follow('full', function (e) {
             try {
+                CardSections.onFullEvent(e);
+
                 if (e.type === 'complite') {
                     setupFullCard(e);
                 } else if (e.type === 'build' && e.name === 'description') {
