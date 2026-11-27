@@ -764,6 +764,17 @@
         return Lampa.Utils.hash(getOriginalTitle(movie));
     }
 
+    function clonePlayItem(item) {
+        var copy = {};
+        if (!item) return copy;
+        for (var k in item) {
+            if (Object.prototype.hasOwnProperty.call(item, k) && k !== 'playlist') {
+                copy[k] = item[k];
+            }
+        }
+        return copy;
+    }
+
     function formatDaysLeft(airDateStr) {
         if (!airDateStr) return null;
         var parsed = new Date(String(airDateStr).replace(/-/g, '/'));
@@ -1593,8 +1604,8 @@
                 playlist.push(makePlayItem(voiceObj.episodes[i]));
             }
 
-            var first = playlist[epIndex];
-            if (!first || !first.url) {
+            var firstItem = playlist[epIndex];
+            if (!firstItem || !firstItem.url) {
                 Lampa.Noty.show(t('tv_filmix_nolink'));
                 return;
             }
@@ -1603,6 +1614,7 @@
             markEpisodeWatched(movie, voiceObj.episodes[epIndex].season, voiceObj.episodes[epIndex].episode, voiceObj.name);
             if (onAfterMark) onAfterMark(voiceObj.episodes[epIndex]);
 
+            var first = clonePlayItem(firstItem);
             if (playlist.length > 1) first.playlist = playlist;
             Lampa.Player.play(first);
             Lampa.Player.playlist(playlist);
@@ -2961,7 +2973,7 @@
                     })(voiceObj.episodes[i], i);
                 }
 
-                var first = playlist[epIndex];
+                var first = clonePlayItem(playlist[epIndex]);
                 if (movie && movie.id) Lampa.Favorite.add('history', movie, 100);
                 Filmix.markEpisodeWatched(movie, targetEp.season, targetEp.episode, voiceObj.name);
                 if (onAfterMark) onAfterMark(targetEp);
