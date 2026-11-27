@@ -4268,7 +4268,7 @@
                     return;
                 }
                 postToBridge('setVolume', { volume: 0 });
-                postToBridge('resize', { width: window.innerWidth, height: window.innerHeight });
+                applyFrameSize(true);
                 if (isStillActiveAndTop()) {
                     postToBridge('play');
                 } else {
@@ -4320,10 +4320,42 @@
             }
         }
 
-        function onWindowResize() {
-            if (frameReady) {
-                postToBridge('resize', { width: window.innerWidth, height: window.innerHeight });
+        function getBridgeMetrics() {
+            var dpr = Math.min(Math.max(window.devicePixelRatio || 1, 1), 3);
+            var winW = window.innerWidth || 1920;
+            var winH = window.innerHeight || 1080;
+            // youtube.html умножает innerWidth на 2 (screen_size = 2): ограничиваем физический viewport до 1920x1080 (Full HD),
+            // чтобы YouTube ABR не выбирал 4K (2160p) и не тормозил на ТВ
+            var maxPhysW = Math.min(1920, Math.round(winW * dpr));
+            var bridgeW = Math.max(320, Math.floor(maxPhysW / (2 * dpr)));
+            var bridgeH = Math.round(bridgeW * 9 / 16);
+            var cw = ($layer && $layer[0] && $layer[0].offsetWidth) ? $layer[0].offsetWidth : winW;
+            var ch = ($layer && $layer[0] && $layer[0].offsetHeight) ? $layer[0].offsetHeight : Math.round(winH * 1.05);
+            var scale = Math.max(cw / bridgeW, ch / bridgeH);
+            return {
+                bridgeW: bridgeW,
+                bridgeH: bridgeH,
+                innerW: bridgeW * 2,
+                innerH: (bridgeH + 600) * 2,
+                scale: scale
+            };
+        }
+
+        function applyFrameSize(notifyBridge) {
+            if (!frameEl || !$layer) return;
+            var m = getBridgeMetrics();
+            frameEl.style.width = m.bridgeW + 'px';
+            frameEl.style.height = m.bridgeH + 'px';
+            var tf = 'translate(-50%,-50%) scale(' + m.scale.toFixed(4) + ')';
+            frameEl.style.webkitTransform = tf;
+            frameEl.style.transform = tf;
+            if (notifyBridge && frameReady) {
+                postToBridge('resize', { width: m.innerW, height: m.innerH });
             }
+        }
+
+        function onWindowResize() {
+            applyFrameSize(true);
         }
 
         function tryNextCandidate() {
@@ -4348,10 +4380,11 @@
             iframe.setAttribute('frameborder', '0');
             iframe.setAttribute('allow', 'autoplay; encrypted-media; picture-in-picture');
             iframe.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
-            iframe.src = getYouTubeBridgeUrl(bridgeId, currentVideo.id, START_OFFSET);
             frameEl = iframe;
 
             $layer.find('.tv-bg-trailer__wrap')[0].appendChild(iframe);
+            applyFrameSize(false);
+            iframe.src = getYouTubeBridgeUrl(bridgeId, currentVideo.id, START_OFFSET);
 
             // Если видео не начало играть за 8 сек (напр. заблокировано/не грузится) — пробуем следующий трейлер
             clearTimeout(watchdogTimer);
@@ -6675,8 +6708,8 @@
             '.tv-bg-trailer{position:absolute;left:0;top:-5em;width:100%;height:105vh;z-index:-2;overflow:hidden;pointer-events:none;opacity:.01;-webkit-transition:opacity .7s ease;transition:opacity .7s ease;-webkit-mask-image:-webkit-linear-gradient(top,#fff 48%,rgba(255,255,255,0) 98%);mask-image:linear-gradient(to bottom,#fff 48%,rgba(255,255,255,0) 98%)}' +
             '.tv-bg-trailer.tv-bg-trailer--visible{opacity:1;z-index:-1}' +
             '.tv-bg-trailer.tv-bg-trailer--paused{opacity:0 !important;z-index:-2}' +
-            '.tv-bg-trailer__wrap{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none}' +
-            '.tv-bg-trailer__wrap iframe{width:100%;height:100%;border:0;display:block;pointer-events:none}' +
+            '.tv-bg-trailer__wrap{position:absolute;top:0;left:0;width:100%;height:100%;overflow:hidden;pointer-events:none}' +
+            '.tv-bg-trailer__wrap iframe{position:absolute;left:50%;top:50%;border:0;display:block;pointer-events:none;-webkit-transform-origin:center center;transform-origin:center center}' +
 
             /* --- Hero Layout --- */
             '.full-start-new.tv-card{padding-bottom:2.8em}' +
