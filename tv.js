@@ -249,10 +249,10 @@
             be: 'Тэгі настрояў фільма або серыяла'
         },
         card_sections_descr_episodes: {
-            ru: 'Список и расписание выхода серий (для сериалов)',
-            uk: 'Список та розклад виходу серій (для серіалів)',
-            en: 'Episodes list and release schedule (for TV shows)',
-            be: 'Спіс і расклад выхаду серый (для серыялаў)'
+            ru: 'Штатный блок «Сезон N» и расписание выхода серий (для сериалов)',
+            uk: 'Штатний блок «Сезон N» та розклад виходу серій (для серіалів)',
+            en: 'Default "Season N" row and episode release schedule (for TV shows)',
+            be: 'Штатны блок «Сезон N» і расклад выхаду серый (для серыялаў)'
         },
         card_sections_descr_directors: {
             ru: 'Блок режиссёров',
@@ -5068,6 +5068,7 @@
             var maxS = 0;
             if (!dataObj || !dataObj.episodes) return 0;
             var epBlock = dataObj.episodes;
+            if (epBlock.seasons_count && epBlock.seasons_count > maxS) maxS = epBlock.seasons_count;
             if (epBlock.season_number && epBlock.season_number > maxS) maxS = epBlock.season_number;
             if (epBlock.name) {
                 var mName = String(epBlock.name).match(/(?:сезон|season)\s*(\d+)|(\d+)\s*(?:сезон|season)/i);
