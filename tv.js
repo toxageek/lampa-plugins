@@ -428,11 +428,23 @@
             en: 'Loading Filmix...',
             be: 'Загрузка Filmix...'
         },
+        tv_loading_bwa: {
+            ru: 'Поиск в BWA...',
+            uk: 'Пошук у BWA...',
+            en: 'Searching BWA...',
+            be: 'Пошук у BWA...'
+        },
         tv_not_found_filmix: {
             ru: 'Не найдено на Filmix',
             uk: 'Не знайдено на Filmix',
             en: 'Not found on Filmix',
             be: 'Не знойдзена на Filmix'
+        },
+        tv_not_found_sources: {
+            ru: 'Не найдено в источниках',
+            uk: 'Не знайдено у джерелах',
+            en: 'Not found in sources',
+            be: 'Не знойдзена ў крыніцах'
         },
         tv_open_filmix: {
             ru: 'Найти на Filmix',
@@ -2387,6 +2399,627 @@
     })();
 
     /* ------------------------------------------------------------------ *
+     * Резервный провайдер BWA (bwa_online): перебор всех включённых источников
+     * ------------------------------------------------------------------ */
+
+    var BwaFallback = (function () {
+        var BWA_COMPONENT = 'bwa_online';
+        var DEFAULT_SERVER = 'https://api.bwa.ad';
+        var ANIME_BALANSERS = ['animevost', 'anilibria', 'animedia', 'animego', 'animelib', 'kodik', 'animebesst', 'moonanime'];
+        var epStreamCache = {};
+
+        function isInstalled() {
+            try {
+                if (window.bwa_plugin) return true;
+                if (Lampa.Component && typeof Lampa.Component.get === 'function' && Lampa.Component.get(BWA_COMPONENT)) return true;
+            } catch (e) {}
+            return false;
+        }
+
+        function getServerBase() {
+            var srv = Lampa.Storage.value('bwa_server', '');
+            if (srv && /^https?:\/\//i.test(srv)) {
+                return srv.replace(/\/+$/, '');
+            }
+            var cached = Lampa.Storage.get('bwa_node_cache', null);
+            if (cached) {
+                var cUrl = typeof cached === 'string' ? cached : (cached.url || cached.host || cached.server || '');
+                if (cUrl && /^https?:\/\//i.test(cUrl)) return cUrl.replace(/\/+$/, '');
+            }
+            return DEFAULT_SERVER;
+        }
+
+        function getUid() {
+            var uid = Lampa.Storage.value('bwa_uid', '');
+            if (!uid) uid = Lampa.Utils.uid(16);
+            return uid;
+        }
+
+        function getHiddenMap() {
+            var raw = Lampa.Storage.get('bwa_sources_hidden', []);
+            var map = {};
+            if (Array.isArray(raw)) {
+                for (var i = 0; i < raw.length; i++) {
+                    if (raw[i]) map[String(raw[i]).toLowerCase()] = true;
+                }
+            } else if (raw && typeof raw === 'object') {
+                for (var k in raw) {
+                    if (raw[k]) map[String(k).toLowerCase()] = true;
+                }
+            }
+            return map;
+        }
+
+        function parseQualityNum(q) {
+            var str = String(q || '');
+            if (/4k|2160|uhd/i.test(str)) return 2160;
+            var num = parseInt(str.replace(/[^\d]/g, ''), 10);
+            return num > 0 ? num : 720;
+        }
+
+        function buildQuery(movie, extra) {
+            var serial = isSerialMovie(movie);
+            var clarifyMap = Lampa.Storage.get('bwa_clarify', {}) || {};
+            var clarify = clarifyMap[(serial ? 's:' : 'm:') + movie.id] || '';
+            var title = clarify || movie.title || movie.name || '';
+            var orig = movie.original_title || movie.original_name || title;
+            var year = String(movie.release_date || movie.first_air_date || '0000').slice(0, 4);
+
+            var q = [
+                'id=' + encodeURIComponent(movie.id || ''),
+                'tmdb_id=' + encodeURIComponent(movie.id || ''),
+                'title=' + encodeURIComponent(title),
+                'original_title=' + encodeURIComponent(orig),
+                'serial=' + (serial ? 1 : 0),
+                'year=' + encodeURIComponent(year),
+                'uid=' + encodeURIComponent(getUid()),
+                'rchtype=cors',
+                'dalt=2'
+            ];
+
+            if (movie.imdb_id) q.push('imdb_id=' + encodeURIComponent(movie.imdb_id));
+            if (movie.kinopoisk_id) q.push('kinopoisk_id=' + encodeURIComponent(movie.kinopoisk_id));
+            if (movie.original_language) q.push('original_language=' + encodeURIComponent(movie.original_language));
+            if (clarify) q.push('clarification=1');
+
+            var kitKey = Lampa.Storage.value('bwa_kitkey', '');
+            if (kitKey) q.push('kit=' + encodeURIComponent(kitKey));
+
+            var email = Lampa.Storage.value('account_email', '');
+            if (email) q.push('cub_id=' + encodeURIComponent(Lampa.Utils.hash(email)));
+
+            if (extra) {
+                for (var ek in extra) {
+                    if (extra[ek] !== undefined && extra[ek] !== null && extra[ek] !== '') {
+                        q.push(encodeURIComponent(ek) + '=' + encodeURIComponent(extra[ek]));
+                    }
+                }
+            }
+
+            return q.join('&');
+        }
+
+        function resolveUrl(base, path, query) {
+            var full = /^https?:\/\//i.test(path) ? path : (base + (path.charAt(0) === '/' ? path : '/' + path));
+            if (!query) return full;
+            return full + (full.indexOf('?') >= 0 ? '&' : '?') + query;
+        }
+
+        function requestJson(net, url, timeoutMs, onOk, onErr) {
+            net.timeout(timeoutMs || 7000);
+            var method = (Lampa.Platform && Lampa.Platform.is && Lampa.Platform.is('android')) ? 'native' : 'silent';
+            net[method](url, function (res) {
+                var json = res;
+                if (typeof res === 'string') {
+                    try { json = JSON.parse(res); } catch (e) { json = null; }
+                }
+                if (json && typeof json === 'object') onOk(json);
+                else onErr();
+            }, function () {
+                onErr();
+            });
+        }
+
+        function groupStreamsByVoice(streams) {
+            if (!Array.isArray(streams) || !streams.length) return [];
+            var map = {};
+            var order = [];
+
+            for (var i = 0; i < streams.length; i++) {
+                var st = streams[i];
+                if (!st || !st.url) continue;
+                var vName = String(st.voice || st.translate || st.translation || 'По умолчанию').trim() || 'По умолчанию';
+                if (!map[vName]) {
+                    map[vName] = {
+                        name: vName,
+                        maxQuality: 0,
+                        qualitiesMap: {},
+                        bestUrl: '',
+                        subtitles: null
+                    };
+                    order.push(vName);
+                }
+                var entry = map[vName];
+                var qNum = parseQualityNum(st.quality);
+                var qLabel = qNum >= 2160 ? '2160p' : (qNum + 'p');
+                if (!entry.qualitiesMap[qLabel]) entry.qualitiesMap[qLabel] = st.url;
+                if (qNum > entry.maxQuality) {
+                    entry.maxQuality = qNum;
+                    entry.bestUrl = st.url;
+                }
+                if (!entry.bestUrl) entry.bestUrl = st.url;
+                if (st.subtitles && Array.isArray(st.subtitles) && st.subtitles.length && !entry.subtitles) {
+                    entry.subtitles = st.subtitles;
+                }
+            }
+
+            var preferred = Lampa.Storage.get('video_quality_default', '1080') + 'p';
+            var result = [];
+            for (var j = 0; j < order.length; j++) {
+                var item = map[order[j]];
+                if (item.qualitiesMap[preferred]) item.bestUrl = item.qualitiesMap[preferred];
+                result.push(item);
+            }
+            return result;
+        }
+
+        function extractSeasonNumbers(movie, srcSeasons) {
+            var nums = [];
+            var seen = {};
+            var i, n;
+
+            if (Array.isArray(srcSeasons) && srcSeasons.length) {
+                for (i = 0; i < srcSeasons.length; i++) {
+                    var s = srcSeasons[i];
+                    n = parseInt(typeof s === 'object' && s ? (s.season || s.season_number || s.number || s.id) : s, 10);
+                    if (n > 0 && !seen[n]) { seen[n] = true; nums.push(n); }
+                }
+            }
+            if (!nums.length && movie && Array.isArray(movie.seasons) && movie.seasons.length) {
+                for (i = 0; i < movie.seasons.length; i++) {
+                    n = parseInt(movie.seasons[i] && movie.seasons[i].season_number, 10);
+                    if (n > 0 && !seen[n]) { seen[n] = true; nums.push(n); }
+                }
+            }
+            if (!nums.length && movie && movie.number_of_seasons > 0) {
+                for (i = 1; i <= movie.number_of_seasons; i++) nums.push(i);
+            }
+            if (!nums.length) nums.push(1);
+
+            nums.sort(function (a, b) { return a - b; });
+            return nums;
+        }
+
+        function extractEpisodeNumbers(movie, seasonNum, jsonEpisodes) {
+            var nums = [];
+            var seen = {};
+            var i, n;
+
+            if (Array.isArray(jsonEpisodes) && jsonEpisodes.length) {
+                for (i = 0; i < jsonEpisodes.length; i++) {
+                    var ep = jsonEpisodes[i];
+                    n = parseInt(typeof ep === 'object' && ep ? (ep.episode || ep.episode_number || ep.number || ep.id) : ep, 10);
+                    if (n > 0 && !seen[n]) { seen[n] = true; nums.push(n); }
+                }
+            }
+            if (!nums.length && movie && Array.isArray(movie.seasons)) {
+                for (i = 0; i < movie.seasons.length; i++) {
+                    var ms = movie.seasons[i];
+                    if (ms && parseInt(ms.season_number, 10) === seasonNum && ms.episode_count > 0) {
+                        for (var e = 1; e <= ms.episode_count; e++) nums.push(e);
+                        break;
+                    }
+                }
+            }
+            if (!nums.length) nums.push(1);
+
+            nums.sort(function (a, b) { return a - b; });
+            return nums;
+        }
+
+        function orderSources(movie, list) {
+            if (!Array.isArray(list) || !list.length) return [];
+            var hidden = getHiddenMap();
+            var titleSrcMap = Lampa.Storage.get('bwa_title_src', {}) || {};
+            var savedForMovie = String(titleSrcMap[movie.id] || '').toLowerCase();
+            var globalBalanser = String(Lampa.Storage.value('bwa_balanser', '') || '').toLowerCase();
+            var anime = isAnimeMovie(movie);
+
+            var enabled = [];
+            for (var i = 0; i < list.length; i++) {
+                var s = list[i];
+                if (!s || !s.balanser || !s.url) continue;
+                if (s.show === false) continue;
+                if (s.account_only && !s.bound) continue;
+                if (hidden[String(s.balanser).toLowerCase()]) continue;
+                enabled.push(s);
+            }
+
+            function priority(src, idx) {
+                var key = String(src.balanser).toLowerCase();
+                if (savedForMovie && key === savedForMovie) return 0;
+                if (globalBalanser && key === globalBalanser) return 10;
+                if (anime && ANIME_BALANSERS.indexOf(key) !== -1) return 20 + ANIME_BALANSERS.indexOf(key);
+                if (src.avoid) return 500 + idx;
+                return 100 + idx;
+            }
+
+            return enabled.map(function (s, idx) {
+                return { src: s, p: priority(s, idx) };
+            }).sort(function (a, b) {
+                return a.p - b.p;
+            }).map(function (x) {
+                return x.src;
+            });
+        }
+
+        function buildSeasonVoices(src, seasonNum, epNums, groupedVoices, probedEpNum) {
+            var voices = [];
+            for (var v = 0; v < groupedVoices.length; v++) {
+                var gv = groupedVoices[v];
+                var eps = [];
+                for (var e = 0; e < epNums.length; e++) {
+                    var eNum = epNums[e];
+                    eps.push({
+                        id: seasonNum + '_' + eNum,
+                        season: seasonNum,
+                        episode: eNum,
+                        quality: gv.maxQuality,
+                        qualities: [gv.maxQuality],
+                        voice_name: gv.name,
+                        provider: 'bwa',
+                        bwaSource: src,
+                        file: eNum === probedEpNum ? gv.bestUrl : '',
+                        bwaQualitiesMap: eNum === probedEpNum ? gv.qualitiesMap : null,
+                        bwaSubtitles: eNum === probedEpNum ? gv.subtitles : null
+                    });
+                }
+                voices.push({
+                    name: gv.name,
+                    maxQuality: gv.maxQuality,
+                    episodes: eps,
+                    provider: 'bwa'
+                });
+            }
+            return voices;
+        }
+
+        function cacheGroupedVoices(balanser, movieId, seasonNum, epNum, groupedVoices) {
+            var key = balanser + ':' + movieId + ':' + seasonNum + ':' + epNum;
+            epStreamCache[key] = groupedVoices;
+        }
+
+        function getCachedVoiceStream(balanser, movieId, seasonNum, epNum, voiceName) {
+            var key = balanser + ':' + movieId + ':' + seasonNum + ':' + epNum;
+            var list = epStreamCache[key];
+            if (!list || !list.length) return null;
+            if (voiceName) {
+                var low = voiceName.toLowerCase();
+                for (var i = 0; i < list.length; i++) {
+                    if (list[i].name.toLowerCase() === low) return list[i];
+                }
+            }
+            return list[0];
+        }
+
+        function saveTitleSource(movieId, balanser) {
+            if (!movieId || !balanser) return;
+            var map = Lampa.Storage.get('bwa_title_src', {}) || {};
+            map[movieId] = balanser;
+            Lampa.Storage.set('bwa_title_src', map);
+        }
+
+        function resolveForMovie(movie, net, onProgress, onDone) {
+            if (!isInstalled() || !movie) {
+                onDone(null);
+                return;
+            }
+
+            var base = getServerBase();
+            var serial = isSerialMovie(movie);
+            var eventsUrl = resolveUrl(base, '/lite/events', buildQuery(movie));
+
+            requestJson(net, eventsUrl, 8000, function (eventsList) {
+                var sources = orderSources(movie, eventsList);
+                if (!sources.length) {
+                    onDone(null);
+                    return;
+                }
+
+                var savedChoice = Filmix.getChoice(movie.id);
+                var probeSeason = serial ? (savedChoice.last_season || 1) : 0;
+                var probeEpisode = serial ? (savedChoice.last_episode || 1) : 0;
+
+                var idx = 0;
+
+                function tryNext() {
+                    if (idx >= sources.length) {
+                        onDone(null);
+                        return;
+                    }
+
+                    var src = sources[idx++];
+                    if (onProgress) onProgress(src.name || src.balanser);
+
+                    function probeSource(sNum, eNum, canFallbackToS1E1) {
+                        var extra = serial ? { season: sNum, episode: eNum } : null;
+                        var url = resolveUrl(base, src.url, buildQuery(movie, extra));
+
+                        requestJson(net, url, 6500, function (json) {
+                            var grouped = json && Array.isArray(json.streams) ? groupStreamsByVoice(json.streams) : [];
+                            if (!grouped.length) {
+                                if (serial && canFallbackToS1E1 && (sNum !== 1 || eNum !== 1)) {
+                                    probeSource(1, 1, false);
+                                } else {
+                                    tryNext();
+                                }
+                                return;
+                            }
+
+                            saveTitleSource(movie.id, src.balanser);
+
+                            if (serial) {
+                                cacheGroupedVoices(src.balanser, movie.id, sNum, eNum, grouped);
+                                var seasonNums = extractSeasonNumbers(movie, json.src_seasons);
+                                if (seasonNums.indexOf(sNum) === -1) {
+                                    seasonNums.push(sNum);
+                                    seasonNums.sort(function (a, b) { return a - b; });
+                                }
+                                var epNums = extractEpisodeNumbers(movie, sNum, json.episodes);
+                                if (epNums.indexOf(eNum) === -1) {
+                                    epNums.push(eNum);
+                                    epNums.sort(function (a, b) { return a - b; });
+                                }
+
+                                var seasons = [];
+                                for (var si = 0; si < seasonNums.length; si++) {
+                                    var curS = seasonNums[si];
+                                    var isProbed = (curS === sNum);
+                                    var curEps = isProbed ? epNums : extractEpisodeNumbers(movie, curS, null);
+                                    seasons.push({
+                                        key: String(curS),
+                                        num: curS,
+                                        label: t('tv_season_short') + ' ' + curS,
+                                        voices: buildSeasonVoices(src, curS, curEps, grouped, isProbed ? eNum : -1),
+                                        bwaLoaded: isProbed
+                                    });
+                                }
+
+                                onDone({
+                                    id: 'bwa_' + src.balanser,
+                                    provider: 'bwa',
+                                    bwaSource: src,
+                                    sourceName: src.name || src.balanser,
+                                    title: movie.name || movie.title || '',
+                                    isSerial: true,
+                                    seasons: seasons,
+                                    movies: []
+                                });
+                            } else {
+                                var moviesList = [];
+                                for (var mi = 0; mi < grouped.length; mi++) {
+                                    moviesList.push({
+                                        translation: grouped[mi].name,
+                                        file: grouped[mi].bestUrl,
+                                        quality: grouped[mi].maxQuality,
+                                        qualities: [grouped[mi].maxQuality],
+                                        qualitiesMap: grouped[mi].qualitiesMap,
+                                        subtitles: grouped[mi].subtitles
+                                    });
+                                }
+                                onDone({
+                                    id: 'bwa_' + src.balanser,
+                                    provider: 'bwa',
+                                    bwaSource: src,
+                                    sourceName: src.name || src.balanser,
+                                    title: movie.title || movie.name || '',
+                                    isSerial: false,
+                                    seasons: [],
+                                    movies: moviesList
+                                });
+                            }
+                        }, function () {
+                            tryNext();
+                        });
+                    }
+
+                    probeSource(probeSeason, probeEpisode, true);
+                }
+
+                tryNext();
+            }, function () {
+                onDone(null);
+            });
+        }
+
+        function loadSeason(movie, parsedPost, seasonIndex, net, onDone) {
+            if (!parsedPost || !parsedPost.bwaSource || !parsedPost.seasons[seasonIndex]) {
+                onDone(false);
+                return;
+            }
+            var seasonObj = parsedPost.seasons[seasonIndex];
+            if (seasonObj.bwaLoaded) {
+                onDone(true);
+                return;
+            }
+
+            var src = parsedPost.bwaSource;
+            var base = getServerBase();
+            var url = resolveUrl(base, src.url, buildQuery(movie, { season: seasonObj.num, episode: 1 }));
+
+            requestJson(net, url, 8000, function (json) {
+                var grouped = json && Array.isArray(json.streams) ? groupStreamsByVoice(json.streams) : [];
+                if (grouped.length) {
+                    cacheGroupedVoices(src.balanser, movie.id, seasonObj.num, 1, grouped);
+                    var epNums = extractEpisodeNumbers(movie, seasonObj.num, json.episodes);
+                    seasonObj.voices = buildSeasonVoices(src, seasonObj.num, epNums, grouped, 1);
+                    seasonObj.bwaLoaded = true;
+                    onDone(true);
+                } else {
+                    onDone(false);
+                }
+            }, function () {
+                onDone(false);
+            });
+        }
+
+        function fetchEpisodeStream(movie, bwaSource, seasonNum, epNum, voiceName, net, cb) {
+            var cached = getCachedVoiceStream(bwaSource.balanser, movie.id, seasonNum, epNum, voiceName);
+            if (cached && cached.bestUrl) {
+                cb({ file: cached.bestUrl, quality: cached.qualitiesMap, subtitles: cached.subtitles });
+                return;
+            }
+
+            var base = getServerBase();
+            var url = resolveUrl(base, bwaSource.url, buildQuery(movie, { season: seasonNum, episode: epNum }));
+
+            requestJson(net, url, 10000, function (json) {
+                var grouped = json && Array.isArray(json.streams) ? groupStreamsByVoice(json.streams) : [];
+                if (!grouped.length) {
+                    cb(null);
+                    return;
+                }
+                cacheGroupedVoices(bwaSource.balanser, movie.id, seasonNum, epNum, grouped);
+                var picked = getCachedVoiceStream(bwaSource.balanser, movie.id, seasonNum, epNum, voiceName);
+                if (picked && picked.bestUrl) {
+                    cb({ file: picked.bestUrl, quality: picked.qualitiesMap, subtitles: picked.subtitles });
+                } else {
+                    cb(null);
+                }
+            }, function () {
+                cb(null);
+            });
+        }
+
+        function playEpisode(movie, parsedPost, voiceObj, epIndex, tmdbMap, onAfterMark) {
+            if (!parsedPost || !parsedPost.bwaSource || !voiceObj || !voiceObj.episodes || !voiceObj.episodes[epIndex]) {
+                Lampa.Noty.show(t('tv_filmix_nolink'));
+                return;
+            }
+
+            var src = parsedPost.bwaSource;
+            var targetEp = voiceObj.episodes[epIndex];
+            var loadNet = new Lampa.Reguest();
+            var cancelled = false;
+
+            function makeEpTitle(ep) {
+                var tmdbEp = tmdbMap && tmdbMap[ep.episode];
+                return tmdbEp && tmdbEp.name
+                    ? (t('tv_season_short') + ' ' + ep.season + ', ' + t('tv_episode_short') + ' ' + ep.episode + ' — ' + tmdbEp.name)
+                    : (t('tv_season_short') + ' ' + ep.season + ', ' + t('tv_episode_short') + ' ' + ep.episode);
+            }
+
+            function launchWithStream(streamData) {
+                if (cancelled) return;
+                if (!streamData || !streamData.file) {
+                    Lampa.Noty.show(t('tv_filmix_nolink'));
+                    return;
+                }
+
+                var playlist = [];
+                for (var i = 0; i < voiceObj.episodes.length; i++) {
+                    (function (ep, idx) {
+                        var timeline = getEpisodeTimeline(movie, ep.season, ep.episode);
+                        var item = {
+                            title: makeEpTitle(ep),
+                            timeline: timeline,
+                            card: movie,
+                            season: ep.season,
+                            episode: ep.episode,
+                            callback: function () {
+                                Filmix.markEpisodeWatched(movie, ep.season, ep.episode, voiceObj.name);
+                                if (onAfterMark) onAfterMark(ep);
+                            }
+                        };
+
+                        if (idx === epIndex) {
+                            item.url = streamData.file;
+                            if (streamData.quality) item.quality = streamData.quality;
+                            if (streamData.subtitles) item.subtitles = streamData.subtitles;
+                        } else {
+                            var cached = getCachedVoiceStream(src.balanser, movie.id, ep.season, ep.episode, voiceObj.name);
+                            if (cached && cached.bestUrl) {
+                                item.url = cached.bestUrl;
+                                if (cached.qualitiesMap) item.quality = cached.qualitiesMap;
+                                if (cached.subtitles) item.subtitles = cached.subtitles;
+                            } else {
+                                item.url = function (done) {
+                                    var nextNet = new Lampa.Reguest();
+                                    fetchEpisodeStream(movie, src, ep.season, ep.episode, voiceObj.name, nextNet, function (res) {
+                                        if (res && res.file) {
+                                            item.url = res.file;
+                                            if (res.quality) item.quality = res.quality;
+                                            if (res.subtitles) item.subtitles = res.subtitles;
+                                        }
+                                        done();
+                                    });
+                                };
+                            }
+                        }
+
+                        playlist.push(item);
+                    })(voiceObj.episodes[i], i);
+                }
+
+                var first = playlist[epIndex];
+                if (movie && movie.id) Lampa.Favorite.add('history', movie, 100);
+                Filmix.markEpisodeWatched(movie, targetEp.season, targetEp.episode, voiceObj.name);
+                if (onAfterMark) onAfterMark(targetEp);
+
+                if (playlist.length > 1) first.playlist = playlist;
+                Lampa.Player.play(first);
+                Lampa.Player.playlist(playlist);
+            }
+
+            // Если поток уже в кэше — запускаем мгновенно без экрана загрузки
+            var immediate = getCachedVoiceStream(src.balanser, movie.id, targetEp.season, targetEp.episode, voiceObj.name);
+            if (immediate && immediate.bestUrl) {
+                launchWithStream({ file: immediate.bestUrl, quality: immediate.qualitiesMap, subtitles: immediate.subtitles });
+                return;
+            }
+
+            Lampa.Loading.start(function () {
+                cancelled = true;
+                loadNet.clear();
+                Lampa.Loading.stop();
+            });
+
+            fetchEpisodeStream(movie, src, targetEp.season, targetEp.episode, voiceObj.name, loadNet, function (res) {
+                if (cancelled) return;
+                Lampa.Loading.stop();
+                launchWithStream(res);
+            });
+        }
+
+        function openBwaPage(movie) {
+            if (!isInstalled() || !movie) return;
+            var serial = isSerialMovie(movie);
+            var clarifyMap = Lampa.Storage.get('bwa_clarify', {}) || {};
+            var clarify = clarifyMap[(serial ? 's:' : 'm:') + movie.id] || '';
+
+            Lampa.Activity.push({
+                url: '',
+                title: 'BWA',
+                component: BWA_COMPONENT,
+                search: clarify || movie.title || movie.name || '',
+                search_one: movie.title || movie.name || '',
+                search_two: movie.original_title || movie.original_name || '',
+                movie: movie,
+                page: 1,
+                clarification: !!clarify
+            });
+        }
+
+        return {
+            isInstalled: isInstalled,
+            resolveForMovie: resolveForMovie,
+            loadSeason: loadSeason,
+            playEpisode: playEpisode,
+            openBwaPage: openBwaPage
+        };
+    })();
+
+    /* ------------------------------------------------------------------ *
      * Рейтинги: IMDB, Shikimori (из shikimori-catalog.js), New Rating
      * ------------------------------------------------------------------ */
 
@@ -2609,7 +3242,119 @@
      * TMDB медиа: случайный задник, логотип вместо названия и трейлеры
      * ------------------------------------------------------------------ */
 
-    var lastBackdropByMovie = {};
+    var TMDB_IMAGES_CACHE_KEY = 'tv_tmdb_img_cache';
+    var TMDB_IMAGES_CACHE_TTL = 24 * 60 * 60 * 1000; // 1 день
+    var TMDB_IMAGES_CACHE_MAX = 60;
+    var TMDB_BACKDROP_ROTATE_MS = 5000;
+    var tmdbImagesMemCache = null;
+
+    function loadTmdbImagesStore() {
+        if (tmdbImagesMemCache) return tmdbImagesMemCache;
+        var stored = null;
+        try {
+            stored = Lampa.Storage.get(TMDB_IMAGES_CACHE_KEY, null);
+        } catch (e) {}
+        tmdbImagesMemCache = (stored && typeof stored === 'object' && !Array.isArray(stored)) ? stored : {};
+        return tmdbImagesMemCache;
+    }
+
+    function saveTmdbImagesStore(store) {
+        var now = Date.now();
+        var keys = Object.keys(store);
+        var validKeys = [];
+        for (var i = 0; i < keys.length; i++) {
+            var k = keys[i];
+            var entry = store[k];
+            if (!entry || !entry.ts || (now - entry.ts) > TMDB_IMAGES_CACHE_TTL) {
+                delete store[k];
+            } else {
+                validKeys.push(k);
+            }
+        }
+        if (validKeys.length > TMDB_IMAGES_CACHE_MAX) {
+            validKeys.sort(function (a, b) {
+                return (store[a].ts || 0) - (store[b].ts || 0);
+            });
+            var toRemove = validKeys.length - TMDB_IMAGES_CACHE_MAX;
+            for (var r = 0; r < toRemove; r++) {
+                delete store[validKeys[r]];
+            }
+        }
+        tmdbImagesMemCache = store;
+        try {
+            Lampa.Storage.set(TMDB_IMAGES_CACHE_KEY, store);
+        } catch (e) {}
+    }
+
+    function getCachedTmdbImages(movie) {
+        if (!movie || !movie.id) return null;
+        var store = loadTmdbImagesStore();
+        var key = (isSerialMovie(movie) ? 'tv' : 'movie') + '_' + movie.id;
+        var entry = store[key];
+        if (!entry || !entry.ts) return null;
+        if ((Date.now() - entry.ts) > TMDB_IMAGES_CACHE_TTL) {
+            delete store[key];
+            return null;
+        }
+        if (entry.lang && entry.lang !== getTmdbLang()) return null;
+        return entry;
+    }
+
+    function packBackdropsForCache(backdrops) {
+        if (!Array.isArray(backdrops) || !backdrops.length) return [];
+        var seen = {};
+        var valid = [];
+        for (var i = 0; i < backdrops.length; i++) {
+            var b = backdrops[i];
+            if (!b || !b.file_path || seen[b.file_path]) continue;
+            seen[b.file_path] = true;
+            valid.push(b);
+        }
+        // Сначала чистые широкоформатные без текста, затем по убыванию разрешения
+        valid.sort(function (a, b) {
+            var ca = (!a.iso_639_1 && (!a.aspect_ratio || a.aspect_ratio >= 1.5)) ? 1 : 0;
+            var cb = (!b.iso_639_1 && (!b.aspect_ratio || b.aspect_ratio >= 1.5)) ? 1 : 0;
+            if (cb !== ca) return cb - ca;
+            return ((b.width || 0) * (b.height || 0)) - ((a.width || 0) * (a.height || 0));
+        });
+        var out = [];
+        var limit = Math.min(valid.length, 40);
+        for (var j = 0; j < limit; j++) {
+            var item = valid[j];
+            out.push([
+                item.file_path,
+                item.width || 0,
+                item.height || 0,
+                item.aspect_ratio ? Math.round(item.aspect_ratio * 100) / 100 : 0,
+                item.iso_639_1 || ''
+            ]);
+        }
+        return out;
+    }
+
+    function setCachedTmdbImages(movie, backdrops, logoPath) {
+        if (!movie || !movie.id) return;
+        var store = loadTmdbImagesStore();
+        var key = (isSerialMovie(movie) ? 'tv' : 'movie') + '_' + movie.id;
+        store[key] = {
+            ts: Date.now(),
+            lang: getTmdbLang(),
+            logo: logoPath || '',
+            backdrops: packBackdropsForCache(backdrops)
+        };
+        saveTmdbImagesStore(store);
+    }
+
+    function shuffleArray(list) {
+        var arr = list.slice();
+        for (var i = arr.length - 1; i > 0; i--) {
+            var j = Math.floor(Math.random() * (i + 1));
+            var tmp = arr[i];
+            arr[i] = arr[j];
+            arr[j] = tmp;
+        }
+        return arr;
+    }
 
     function getTmdbLang() {
         return (Lampa.Storage.field('tmdb_lang') || Lampa.Storage.get('language', 'ru') || 'ru').split('-')[0].toLowerCase();
@@ -2695,11 +3440,34 @@
         };
     }
 
-    function pickRandomBackdrop(movie, backdrops) {
-        if (!Array.isArray(backdrops) || !backdrops.length) return null;
+    function normalizeBackdropItem(item) {
+        if (!item) return null;
+        if (Array.isArray(item)) {
+            if (!item[0]) return null;
+            return {
+                file_path: item[0],
+                width: item[1] || 0,
+                height: item[2] || 0,
+                aspect_ratio: item[3] || 0,
+                iso_639_1: item[4] || ''
+            };
+        }
+        if (!item.file_path) return null;
+        return item;
+    }
 
-        var valid = backdrops.filter(function (b) { return b && b.file_path; });
-        if (!valid.length) return null;
+    function filterBackdropsForScreen(backdrops) {
+        if (!Array.isArray(backdrops) || !backdrops.length) return [];
+
+        var seen = {};
+        var valid = [];
+        for (var i = 0; i < backdrops.length; i++) {
+            var item = normalizeBackdropItem(backdrops[i]);
+            if (!item || !item.file_path || seen[item.file_path]) continue;
+            seen[item.file_path] = true;
+            valid.push(item);
+        }
+        if (!valid.length) return [];
 
         // Предпочитаем чистые широкоформатные задники без текста
         var cleanWide = valid.filter(function (b) {
@@ -2716,43 +3484,59 @@
             return (b.width || 0) >= req.w && (b.height || 0) >= req.h;
         });
         if (fitPool.length) {
-            pool = fitPool;
-        } else {
-            var allFit = valid.filter(function (b) {
-                return (b.width || 0) >= req.w && (b.height || 0) >= req.h;
+            return fitPool;
+        }
+        var allFit = valid.filter(function (b) {
+            return (b.width || 0) >= req.w && (b.height || 0) >= req.h;
+        });
+        if (allFit.length) {
+            return allFit;
+        }
+        var maxArea = 0;
+        for (var mi = 0; mi < pool.length; mi++) {
+            var area = (pool[mi].width || 0) * (pool[mi].height || 0);
+            if (area > maxArea) maxArea = area;
+        }
+        if (maxArea > 0) {
+            var largestPool = pool.filter(function (b) {
+                return ((b.width || 0) * (b.height || 0)) >= maxArea * 0.95;
             });
-            if (allFit.length) {
-                pool = allFit;
-            } else {
-                var maxArea = 0;
-                for (var mi = 0; mi < pool.length; mi++) {
-                    var area = (pool[mi].width || 0) * (pool[mi].height || 0);
-                    if (area > maxArea) maxArea = area;
-                }
-                if (maxArea > 0) {
-                    var largestPool = pool.filter(function (b) {
-                        return ((b.width || 0) * (b.height || 0)) >= maxArea * 0.95;
-                    });
-                    if (largestPool.length) pool = largestPool;
-                }
-            }
+            if (largestPool.length) return largestPool;
+        }
+        return pool;
+    }
+
+    function buildBackdropSlides(movie, rawBackdrops, $activityRoot) {
+        var reqSize = getRequiredBackdropSize();
+        var sizeSeg = reqSize.w > 1280 ? 'original' : 'w1280';
+        var primaryPath = (movie && movie.backdrop_path) ? movie.backdrop_path : '';
+        var primaryUrl = primaryPath ? Lampa.TMDB.image('t/p/' + sizeSeg + primaryPath) : '';
+
+        if (!primaryUrl) {
+            var $curBg = $activityRoot.find('.full-start__background').not('.tv-card__bg-underlay').first();
+            var curSrc = $curBg.length ? ($curBg.attr('src') || '') : '';
+            if (curSrc) primaryUrl = curSrc;
         }
 
-        // Исключаем последний показанный задник, чтобы каждый раз подгружался другой при наличии выбора
-        var movieKey = String(movie.id);
-        var prevPath = lastBackdropByMovie[movieKey] || movie.backdrop_path || '';
-        var candidates = pool;
-        if (pool.length > 1 && prevPath) {
-            var filtered = pool.filter(function (b) { return b.file_path !== prevPath; });
-            if (filtered.length) candidates = filtered;
+        var eligible = filterBackdropsForScreen(rawBackdrops);
+        var others = [];
+        var seenUrl = {};
+        if (primaryUrl) seenUrl[primaryUrl] = true;
+
+        for (var i = 0; i < eligible.length; i++) {
+            var fp = eligible[i].file_path;
+            if (!fp || fp === primaryPath) continue;
+            var url = Lampa.TMDB.image('t/p/' + sizeSeg + fp);
+            if (seenUrl[url]) continue;
+            seenUrl[url] = true;
+            others.push(url);
         }
 
-        var chosen = candidates[Math.floor(Math.random() * candidates.length)];
-        if (chosen && chosen.file_path) {
-            lastBackdropByMovie[movieKey] = chosen.file_path;
-            return chosen.file_path;
+        var shuffledOthers = shuffleArray(others);
+        if (primaryUrl) {
+            return [primaryUrl].concat(shuffledOthers);
         }
-        return null;
+        return shuffledOthers;
     }
 
     function pickBestLogo(movie, logos) {
@@ -2797,58 +3581,285 @@
         return path;
     }
 
-    function loadTmdbImagesForCard(movie, $activityRoot, $start, net, isDestroyedFn) {
-        if (!movie || !movie.id || !Lampa.TMDB || !Lampa.TMDB.api) return;
+    function applyTitleLogo(movie, logoPath, $start, isDestroyedFn) {
+        if (!logoPath || !getBoolSetting('tv_show_logo', true)) return;
+        var logoUrl = Lampa.TMDB.image('t/p/w500' + logoPath);
+        var preloadLogo = new Image();
+        preloadLogo.onload = function () {
+            if (isDestroyedFn()) return;
+            if (!preloadLogo.naturalWidth) return;
+            var $title = $start.find('.full-start-new__title');
+            if (!$title.length || $title.hasClass('tv-title--logo') || $title.hasClass('tv-title--exiting')) return;
+            var titleText = movie.title || movie.name || $title.text() || '';
+            var $img = $('<img class="tv-title-logo" alt="">').attr('src', logoUrl).attr('alt', titleText);
 
+            if ($('body').hasClass('no--animation')) {
+                $title.addClass('tv-title--logo').empty().append($img);
+                $img.addClass('tv-title-logo--loaded');
+                return;
+            }
+
+            var titleEl = $title[0];
+            var oldH = titleEl.offsetHeight;
+            var oldMb = 0;
+            if (window.getComputedStyle) {
+                oldMb = parseFloat(window.getComputedStyle(titleEl).marginBottom) || 0;
+            }
+
+            $title.addClass('tv-title--exiting');
+
+            setTimeout(function () {
+                if (isDestroyedFn()) return;
+                if (!titleEl || !document.body || !document.body.contains(titleEl)) return;
+
+                $title.addClass('tv-title--measure').removeClass('tv-title--exiting').addClass('tv-title--logo').empty().append($img);
+
+                var targetH = titleEl.offsetHeight;
+                var targetMb = 0;
+                if (window.getComputedStyle) {
+                    targetMb = parseFloat(window.getComputedStyle(titleEl).marginBottom) || 0;
+                }
+
+                var animateHeight = oldH > 0 && targetH > 0 && (Math.abs(targetH - oldH) > 1 || Math.abs(targetMb - oldMb) > 1);
+                if (animateHeight) {
+                    titleEl.style.height = oldH + 'px';
+                    titleEl.style.marginBottom = oldMb + 'px';
+                    $title.addClass('tv-title--animating');
+                    void titleEl.offsetHeight;
+                }
+
+                $title.removeClass('tv-title--measure');
+
+                if (animateHeight) {
+                    titleEl.style.height = targetH + 'px';
+                    titleEl.style.marginBottom = targetMb + 'px';
+                }
+                $img.addClass('tv-title-logo--loaded');
+
+                if (animateHeight) {
+                    setTimeout(function () {
+                        if (isDestroyedFn()) return;
+                        $title.removeClass('tv-title--animating');
+                        titleEl.style.height = '';
+                        titleEl.style.marginBottom = '';
+                    }, 460);
+                }
+            }, 220);
+        };
+        preloadLogo.src = logoUrl;
+    }
+
+    function loadTmdbImagesForCard(movie, activityObj, $activityRoot, $start, net, isDestroyedFn) {
+        var stopped = false;
+        var rotateTimer = null;
+        var decodeTimer = null;
+        var fadeTimer = null;
+        var activePreload = null;
+        var warmPreloadImg = null;
+        var openedAt = Date.now();
+
+        function cleanupSlideshow() {
+            stopped = true;
+            clearTimeout(rotateTimer);
+            clearTimeout(decodeTimer);
+            clearTimeout(fadeTimer);
+            if (activePreload) {
+                activePreload.onload = null;
+                activePreload.onerror = null;
+                activePreload = null;
+            }
+            warmPreloadImg = null;
+            $activityRoot.find('.tv-card__bg-underlay').remove();
+        }
+
+        function getMainBg() {
+            return $activityRoot.find('.full-start__background').not('.tv-card__bg-underlay').first();
+        }
+
+        function isCardVisibleForBg() {
+            if (stopped || isDestroyedFn()) return false;
+            var active = Lampa.Activity && Lampa.Activity.active ? Lampa.Activity.active() : null;
+            if (activityObj && active && active.activity !== activityObj.activity) return false;
+            if (Lampa.Player && Lampa.Player.opened && Lampa.Player.opened()) return false;
+            var $bg = getMainBg();
+            if ($bg.length && $bg.hasClass('tv-bg--hidden')) return false;
+            return true;
+        }
+
+        function crossfadeBg(nextUrl) {
+            if (stopped || isDestroyedFn()) return;
+            var $bg = getMainBg();
+            if (!$bg.length) {
+                $bg = $('<img class="full-start__background tv-card__background">');
+                $activityRoot.prepend($bg);
+            }
+
+            var currentSrc = $bg.attr('src') || '';
+            if (currentSrc === nextUrl) return;
+
+            if ($('body').hasClass('no--animation') || !currentSrc || !$bg.hasClass('loaded')) {
+                $bg.attr('src', nextUrl).addClass('loaded tv-card__background');
+                return;
+            }
+
+            clearTimeout(decodeTimer);
+            clearTimeout(fadeTimer);
+            $activityRoot.find('.tv-card__bg-underlay').remove();
+
+            var $underlay = $('<img class="full-start__background tv-card__background tv-card__bg-underlay loaded">');
+            $underlay.attr('src', currentSrc);
+            if ($bg.hasClass('dim')) $underlay.addClass('dim');
+            if ($bg.hasClass('tv-bg--hidden')) $underlay.addClass('tv-bg--hidden');
+            $bg.before($underlay);
+
+            // Мгновенно скрываем верхний слой, меняем src, затем плавно проявляем его поверх underlay
+            $bg.addClass('tv-bg--instant tv-bg--fade-start');
+            void $bg[0].offsetHeight;
+            $bg.attr('src', nextUrl).addClass('loaded tv-card__background');
+
+            decodeTimer = setTimeout(function () {
+                if (stopped || isDestroyedFn()) {
+                    $underlay.remove();
+                    return;
+                }
+                $underlay.toggleClass('dim', $bg.hasClass('dim'));
+                $underlay.toggleClass('tv-bg--hidden', $bg.hasClass('tv-bg--hidden'));
+
+                $bg.removeClass('tv-bg--instant');
+                void $bg[0].offsetHeight;
+                $bg.removeClass('tv-bg--fade-start');
+                $underlay.addClass('tv-bg--fade-out');
+
+                fadeTimer = setTimeout(function () {
+                    $underlay.remove();
+                }, 900);
+            }, 40);
+        }
+
+        function startBackdropSlideshow(rawBackdrops) {
+            if (stopped || isDestroyedFn()) return;
+            if (window.innerWidth <= 790 || Lampa.Storage.field('light_version')) return;
+
+            var slides = buildBackdropSlides(movie, rawBackdrops, $activityRoot);
+            if (!slides.length) return;
+
+            var currentIdx = 0;
+            var consecutiveErrors = 0;
+
+            // Если у карточки вообще нет стандартного фона — показываем первый сразу
+            var $initialBg = getMainBg();
+            if (!$initialBg.length || !$initialBg.attr('src')) {
+                var initImg = new Image();
+                initImg.onload = function () {
+                    if (stopped || isDestroyedFn()) return;
+                    crossfadeBg(slides[0]);
+                };
+                initImg.src = slides[0];
+            }
+
+            if (slides.length <= 1) return;
+
+            function warmNext(idx) {
+                var nextUrl = slides[(idx + 1) % slides.length];
+                if (!nextUrl) return;
+                warmPreloadImg = new Image();
+                warmPreloadImg.src = nextUrl;
+            }
+
+            function scheduleNext(delayMs) {
+                clearTimeout(rotateTimer);
+                if (stopped || isDestroyedFn()) return;
+                rotateTimer = setTimeout(runStep, delayMs);
+            }
+
+            function runStep() {
+                if (stopped || isDestroyedFn()) return;
+                if (!isCardVisibleForBg()) {
+                    scheduleNext(TMDB_BACKDROP_ROTATE_MS);
+                    return;
+                }
+
+                var nextIdx = (currentIdx + 1) % slides.length;
+                var nextUrl = slides[nextIdx];
+
+                if (activePreload) {
+                    activePreload.onload = null;
+                    activePreload.onerror = null;
+                }
+                var img = new Image();
+                activePreload = img;
+
+                img.onload = function () {
+                    if (activePreload === img) activePreload = null;
+                    if (stopped || isDestroyedFn()) return;
+                    if (!isCardVisibleForBg()) {
+                        scheduleNext(TMDB_BACKDROP_ROTATE_MS);
+                        return;
+                    }
+                    consecutiveErrors = 0;
+                    currentIdx = nextIdx;
+                    crossfadeBg(nextUrl);
+                    warmNext(currentIdx);
+                    scheduleNext(TMDB_BACKDROP_ROTATE_MS);
+                };
+
+                img.onerror = function () {
+                    if (activePreload === img) activePreload = null;
+                    if (stopped || isDestroyedFn()) return;
+                    consecutiveErrors++;
+                    currentIdx = nextIdx;
+                    if (consecutiveErrors < slides.length) {
+                        scheduleNext(1500);
+                    }
+                };
+
+                img.src = nextUrl;
+            }
+
+            // Стандартный фон остаётся первым; заранее греем второй слайд и меняем через 5 сек
+            warmNext(0);
+            var elapsed = Date.now() - openedAt;
+            var firstDelay = Math.max(1500, TMDB_BACKDROP_ROTATE_MS - elapsed);
+            scheduleNext(firstDelay);
+        }
+
+        if (!movie || !movie.id || !Lampa.TMDB || !Lampa.TMDB.api) {
+            return { destroy: cleanupSlideshow };
+        }
+
+        // 1. Проверяем суточный кеш ссылок на фоны и логотип
+        var cached = getCachedTmdbImages(movie);
+        if (cached) {
+            if (cached.backdrops && cached.backdrops.length) {
+                startBackdropSlideshow(cached.backdrops);
+            }
+            if (cached.logo) {
+                applyTitleLogo(movie, cached.logo, $start, isDestroyedFn);
+            }
+            return { destroy: cleanupSlideshow };
+        }
+
+        // 2. Запрашиваем TMDB /images, кешируем на 24 часа и запускаем ротацию + логотип
         var media = isSerialMovie(movie) ? 'tv' : 'movie';
         var path = media + '/' + movie.id + '/images?api_key=' + Lampa.TMDB.key();
         net.timeout(10000);
         net['native'](Lampa.TMDB.api(path), function (json) {
-            if (isDestroyedFn() || !json) return;
+            if (stopped || isDestroyedFn() || !json) return;
 
-            // 1. Случайный задник с TMDB
-            if (window.innerWidth > 790 && !Lampa.Storage.field('light_version') && json.backdrops && json.backdrops.length) {
-                var bgPath = pickRandomBackdrop(movie, json.backdrops);
-                if (bgPath) {
-                    var reqSize = getRequiredBackdropSize();
-                    var sizeSeg = reqSize.w > 1280 ? 'original' : 'w1280';
-                    var bgUrl = Lampa.TMDB.image('t/p/' + sizeSeg + bgPath);
-                    var preloadBg = new Image();
-                    preloadBg.onload = function () {
-                        if (isDestroyedFn()) return;
-                        var $bg = $activityRoot.find('.full-start__background');
-                        if (!$bg.length) {
-                            $bg = $('<img class="full-start__background tv-card__background">');
-                            $activityRoot.prepend($bg);
-                        }
-                        $bg.attr('src', bgUrl).addClass('loaded tv-card__background');
-                    };
-                    preloadBg.src = bgUrl;
-                }
+            var rawBackdrops = Array.isArray(json.backdrops) ? json.backdrops : [];
+            var logoPath = (json.logos && json.logos.length) ? pickBestLogo(movie, json.logos) : '';
+
+            setCachedTmdbImages(movie, rawBackdrops, logoPath);
+
+            if (rawBackdrops.length) {
+                startBackdropSlideshow(rawBackdrops);
             }
-
-            // 2. Логотип вместо текстового названия (если включено в настройках)
-            if (getBoolSetting('tv_show_logo', true) && json.logos && json.logos.length) {
-                var logoPath = pickBestLogo(movie, json.logos);
-                if (logoPath) {
-                    var logoUrl = Lampa.TMDB.image('t/p/w500' + logoPath);
-                    var preloadLogo = new Image();
-                    preloadLogo.onload = function () {
-                        if (isDestroyedFn()) return;
-                        if (!preloadLogo.naturalWidth) return;
-                        var $title = $start.find('.full-start-new__title');
-                        if (!$title.length) return;
-                        var titleText = movie.title || movie.name || $title.text() || '';
-                        var $img = $('<img class="tv-title-logo" alt="">').attr('src', logoUrl).attr('alt', titleText);
-                        $title.addClass('tv-title--logo').empty().append($img);
-                        setTimeout(function () {
-                            $img.addClass('tv-title-logo--loaded');
-                        }, 30);
-                    };
-                    preloadLogo.src = logoUrl;
-                }
+            if (logoPath) {
+                applyTitleLogo(movie, logoPath, $start, isDestroyedFn);
             }
         }, function () {});
+
+        return { destroy: cleanupSlideshow };
     }
 
     function BackgroundTrailer(activityObj, fullLink, $activityRoot, fullData) {
@@ -2996,7 +4007,7 @@
 
                 cleanupCurrentPlayer();
 
-                var $bg = getBgEl();
+                var $bg = getBgEl().first();
                 $layer = $('<div class="tv-bg-trailer"><div class="tv-bg-trailer__wrap"><div class="tv-bg-trailer__frame"></div></div></div>');
                 if ($bg.length) $bg.before($layer);
                 else $activityRoot.prepend($layer);
@@ -3186,6 +4197,7 @@
 
         var destroyed = false;
         var netTmdb = new Lampa.Reguest();
+        var netBwaSeason = new Lampa.Reguest();
         var epScroll = new Lampa.Scroll({ horizontal: true, step: 380, nopadding: true });
         var $html = $('<div class="items-line tv-series-choice">' +
             '<div class="tv-series-choice__header">' +
@@ -3237,7 +4249,7 @@
             if (!parsedPost || !s) {
                 var emptyLabel = (parsedPost && !parsedPost.isSerial && parsedPost.movies && parsedPost.movies.length)
                     ? t('tv_filmix_watch')
-                    : t('tv_not_found_filmix');
+                    : (BwaFallback.isInstalled() ? t('tv_not_found_sources') : t('tv_not_found_filmix'));
                 $seasonPill.find('.tv-pill__text').text(emptyLabel);
                 $seasonPill.find('.tv-pill__chev').addClass('hide');
                 $voicePill.addClass('hide');
@@ -3249,8 +4261,11 @@
 
             if (v) {
                 var qLabel = formatQualityBadge(v.maxQuality);
+                var voiceDisplay = parsedPost.provider === 'bwa' && parsedPost.sourceName
+                    ? (v.name + ' (' + parsedPost.sourceName + ')')
+                    : v.name;
                 $voicePill.removeClass('hide');
-                $voicePill.find('.tv-pill__voice-name').text(v.name);
+                $voicePill.find('.tv-pill__voice-name').text(voiceDisplay);
                 $voicePill.find('.tv-pill__dot').toggleClass('hide', !qLabel);
                 $voicePill.find('.tv-pill__quality').text(qLabel).toggleClass('hide', !qLabel);
             } else {
@@ -3360,21 +4375,30 @@
                     epScroll.update($card, true);
                     if (callbacks.onActive) callbacks.onActive();
                 }).on('hover:enter', function () {
-                    Filmix.saveChoice(movie.id, {
-                        filmix_id: parsedPost.id,
+                    var savePatch = {
                         season: selectedSeasonIdx,
                         voice: selectedVoiceIdx,
                         voice_name: voiceObj.name,
                         last_season: ep.season,
                         last_episode: ep.episode
-                    });
-                    Filmix.playEpisode(movie, voiceObj, idx, tmdbMap, function () {
+                    };
+                    if (parsedPost.provider !== 'bwa') savePatch.filmix_id = parsedPost.id;
+                    Filmix.saveChoice(movie.id, savePatch);
+
+                    var afterPlay = function () {
                         self.refreshProgress();
                         notifyChange();
-                    });
+                    };
+                    if (parsedPost.provider === 'bwa') {
+                        BwaFallback.playEpisode(movie, parsedPost, voiceObj, idx, tmdbMap, afterPlay);
+                    } else {
+                        Filmix.playEpisode(movie, voiceObj, idx, tmdbMap, afterPlay);
+                    }
                 }).on('hover:long', function () {
                     var enabled = Lampa.Controller.enabled().name;
-                    var extra = Filmix.buildQualityMap(ep.file, ep.quality, ep.qualities);
+                    var extra = ep.provider === 'bwa'
+                        ? (ep.file ? { file: ep.file } : null)
+                        : Filmix.buildQualityMap(ep.file, ep.quality, ep.qualities);
                     var menu = [
                         { title: Lampa.Lang.translate('torrent_parser_label_title'), mark: true },
                         { title: Lampa.Lang.translate('torrent_parser_label_cancel_title'), unmark: true },
@@ -3487,7 +4511,8 @@
             if (callbacks.onActive) callbacks.onActive();
         }).on('hover:enter', function () {
             if (!parsedPost || !parsedPost.seasons.length) {
-                Filmix.openFilmixPage(movie);
+                if (BwaFallback.isInstalled()) BwaFallback.openBwaPage(movie);
+                else Filmix.openFilmixPage(movie);
                 return;
             }
             var items = [];
@@ -3507,18 +4532,33 @@
                 onSelect: function (item) {
                     selectedSeasonIdx = item.index;
                     var curSeason = getCurrentSeason();
-                    var savedVoice = Filmix.getChoice(movie.id).voice_name;
-                    var vm = Filmix.findVoiceInSeason(curSeason, savedVoice);
-                    selectedVoiceIdx = vm ? vm.index : 0;
-                    Filmix.saveChoice(movie.id, {
-                        filmix_id: parsedPost.id,
-                        season: selectedSeasonIdx,
-                        voice: selectedVoiceIdx,
-                        voice_name: vm ? vm.voice.name : savedVoice
-                    });
-                    updatePillsUI();
-                    renderCards();
-                    notifyChange();
+
+                    function applySeasonSelection() {
+                        var savedVoice = Filmix.getChoice(movie.id).voice_name;
+                        var vm = Filmix.findVoiceInSeason(curSeason, savedVoice);
+                        selectedVoiceIdx = vm ? vm.index : 0;
+                        var savePatch = {
+                            season: selectedSeasonIdx,
+                            voice: selectedVoiceIdx,
+                            voice_name: vm ? vm.voice.name : savedVoice
+                        };
+                        if (parsedPost.provider !== 'bwa') savePatch.filmix_id = parsedPost.id;
+                        Filmix.saveChoice(movie.id, savePatch);
+                        updatePillsUI();
+                        renderCards();
+                        notifyChange();
+                    }
+
+                    if (parsedPost.provider === 'bwa' && curSeason && !curSeason.bwaLoaded) {
+                        $voicePill.find('.tv-pill__voice-name').text(t('tv_loading_bwa'));
+                        netBwaSeason.clear();
+                        BwaFallback.loadSeason(movie, parsedPost, selectedSeasonIdx, netBwaSeason, function () {
+                            if (destroyed) return;
+                            applySeasonSelection();
+                        });
+                    } else {
+                        applySeasonSelection();
+                    }
                     self.toggle();
                 },
                 onBack: function () {
@@ -3538,9 +4578,13 @@
             for (var i = 0; i < s.voices.length; i++) {
                 var v = s.voices[i];
                 var qStr = formatQualityBadge(v.maxQuality);
+                var subParts = [];
+                if (parsedPost && parsedPost.provider === 'bwa' && parsedPost.sourceName) subParts.push('BWA · ' + parsedPost.sourceName);
+                if (qStr) subParts.push(qStr);
+                subParts.push(v.episodes.length + ' ' + t('tv_episode_short').toLowerCase());
                 items.push({
                     title: escapeHtml(v.name),
-                    subtitle: escapeHtml((qStr ? qStr + ' • ' : '') + v.episodes.length + ' ' + t('tv_episode_short').toLowerCase()),
+                    subtitle: escapeHtml(subParts.join(' • ')),
                     selected: i === selectedVoiceIdx,
                     index: i
                 });
@@ -3551,12 +4595,13 @@
                 onSelect: function (item) {
                     selectedVoiceIdx = item.index;
                     var chosenVoice = s.voices[selectedVoiceIdx];
-                    Filmix.saveChoice(movie.id, {
-                        filmix_id: parsedPost.id,
+                    var savePatch = {
                         season: selectedSeasonIdx,
                         voice: selectedVoiceIdx,
                         voice_name: chosenVoice ? chosenVoice.name : ''
-                    });
+                    };
+                    if (parsedPost.provider !== 'bwa') savePatch.filmix_id = parsedPost.id;
+                    Filmix.saveChoice(movie.id, savePatch);
                     updatePillsUI();
                     renderCards();
                     notifyChange();
@@ -3573,8 +4618,19 @@
             lastHeaderEl = $fxPill[0];
             if (callbacks.onActive) callbacks.onActive();
         }).on('hover:enter', function () {
-            Filmix.openFilmixPage(movie);
+            if (parsedPost && parsedPost.provider === 'bwa') {
+                BwaFallback.openBwaPage(movie);
+            } else {
+                Filmix.openFilmixPage(movie);
+            }
         });
+
+        this.setStatusText = function (txt) {
+            if (destroyed || parsedPost) return;
+            $seasonPill.find('.tv-pill__text').text(txt);
+            $seasonPill.find('.tv-pill__chev').addClass('hide');
+            $voicePill.addClass('hide');
+        };
 
         this.setFilmixData = function (parsed) {
             if (destroyed) return;
@@ -3678,6 +4734,7 @@
         this.destroy = function () {
             destroyed = true;
             netTmdb.clear();
+            netBwaSeason.clear();
             epScroll.destroy();
             $html.remove();
         };
@@ -3857,30 +4914,45 @@
             if (link.items && link.items[0]) link.items[0].last = $tvPlay[0];
         }).on('hover:enter', function () {
             if (!serial) {
-                Filmix.openFilmixPage(movie);
+                if (loadedFilmixPost && loadedFilmixPost.provider === 'bwa') {
+                    BwaFallback.openBwaPage(movie);
+                } else if (!loadedFilmixPost && filmixResolved && BwaFallback.isInstalled()) {
+                    BwaFallback.openBwaPage(movie);
+                } else {
+                    Filmix.openFilmixPage(movie);
+                }
                 return;
             }
             if (loadedFilmixPost && loadedFilmixPost.isSerial) {
                 var resume = Filmix.findResumeTarget(movie, loadedFilmixPost);
                 if (resume) {
                     var tmdbMap = seriesSection ? seriesSection.getTmdbMapForSeason(resume.season.num) : {};
-                    Filmix.saveChoice(movie.id, {
-                        filmix_id: loadedFilmixPost.id,
+                    var savePatch = {
                         season: resume.seasonIndex,
                         voice: resume.voiceIndex,
                         voice_name: resume.voice.name,
                         last_season: resume.season.num,
                         last_episode: resume.episode.episode
-                    });
-                    Filmix.playEpisode(movie, resume.voice, resume.episodeIndex, tmdbMap, function () {
+                    };
+                    if (loadedFilmixPost.provider !== 'bwa') savePatch.filmix_id = loadedFilmixPost.id;
+                    Filmix.saveChoice(movie.id, savePatch);
+
+                    var afterLaunch = function () {
                         updateHeroPlayLabel();
                         if (seriesSection) seriesSection.refreshProgress();
-                    });
+                    };
+
+                    if (loadedFilmixPost.provider === 'bwa') {
+                        BwaFallback.playEpisode(movie, loadedFilmixPost, resume.voice, resume.episodeIndex, tmdbMap, afterLaunch);
+                    } else {
+                        Filmix.playEpisode(movie, resume.voice, resume.episodeIndex, tmdbMap, afterLaunch);
+                    }
                     return;
                 }
             }
-            // Если Filmix ещё не загрузился или сериал не найден автоматически — открываем страницу Filmix
-            Filmix.openFilmixPage(movie);
+            // Если не найдено на Filmix и установлен BWA — открываем BWA, иначе страницу Filmix
+            if (filmixResolved && BwaFallback.isInstalled()) BwaFallback.openBwaPage(movie);
+            else Filmix.openFilmixPage(movie);
         });
 
         // 4. Вставляем секцию "series choice" для сериалов с учётом настроек видимости и порядка разделов
@@ -3935,33 +5007,65 @@
             }
         }
 
-        // 5. Загружаем данные Filmix в фоне для сериалов (и фильмов для качества)
+        // 5. Загружаем данные Filmix в фоне; если не найдено и установлен BWA — перебираем включённые источники BWA
         var loadedFilmixId = 0;
+        var filmixResolved = false;
+        var bwaNet = new Lampa.Reguest();
+
+        function applyResolvedSource(parsed) {
+            loadedFilmixPost = parsed;
+            loadedFilmixId = (parsed && parsed.provider !== 'bwa') ? parsed.id : 0;
+
+            if (serial) {
+                updateHeroPlayLabel();
+                if (seriesSection) seriesSection.setFilmixData(parsed);
+            } else if (parsed && parsed.movies && parsed.movies.length) {
+                // Если у фильма не указано качество в деталях — добавим макс. качество с найденного источника
+                if (!movie.release_quality && !movie.quality) {
+                    var bestQ = 0;
+                    for (var i = 0; i < parsed.movies.length; i++) {
+                        if (parsed.movies[i].quality > bestQ) bestQ = parsed.movies[i].quality;
+                    }
+                    var qText = formatQualityBadge(bestQ);
+                    if (qText) {
+                        var $det = $start.find('.full-start-new__details');
+                        if ($det.length && !$det.find('.tv-filmix-quality').length) {
+                            if ($det.children().length) $det.append('<span class="full-start-new__split">●</span>');
+                            $det.append('<span class="tv-filmix-quality">' + escapeHtml(qText) + '</span>');
+                        }
+                    }
+                }
+            }
+        }
 
         function loadFilmixData() {
             filmixNet.clear();
+            bwaNet.clear();
+            filmixResolved = false;
+
             Filmix.resolveForMovie(movie, filmixNet, function (parsed) {
-                loadedFilmixPost = parsed;
-                loadedFilmixId = parsed ? parsed.id : 0;
-                if (serial) {
-                    updateHeroPlayLabel();
-                    if (seriesSection) seriesSection.setFilmixData(parsed);
-                } else if (parsed && parsed.movies && parsed.movies.length) {
-                    // Если у фильма не указано качество в деталях — добавим макс. качество с Filmix
-                    if (!movie.release_quality && !movie.quality) {
-                        var bestQ = 0;
-                        for (var i = 0; i < parsed.movies.length; i++) {
-                            if (parsed.movies[i].quality > bestQ) bestQ = parsed.movies[i].quality;
+                if (cardDestroyed) return;
+                filmixResolved = true;
+
+                if (parsed) {
+                    applyResolvedSource(parsed);
+                    return;
+                }
+
+                // На Filmix не нашлось — пробуем все включённые источники BWA (если установлен bwa_online)
+                if (BwaFallback.isInstalled()) {
+                    if (serial && seriesSection) seriesSection.setStatusText(t('tv_loading_bwa'));
+                    BwaFallback.resolveForMovie(movie, bwaNet, function (srcName) {
+                        if (cardDestroyed) return;
+                        if (serial && seriesSection) {
+                            seriesSection.setStatusText('BWA: ' + srcName + '...');
                         }
-                        var qText = formatQualityBadge(bestQ);
-                        if (qText) {
-                            var $det = $start.find('.full-start-new__details');
-                            if ($det.length && !$det.find('.tv-filmix-quality').length) {
-                                if ($det.children().length) $det.append('<span class="full-start-new__split">●</span>');
-                                $det.append('<span class="tv-filmix-quality">' + escapeHtml(qText) + '</span>');
-                            }
-                        }
-                    }
+                    }, function (bwaParsed) {
+                        if (cardDestroyed) return;
+                        applyResolvedSource(bwaParsed);
+                    });
+                } else {
+                    applyResolvedSource(null);
                 }
             });
         }
@@ -4004,10 +5108,10 @@
         }
         enhanceDescriptionBlock($activityRoot, movie, descrItem);
 
-        // 8. Случайный задник, логотип (TMDB /images) и фоновый тихий трейлер (TMDB /videos)
+        // 8. Ротация задников (кеш 24ч, старт со стандартного), логотип (TMDB /images) и фоновый тихий трейлер (TMDB /videos)
         var cardDestroyed = false;
         var tmdbImagesNet = new Lampa.Reguest();
-        loadTmdbImagesForCard(movie, $activityRoot, $start, tmdbImagesNet, function () {
+        var tmdbImagesCtrl = loadTmdbImagesForCard(movie, e.object, $activityRoot, $start, tmdbImagesNet, function () {
             return cardDestroyed;
         });
 
@@ -4041,7 +5145,15 @@
 
             if (ev.type === 'start') {
                 var savedCh = Filmix.getChoice(movie.id);
+                var curBwaSrcMap = Lampa.Storage.get('bwa_title_src', {}) || {};
+                var curBwaBalanser = curBwaSrcMap[movie.id] || '';
+                var loadedBwaBalanser = (loadedFilmixPost && loadedFilmixPost.provider === 'bwa' && loadedFilmixPost.bwaSource)
+                    ? loadedFilmixPost.bwaSource.balanser
+                    : '';
+
                 if (savedCh.filmix_id && savedCh.filmix_id !== loadedFilmixId) {
+                    loadFilmixData();
+                } else if (BwaFallback.isInstalled() && curBwaBalanser && curBwaBalanser !== loadedBwaBalanser && (!loadedFilmixPost || loadedFilmixPost.provider === 'bwa')) {
                     loadFilmixData();
                 } else if (serial && loadedFilmixPost) {
                     if (seriesSection) seriesSection.setFilmixData(loadedFilmixPost);
@@ -4054,7 +5166,9 @@
                     Lampa.Player.listener.remove('close', onPlayerClose);
                 }
                 filmixNet.clear();
+                bwaNet.clear();
                 tmdbImagesNet.clear();
+                if (tmdbImagesCtrl && tmdbImagesCtrl.destroy) tmdbImagesCtrl.destroy();
                 bgTrailer.destroy();
                 for (var oi = 0; oi < observers.length; oi++) {
                     try { observers[oi].disconnect(); } catch (err) {}
@@ -5109,8 +6223,12 @@
             '.tv-head-hidden{display:none !important}' +
 
             /* --- Background & Trailer --- */
-            '.tv-card__background{left:0 !important;top:-5em !important;width:100% !important;height:105vh !important;object-fit:cover;z-index:-1 !important;-webkit-mask-image:-webkit-linear-gradient(top,#fff 48%,rgba(255,255,255,0) 98%) !important;mask-image:linear-gradient(to bottom,#fff 48%,rgba(255,255,255,0) 98%) !important;-webkit-transition:opacity .6s ease;transition:opacity .6s ease}' +
-            '.tv-card__background.loaded:not(.dim):not(.tv-bg--hidden){opacity:1 !important}' +
+            '.tv-card__background{left:0 !important;top:-5em !important;width:100% !important;height:105vh !important;object-fit:cover;z-index:-1 !important;-webkit-mask-image:-webkit-linear-gradient(top,#fff 48%,rgba(255,255,255,0) 98%) !important;mask-image:linear-gradient(to bottom,#fff 48%,rgba(255,255,255,0) 98%) !important;-webkit-transition:opacity .85s ease-out;transition:opacity .85s ease-out}' +
+            '.tv-card__background.loaded:not(.dim):not(.tv-bg--hidden):not(.tv-bg--fade-start):not(.tv-bg--fade-out){opacity:1 !important}' +
+            '.tv-card__background.tv-bg--instant{-webkit-transition:none !important;transition:none !important}' +
+            '.tv-card__background.tv-bg--fade-start{opacity:0 !important}' +
+            '.tv-card__background.tv-card__bg-underlay{pointer-events:none;-webkit-transition:opacity .85s ease-in;transition:opacity .85s ease-in}' +
+            '.tv-card__background.tv-card__bg-underlay.tv-bg--fade-out{opacity:0 !important}' +
             '.tv-card__background.tv-bg--hidden{opacity:0 !important}' +
             '.tv-bg-trailer{position:absolute;left:0;top:-5em;width:100%;height:105vh;z-index:-2;overflow:hidden;pointer-events:none;opacity:.01;-webkit-transition:opacity .7s ease;transition:opacity .7s ease;-webkit-mask-image:-webkit-linear-gradient(top,#fff 48%,rgba(255,255,255,0) 98%);mask-image:linear-gradient(to bottom,#fff 48%,rgba(255,255,255,0) 98%)}' +
             '.tv-bg-trailer.tv-bg-trailer--visible{opacity:1;z-index:-1}' +
@@ -5126,10 +6244,13 @@
             '.tv-hero__right{-webkit-flex-shrink:0;flex-shrink:0;display:-webkit-box;display:-webkit-flex;display:flex;-webkit-box-orient:vertical;-webkit-box-direction:normal;-webkit-flex-direction:column;flex-direction:column;-webkit-box-align:end;-webkit-align-items:flex-end;align-items:flex-end;padding-bottom:.3em}' +
             '.full-start-new.tv-card .full-start-new__head{font-size:1.22em;color:rgba(255,255,255,.68);margin-bottom:.75em;text-shadow:0 1px 6px rgba(0,0,0,.45)}' +
             '.full-start-new.tv-card .full-start-new__head span{color:#fff}' +
-            '.full-start-new.tv-card .full-start-new__title{font-size:4.1em;font-weight:600;line-height:1.15;margin-bottom:.25em;text-shadow:0 .06em .28em rgba(0,0,0,.45);max-width:100%}' +
+            '.full-start-new.tv-card .full-start-new__title{font-size:4.1em;font-weight:600;line-height:1.15;margin-bottom:.25em;text-shadow:0 .06em .28em rgba(0,0,0,.45);max-width:100%;-webkit-transition:opacity .22s ease,-webkit-transform .22s ease;transition:opacity .22s ease,transform .22s ease}' +
+            '.full-start-new.tv-card .full-start-new__title.tv-title--exiting{opacity:0;-webkit-transform:translate3d(0,-.12em,0);transform:translate3d(0,-.12em,0)}' +
+            '.full-start-new.tv-card .full-start-new__title.tv-title--measure{-webkit-transition:none !important;transition:none !important}' +
             '.full-start-new.tv-card .full-start-new__title.tv-title--logo{display:block;overflow:visible;max-height:none;-webkit-line-clamp:unset;line-clamp:unset;margin-left:0;margin-bottom:.85em;font-size:1em}' +
-            '.tv-title-logo{display:block;max-height:10em;max-width:24em;width:auto;height:auto;object-fit:contain;object-position:left bottom;-webkit-filter:drop-shadow(0 .1em .35em rgba(0,0,0,.55));filter:drop-shadow(0 .1em .35em rgba(0,0,0,.55));opacity:0;-webkit-transition:opacity .35s ease;transition:opacity .35s ease}' +
-            '.tv-title-logo.tv-title-logo--loaded{opacity:1}' +
+            '.full-start-new.tv-card .full-start-new__title.tv-title--animating{display:-webkit-box;display:-webkit-flex;display:flex;-webkit-box-align:end;-webkit-align-items:flex-end;align-items:flex-end;-webkit-transition:height .42s cubic-bezier(.22,1,.36,1),margin-bottom .42s cubic-bezier(.22,1,.36,1);transition:height .42s cubic-bezier(.22,1,.36,1),margin-bottom .42s cubic-bezier(.22,1,.36,1)}' +
+            '.tv-title-logo{display:block;-webkit-flex:0 0 auto;flex:0 0 auto;max-height:10em;max-width:24em;width:auto;height:auto;object-fit:contain;object-position:left bottom;-webkit-filter:drop-shadow(0 .1em .35em rgba(0,0,0,.55));filter:drop-shadow(0 .1em .35em rgba(0,0,0,.55));opacity:0;-webkit-transform:translate3d(0,.35em,0) scale(.96);transform:translate3d(0,.35em,0) scale(.96);-webkit-transform-origin:left bottom;transform-origin:left bottom;-webkit-transition:opacity .45s cubic-bezier(.22,1,.36,1),-webkit-transform .45s cubic-bezier(.22,1,.36,1);transition:opacity .45s cubic-bezier(.22,1,.36,1),transform .45s cubic-bezier(.22,1,.36,1)}' +
+            '.tv-title-logo.tv-title-logo--loaded{opacity:1;-webkit-transform:translate3d(0,0,0) scale(1);transform:translate3d(0,0,0) scale(1)}' +
             '.tv-hero__details{margin-bottom:1.2em}' +
             '.full-start-new.tv-card .full-start-new__details{margin:0;font-size:1.1em;color:rgba(255,255,255,.95);display:-webkit-box;display:-webkit-flex;display:flex;-webkit-flex-wrap:wrap;flex-wrap:wrap;-webkit-box-align:center;-webkit-align-items:center;align-items:center;gap:.45em .75em;text-shadow:0 1px 4px rgba(0,0,0,.4)}' +
             '.full-start-new.tv-card .full-start-new__details>*{margin:0}' +
