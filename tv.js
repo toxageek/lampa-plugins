@@ -8161,6 +8161,38 @@
                 }
             }
 
+            function preloadAndDecodeHomeImage(url, onReady, onError) {
+                if (!url) {
+                    if (typeof onError === 'function') onError();
+                    return;
+                }
+                var img = new Image();
+                img.onload = function () {
+                    if (destroyed || !img.naturalWidth) {
+                        if (typeof onError === 'function') onError();
+                        return;
+                    }
+                    if (typeof img.decode === 'function') {
+                        try {
+                            var p = img.decode();
+                            if (p && typeof p.then === 'function') {
+                                p.then(function () {
+                                    if (!destroyed && typeof onReady === 'function') onReady(img);
+                                }, function () {
+                                    if (!destroyed && typeof onReady === 'function') onReady(img);
+                                });
+                                return;
+                            }
+                        } catch (e) {}
+                    }
+                    if (typeof onReady === 'function') onReady(img);
+                };
+                img.onerror = function () {
+                    if (typeof onError === 'function') onError();
+                };
+                img.src = url;
+            }
+
             function setHeroBackgroundSmooth(url, immediate) {
                 if (!url || destroyed) return;
                 if (url === activeBgUrl && $bgImg.hasClass('is-ready')) return;
@@ -8215,7 +8247,7 @@
                     }, 380);
                 }
 
-                preloadAndDecodeImage(url, applyDecoded, function () {});
+                preloadAndDecodeHomeImage(url, applyDecoded, function () {});
             }
 
             function startCarousel(slides) {
@@ -8243,7 +8275,7 @@
             function showHeroLogo(logoUrl) {
                 if (!logoUrl || destroyed) return;
                 var mySeq = heroSeq;
-                preloadAndDecodeImage(logoUrl, function () {
+                preloadAndDecodeHomeImage(logoUrl, function () {
                     if (destroyed || mySeq !== heroSeq) return;
                     $heroLogo.attr('src', logoUrl).removeClass('hide');
                     requestAnimationFrame(function () {
