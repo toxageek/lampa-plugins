@@ -837,6 +837,133 @@
         return nextLabel + ': ' + shortDate + ' / ' + leftLabel + ': ' + days;
     }
 
+    function fetchTmdbSeasonEpisodes(movie, seasonNum, preferEpisodeGroups, net, cacheObj, cb) {
+        var tmdbId = parseInt(movie && movie.id, 10);
+        if (!tmdbId || !isSerialMovie(movie) || !Lampa.TMDB || !Lampa.TMDB.api) {
+            cb([]);
+            return;
+        }
+        if (!cacheObj.seasons) cacheObj.seasons = {};
+        if (cacheObj.seasons[seasonNum]) {
+            cb(cacheObj.seasons[seasonNum]);
+            return;
+        }
+
+        var lang = Lampa.Storage.get('language', 'ru');
+
+        function loadEpisodeGroups(done) {
+            if (cacheObj.groupsLoaded) {
+                done(cacheObj.groupsMap);
+                return;
+            }
+            var listUrl = Lampa.TMDB.api('tv/' + tmdbId + '/episode_groups?api_key=' + Lampa.TMDB.key());
+            net.timeout(10000);
+            net['native'](listUrl, function (egJson) {
+                var results = (egJson && Array.isArray(egJson.results)) ? egJson.results : [];
+                var picked = null;
+                for (var i = 0; i < results.length; i++) {
+                    if (results[i] && results[i].type === 6) {
+                        picked = results[i];
+                        break;
+                    }
+                }
+                if (!picked) {
+                    for (var j = 0; j < results.length; j++) {
+                        if (results[j] && /season/i.test(String(results[j].name || ''))) {
+                            picked = results[j];
+                            break;
+                        }
+                    }
+                }
+                if (!picked || !picked.id) {
+                    cacheObj.groupsLoaded = true;
+                    cacheObj.groupsMap = null;
+                    done(null);
+                    return;
+                }
+                var detailUrl = Lampa.TMDB.api('tv/episode_group/' + picked.id + '?api_key=' + Lampa.TMDB.key() + '&language=' + encodeURIComponent(lang));
+                net.timeout(10000);
+                net['native'](detailUrl, function (detailJson) {
+                    var map = {};
+                    var groups = (detailJson && Array.isArray(detailJson.groups)) ? detailJson.groups : [];
+                    for (var g = 0; g < groups.length; g++) {
+                        var grp = groups[g];
+                        if (!grp || !grp.order || grp.order <= 0 || !Array.isArray(grp.episodes)) continue;
+                        var sorted = grp.episodes.slice().sort(function (a, b) {
+                            return (a.order || 0) - (b.order || 0);
+                        });
+                        var mapped = [];
+                        for (var e = 0; e < sorted.length; e++) {
+                            var src = sorted[e];
+                            if (!src) continue;
+                            mapped.push({
+                                id: src.id,
+                                episode_number: e + 1,
+                                season_number: grp.order,
+                                name: src.name || '',
+                                overview: src.overview || '',
+                                still_path: src.still_path || null,
+                                air_date: src.air_date || '',
+                                runtime: src.runtime || null
+                            });
+                        }
+                        map[grp.order] = mapped;
+                    }
+                    cacheObj.groupsLoaded = true;
+                    cacheObj.groupsMap = map;
+                    done(map);
+                }, function () {
+                    cacheObj.groupsLoaded = true;
+                    cacheObj.groupsMap = null;
+                    done(null);
+                });
+            }, function () {
+                cacheObj.groupsLoaded = true;
+                cacheObj.groupsMap = null;
+                done(null);
+            });
+        }
+
+        function fetchStandardSeason(onDone) {
+            var url = Lampa.TMDB.api('tv/' + tmdbId + '/season/' + seasonNum + '?api_key=' + Lampa.TMDB.key() + '&language=' + encodeURIComponent(lang));
+            net.timeout(10000);
+            net['native'](url, function (data) {
+                var eps = (data && Array.isArray(data.episodes)) ? data.episodes : [];
+                onDone(eps);
+            }, function () {
+                onDone([]);
+            });
+        }
+
+        if (preferEpisodeGroups) {
+            loadEpisodeGroups(function (map) {
+                if (map && map[seasonNum] && map[seasonNum].length) {
+                    cacheObj.seasons[seasonNum] = map[seasonNum];
+                    cb(map[seasonNum]);
+                    return;
+                }
+                fetchStandardSeason(function (eps) {
+                    cacheObj.seasons[seasonNum] = eps;
+                    cb(eps);
+                });
+            });
+            return;
+        }
+
+        fetchStandardSeason(function (eps) {
+            if (eps.length) {
+                cacheObj.seasons[seasonNum] = eps;
+                cb(eps);
+                return;
+            }
+            loadEpisodeGroups(function (map) {
+                var grpEps = (map && map[seasonNum]) ? map[seasonNum] : [];
+                cacheObj.seasons[seasonNum] = grpEps;
+                cb(grpEps);
+            });
+        });
+    }
+
     /* ------------------------------------------------------------------ *
      * Встроенный модуль Filmix (собственная реализация на базе fx.js)
      * ------------------------------------------------------------------ */
@@ -1984,18 +2111,11 @@
                 filter.chosen('filter', chosen);
             }
 
+            var fxTmdbCache = {};
+
             function fetchTmdbSeason(seasonNum, cb) {
-                if (typeof object.movie.id === 'number' && isSerialMovie(object.movie)) {
-                    var url = Lampa.TMDB.api('tv/' + object.movie.id + '/season/' + seasonNum + '?api_key=' + Lampa.TMDB.key() + '&language=' + Lampa.Storage.get('language', 'ru'));
-                    network.timeout(10000);
-                    network['native'](url, function (data) {
-                        cb(data && data.episodes ? data.episodes : []);
-                    }, function () {
-                        cb([]);
-                    });
-                } else {
-                    cb([]);
-                }
+                var preferGroups = !!(parsedPost && parsedPost.seasons && parsedPost.seasons.length > 1 && (object.movie.number_of_seasons || 0) <= 1);
+                fetchTmdbSeasonEpisodes(object.movie, seasonNum, preferGroups, network, fxTmdbCache, cb);
             }
 
             function drawSerialEpisodes(seasonObj, voiceObj) {
@@ -4291,23 +4411,8 @@
         }
 
         function fetchTmdbSeason(seasonNum, cb) {
-            if (tmdbSeasonCache[seasonNum]) {
-                cb(tmdbSeasonCache[seasonNum]);
-                return;
-            }
-            if (typeof movie.id !== 'number') {
-                cb([]);
-                return;
-            }
-            var url = Lampa.TMDB.api('tv/' + movie.id + '/season/' + seasonNum + '?api_key=' + Lampa.TMDB.key() + '&language=' + Lampa.Storage.get('language', 'ru'));
-            netTmdb.timeout(10000);
-            netTmdb['native'](url, function (data) {
-                var eps = (data && Array.isArray(data.episodes)) ? data.episodes : [];
-                tmdbSeasonCache[seasonNum] = eps;
-                cb(eps);
-            }, function () {
-                cb([]);
-            });
+            var preferGroups = !!(parsedPost && parsedPost.seasons && parsedPost.seasons.length > 1 && (movie.number_of_seasons || 0) <= 1);
+            fetchTmdbSeasonEpisodes(movie, seasonNum, preferGroups, netTmdb, tmdbSeasonCache, cb);
         }
 
         function renderCards() {
@@ -4322,10 +4427,12 @@
             }
             $cardsWrap.removeClass('hide');
 
-            // Рисуем сначала сразу (или с кэшем TMDB), затем дополняем TMDB-метаданными
-            drawCardsWithTmdb(s, v, tmdbSeasonCache[s.num] || null);
+            var cachedSeasonEps = (tmdbSeasonCache.seasons && tmdbSeasonCache.seasons[s.num]) ? tmdbSeasonCache.seasons[s.num] : null;
 
-            if (!tmdbSeasonCache[s.num]) {
+            // Рисуем сначала сразу (или с кэшем TMDB), затем дополняем TMDB-метаданными
+            drawCardsWithTmdb(s, v, cachedSeasonEps);
+
+            if (!cachedSeasonEps) {
                 var targetSeasonNum = s.num;
                 var targetVoiceName = v.name;
                 fetchTmdbSeason(targetSeasonNum, function (tmdbEps) {
@@ -4342,8 +4449,8 @@
                         }
                     }
                 });
-            } else if (typeof onTmdbEpisodes === 'function' && tmdbSeasonCache[s.num].length) {
-                onTmdbEpisodes(tmdbSeasonCache[s.num]);
+            } else if (typeof onTmdbEpisodes === 'function' && cachedSeasonEps.length) {
+                onTmdbEpisodes(cachedSeasonEps);
             }
         }
 
@@ -4692,7 +4799,7 @@
         };
 
         this.getTmdbMapForSeason = function (seasonNum) {
-            var eps = tmdbSeasonCache[seasonNum];
+            var eps = tmdbSeasonCache.seasons && tmdbSeasonCache.seasons[seasonNum];
             if (!eps) return {};
             var map = {};
             for (var i = 0; i < eps.length; i++) map[eps[i].episode_number] = eps[i];
