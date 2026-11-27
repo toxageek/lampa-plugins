@@ -4905,20 +4905,32 @@
         var serial = isSerialMovie(movie);
         var cardDestroyed = false;
         var tmdbDetailsNet = new Lampa.Reguest();
+        var tmdbGroupsNet = new Lampa.Reguest();
 
         // 3.1. Оформляем детали под Figma (bold для цифр сезонов/серий + "Следующая: <дата> / Осталось дней: <N>")
         var $detailsEl = $start.find('.full-start-new__details');
         var seasonsLbl = Lampa.Lang.translate('title_seasons') || 'Сезоны';
         var episodesLbl = Lampa.Lang.translate('title_episodes') || 'Серии';
         var nextLblPrefix = (Lampa.Lang.translate('full_next_episode') || 'Следующая') + ':';
+        var displayedSeasons = 0;
+        var displayedEpisodes = 0;
 
         $detailsEl.children('span:not(.full-start-new__split)').each(function () {
             var $sp = $(this);
             var txt = $sp.text().trim();
             if (txt.indexOf(seasonsLbl + ':') === 0 || txt.indexOf(episodesLbl + ':') === 0) {
+                var isSeasonsSpan = txt.indexOf(seasonsLbl + ':') === 0;
                 var colonIdx = txt.indexOf(':');
                 var labelPart = txt.slice(0, colonIdx + 1);
                 var valPart = txt.slice(colonIdx + 1).trim();
+                var numVal = parseInt(valPart, 10) || 0;
+                if (isSeasonsSpan) {
+                    $sp.addClass('tv-details__seasons');
+                    displayedSeasons = numVal;
+                } else {
+                    $sp.addClass('tv-details__episodes');
+                    displayedEpisodes = numVal;
+                }
                 if (valPart) {
                     $sp.html(escapeHtml(labelPart) + ' <span class="tv-details__val">' + escapeHtml(valPart) + '</span>');
                 }
@@ -4926,6 +4938,43 @@
                 $sp.addClass('tv-next-episode');
             }
         });
+
+        function updateHeroSeasonsAndEpisodes(seasonsCount, episodesCount) {
+            if (!$detailsEl.length) return;
+            if (seasonsCount && seasonsCount > displayedSeasons) {
+                displayedSeasons = seasonsCount;
+                var $sSpan = $detailsEl.find('.tv-details__seasons').first();
+                if ($sSpan.length) {
+                    $sSpan.html(escapeHtml(seasonsLbl + ':') + ' <span class="tv-details__val">' + escapeHtml(String(displayedSeasons)) + '</span>');
+                }
+            }
+            if (episodesCount && episodesCount > displayedEpisodes) {
+                displayedEpisodes = episodesCount;
+                var $eSpan = $detailsEl.find('.tv-details__episodes').first();
+                if ($eSpan.length) {
+                    $eSpan.html(escapeHtml(episodesLbl + ':') + ' <span class="tv-details__val">' + escapeHtml(String(displayedEpisodes)) + '</span>');
+                }
+            }
+        }
+
+        function extractMaxSeasonFromData(dataObj) {
+            var maxS = 0;
+            if (!dataObj || !dataObj.episodes) return 0;
+            var epBlock = dataObj.episodes;
+            if (epBlock.season_number && epBlock.season_number > maxS) maxS = epBlock.season_number;
+            if (epBlock.name) {
+                var mName = String(epBlock.name).match(/(?:сезон|season)\s*(\d+)|(\d+)\s*(?:сезон|season)/i);
+                var parsedN = mName ? (parseInt(mName[1] || mName[2], 10) || 0) : 0;
+                if (parsedN > maxS) maxS = parsedN;
+            }
+            if (Array.isArray(epBlock.episodes)) {
+                for (var ei = 0; ei < epBlock.episodes.length; ei++) {
+                    var sn = epBlock.episodes[ei] && epBlock.episodes[ei].season_number;
+                    if (sn && sn > maxS) maxS = sn;
+                }
+            }
+            return maxS;
+        }
 
         function renderNextEpisodeBadge(nextInfo) {
             if (!nextInfo || !nextInfo.air_date || !$detailsEl.length) return;
@@ -4942,6 +4991,59 @@
         }
 
         if (serial) {
+            // 1) Уточняем число сезонов по e.data.episodes (если CUB/Lampa знает более высокий сезон, чем movie.number_of_seasons)
+            var dataMaxSeason = extractMaxSeasonFromData(e.data);
+            if (dataMaxSeason > displayedSeasons) {
+                updateHeroSeasonsAndEpisodes(dataMaxSeason, 0);
+            }
+
+            // 2) Для аниме/сериалов, где TMDB слил несколько сезонов в 1 (напр. 1 сезон / 60 серий), проверяем TMDB episode_groups ("Seasons", type=6)
+            if (displayedSeasons <= 1 && displayedEpisodes >= 14 && movie.id && Lampa.TMDB && Lampa.TMDB.api) {
+                var egListUrl = Lampa.TMDB.api('tv/' + movie.id + '/episode_groups?api_key=' + Lampa.TMDB.key());
+                tmdbGroupsNet.timeout(10000);
+                tmdbGroupsNet['native'](egListUrl, function (egJson) {
+                    if (cardDestroyed || !egJson || !Array.isArray(egJson.results) || !egJson.results.length) return;
+                    var seasonGroup = null;
+                    for (var gi = 0; gi < egJson.results.length; gi++) {
+                        var g = egJson.results[gi];
+                        if (g && g.type === 6) {
+                            seasonGroup = g;
+                            break;
+                        }
+                    }
+                    if (!seasonGroup) {
+                        for (var gj = 0; gj < egJson.results.length; gj++) {
+                            if (egJson.results[gj] && /season/i.test(String(egJson.results[gj].name || ''))) {
+                                seasonGroup = egJson.results[gj];
+                                break;
+                            }
+                        }
+                    }
+                    if (!seasonGroup || !seasonGroup.id) return;
+
+                    var egDetailUrl = Lampa.TMDB.api('tv/episode_group/' + seasonGroup.id + '?api_key=' + Lampa.TMDB.key());
+                    tmdbGroupsNet.timeout(10000);
+                    tmdbGroupsNet['native'](egDetailUrl, function (detailJson) {
+                        if (cardDestroyed || !detailJson || !Array.isArray(detailJson.groups)) return;
+                        var realSeasons = 0;
+                        var totalEps = 0;
+                        for (var k = 0; k < detailJson.groups.length; k++) {
+                            var grp = detailJson.groups[k];
+                            if (!grp || !grp.order || grp.order <= 0) continue; // пропускаем order=0 (Specials)
+                            var epCount = Array.isArray(grp.episodes) ? grp.episodes.length : 0;
+                            if (epCount > 0) {
+                                realSeasons++;
+                                totalEps += epCount;
+                            }
+                        }
+                        if (realSeasons > displayedSeasons) {
+                            updateHeroSeasonsAndEpisodes(realSeasons, totalEps);
+                        }
+                    }, function () {});
+                }, function () {});
+            }
+
+            // 3) Строка "Следующая: <дата> / Осталось дней: <N>"
             var nextEpInfo = findNextUpcomingAirDate(movie, e.data, null);
             if (nextEpInfo) {
                 renderNextEpisodeBadge(nextEpInfo);
@@ -5116,6 +5218,24 @@
             if (serial) {
                 updateHeroPlayLabel();
                 if (seriesSection) seriesSection.setFilmixData(parsed);
+                if (parsed && parsed.isSerial && Array.isArray(parsed.seasons) && parsed.seasons.length) {
+                    var srcSeasons = 0;
+                    var srcEpisodes = 0;
+                    for (var si = 0; si < parsed.seasons.length; si++) {
+                        var sObj = parsed.seasons[si];
+                        if (!sObj || sObj.num <= 0) continue;
+                        srcSeasons++;
+                        var bestVoiceEps = 0;
+                        if (Array.isArray(sObj.voices)) {
+                            for (var vi = 0; vi < sObj.voices.length; vi++) {
+                                var vLen = (sObj.voices[vi] && Array.isArray(sObj.voices[vi].episodes)) ? sObj.voices[vi].episodes.length : 0;
+                                if (vLen > bestVoiceEps) bestVoiceEps = vLen;
+                            }
+                        }
+                        srcEpisodes += bestVoiceEps;
+                    }
+                    updateHeroSeasonsAndEpisodes(srcSeasons, srcEpisodes);
+                }
             } else if (parsed && parsed.movies && parsed.movies.length) {
                 // Если у фильма не указано качество в деталях — добавим макс. качество с найденного источника
                 if (!movie.release_quality && !movie.quality) {
@@ -5264,6 +5384,7 @@
                 filmixNet.clear();
                 bwaNet.clear();
                 tmdbDetailsNet.clear();
+                tmdbGroupsNet.clear();
                 tmdbImagesNet.clear();
                 if (tmdbImagesCtrl && tmdbImagesCtrl.destroy) tmdbImagesCtrl.destroy();
                 bgTrailer.destroy();
