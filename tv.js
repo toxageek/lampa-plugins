@@ -649,6 +649,246 @@
             uk: 'Профіль Filmix оновлено',
             en: 'Filmix profile updated',
             be: 'Профіль Filmix абноўлены'
+        },
+        tv_home_title: {
+            ru: 'Главный экран',
+            uk: 'Головний екран',
+            en: 'Home Screen',
+            be: 'Галоўны экран'
+        },
+        tv_home_descr: {
+            ru: 'Netflix-главная, порядок и скрытие блоков',
+            uk: 'Netflix-головна, порядок та приховування блоків',
+            en: 'Netflix home layout, block order and visibility',
+            be: 'Netflix-галоўная, парадак і схаванне блокаў'
+        },
+        tv_home_enabled_title: {
+            ru: 'Netflix-стиль главного экрана',
+            uk: 'Netflix-стиль головного екрана',
+            en: 'Netflix-style home screen',
+            be: 'Netflix-стыль галоўнага экрана'
+        },
+        tv_home_enabled_descr: {
+            ru: 'Hero-блок с логотипом, каруселью задников и карточками как в макете',
+            uk: 'Hero-блок з логотипом, каруселлю фонів та картками як у макеті',
+            en: 'Hero panel with logo, backdrop carousel and wide continue watching row',
+            be: 'Hero-блок з лагатыпам, каруселлю фонаў і карткамі як у макеце'
+        },
+        tv_home_carousel_title: {
+            ru: 'Карусель задников в Hero',
+            uk: 'Карусель фонів у Hero',
+            en: 'Hero backdrop carousel',
+            be: 'Карусель фонаў у Hero'
+        },
+        tv_home_carousel_descr: {
+            ru: 'Плавная смена фоновых кадров на главном экране каждые 5 секунд',
+            uk: 'Плавна зміна фонових кадрів на головному екрані кожні 5 секунд',
+            en: 'Smoothly rotate background stills on the home screen every 5 seconds',
+            be: 'Плаўная змена фонавых кадраў на галоўным экране кожныя 5 секунд'
+        },
+        tv_home_continue_title: {
+            ru: 'Продолжить просмотр',
+            uk: 'Продовжити перегляд',
+            en: 'Continue Watching',
+            be: 'Працягнуць прагляд'
+        },
+        tv_home_new_episodes_title: {
+            ru: 'Новые серии',
+            uk: 'Нові серії',
+            en: 'New Episodes',
+            be: 'Новыя серыі'
+        },
+        tv_home_new_episodes_sub: {
+            ru: 'Обновления подписок',
+            uk: 'Оновлення підписок',
+            en: 'Subscription updates',
+            be: 'Абнаўленні падпісак'
+        },
+        tv_home_mark_watched: {
+            ru: 'Просмотрено',
+            uk: 'Переглянуто',
+            en: 'Mark as watched',
+            be: 'Прагледжана'
+        },
+        tv_home_mark_watched_sub: {
+            ru: 'Скрыть из «Продолжить просмотр»',
+            uk: 'Приховати з «Продовжити перегляд»',
+            en: 'Hide from Continue Watching',
+            be: 'Схаваць з «Працягнуць прагляд»'
+        },
+        tv_home_marked_watched_noty: {
+            ru: 'Отмечено как просмотрено',
+            uk: 'Позначено як переглянуто',
+            en: 'Marked as watched',
+            be: 'Пазначана як прагледжана'
+        },
+        tv_home_remaining: {
+            ru: 'Осталось',
+            uk: 'Залишилось',
+            en: 'Left',
+            be: 'Засталося'
+        },
+        tv_home_watched_pct: {
+            ru: 'Просмотрено',
+            uk: 'Переглянуто',
+            en: 'Watched',
+            be: 'Прагледжана'
+        },
+        tv_home_season_word: {
+            ru: 'Сезон',
+            uk: 'Сезон',
+            en: 'Season',
+            be: 'Сезон'
+        },
+        tv_home_episode_word: {
+            ru: 'Серия',
+            uk: 'Серія',
+            en: 'Episode',
+            be: 'Серыя'
+        },
+        tv_home_ep_short: {
+            ru: 'эп.',
+            uk: 'еп.',
+            en: 'ep.',
+            be: 'эп.'
+        },
+        tv_home_top10_badge: {
+            ru: 'ТОП-10',
+            uk: 'ТОП-10',
+            en: 'TOP 10',
+            be: 'ТОП-10'
+        },
+        tv_home_top_today: {
+            ru: 'сегодня',
+            uk: 'сьогодні',
+            en: 'today',
+            be: 'сёння'
+        },
+        tv_home_more_action: {
+            ru: 'Еще',
+            uk: 'Ще',
+            en: 'More',
+            be: 'Яшчэ'
+        },
+        tv_home_more_all: {
+            ru: 'Открыть весь раздел',
+            uk: 'Відкрити весь розділ',
+            en: 'Open full section',
+            be: 'Адкрыць увесь раздзел'
+        },
+        tv_home_order_btn: {
+            ru: 'Порядок блоков',
+            uk: 'Порядок блоків',
+            en: 'Block order',
+            be: 'Парадак блокаў'
+        },
+        tv_home_order_descr: {
+            ru: 'Нажмите OK на блоке, переставьте стрелками и нажмите OK',
+            uk: 'Натисніть OK на блоці, переставте стрілками та натисніть OK',
+            en: 'Press OK on a block, move with arrows and press OK',
+            be: 'Націсніце OK на блоку, перастаўце стрэлкамі і націсніце OK'
+        },
+        tv_home_order_pick_hint: {
+            ru: 'Выберите блок и нажмите OK для перемещения',
+            uk: 'Виберіть блок і натисніть OK для переміщення',
+            en: 'Select a block and press OK to move it',
+            be: 'Выберыце блок і націсніце OK для перамяшчэння'
+        },
+        tv_home_order_move_hint: {
+            ru: 'Переместите ▲/▼ и нажмите OK для фиксации',
+            uk: 'Перемістіть ▲/▼ та натисніть OK для фіксації',
+            en: 'Move with ▲/▼ and press OK to place',
+            be: 'Перамясціце ▲/▼ і націсніце OK для фіксацыі'
+        },
+        tv_home_blocks_title: {
+            ru: 'Отображение блоков главного экрана',
+            uk: 'Відображення блоків головного екрана',
+            en: 'Home screen block visibility',
+            be: 'Адлюстраванне блокаў галоўнага экрана'
+        },
+        tv_home_block_now_watch: {
+            ru: 'Сейчас смотрят',
+            uk: 'Зараз дивляться',
+            en: 'Now Watching',
+            be: 'Зараз глядзяць'
+        },
+        tv_home_block_latest: {
+            ru: 'Новинки',
+            uk: 'Новинки',
+            en: 'Latest',
+            be: 'Навінкі'
+        },
+        tv_home_block_fire: {
+            ru: 'В огне',
+            uk: 'У вогні',
+            en: 'Trending Fire',
+            be: 'У агні'
+        },
+        tv_home_block_high_quality: {
+            ru: 'В высоком качестве',
+            uk: 'У високій якості',
+            en: 'In High Quality',
+            be: 'У высокай якасці'
+        },
+        tv_home_block_top_movies: {
+            ru: 'Топ 100 — Фильмы',
+            uk: 'Топ 100 — Фільми',
+            en: 'Top 100 — Movies',
+            be: 'Топ 100 — Фільмы'
+        },
+        tv_home_block_top_tv: {
+            ru: 'Топ 100 — Сериалы',
+            uk: 'Топ 100 — Серіали',
+            en: 'Top 100 — TV Shows',
+            be: 'Топ 100 — Серыялы'
+        },
+        tv_home_block_trend_day: {
+            ru: 'В тренде за день',
+            uk: 'У тренді за день',
+            en: 'Trending Today',
+            be: 'У трэндзе за дзень'
+        },
+        tv_home_block_trend_week: {
+            ru: 'В тренде за неделю',
+            uk: 'У тренді за тиждень',
+            en: 'Trending This Week',
+            be: 'У трэндзе за тыдзень'
+        },
+        tv_home_block_upcoming: {
+            ru: 'Скоро на экранах',
+            uk: 'Скоро на екранах',
+            en: 'Upcoming',
+            be: 'Хутка на экранах'
+        },
+        tv_home_block_popular_movie: {
+            ru: 'Популярные фильмы',
+            uk: 'Популярні фільми',
+            en: 'Popular Movies',
+            be: 'Папулярныя фільмы'
+        },
+        tv_home_block_popular_tv: {
+            ru: 'Популярные сериалы',
+            uk: 'Популярні серіали',
+            en: 'Popular TV Shows',
+            be: 'Папулярныя серыялы'
+        },
+        tv_home_open_card: {
+            ru: 'Открыть',
+            uk: 'Відкрити',
+            en: 'Open',
+            be: 'Адкрыць'
+        },
+        tv_search_open_action: {
+            ru: 'Поиск',
+            uk: 'Пошук',
+            en: 'Search',
+            be: 'Пошук'
+        },
+        tv_search_open_sub: {
+            ru: 'Открыть поиск',
+            uk: 'Відкрити пошук',
+            en: 'Open search',
+            be: 'Адкрыць пошук'
         }
     };
 
@@ -3248,13 +3488,21 @@
         if (!getBoolSetting('tv_show_imdb', true)) return null;
         if (movie && movie.imdb_rating && parseFloat(movie.imdb_rating) > 0) {
             var sc = parseFloat(movie.imdb_rating);
-            return sc >= 10 ? '10' : sc.toFixed(1);
+            var formatted = sc >= 10 ? '10' : sc.toFixed(1);
+            if (typeof ImdbCardRatings !== 'undefined' && ImdbCardRatings && ImdbCardRatings.remember) {
+                ImdbCardRatings.remember(movie, formatted);
+            }
+            return formatted;
         }
         if ($root && $root.length) {
             var domScore = $root.find('.full-start-new__rate-line .rate--imdb > div').eq(0).text().trim();
             if (domScore && parseFloat(domScore) > 0) {
                 var dsc = parseFloat(domScore);
-                return dsc >= 10 ? '10' : dsc.toFixed(1);
+                var dFormatted = dsc >= 10 ? '10' : dsc.toFixed(1);
+                if (typeof ImdbCardRatings !== 'undefined' && ImdbCardRatings && ImdbCardRatings.remember) {
+                    ImdbCardRatings.remember(movie, dFormatted);
+                }
+                return dFormatted;
             }
         }
         return null;
@@ -6329,14 +6577,2592 @@
     })();
 
     /* ------------------------------------------------------------------ *
+     * Глобальная кнопка «Еще» в контекстном меню (долгое нажатие на карточку)
+     * Работает во всём приложении во всех горизонтальных рядах с «Еще»
+     * ------------------------------------------------------------------ */
+
+    var GlobalMoreMenu = (function () {
+        var initialized = false;
+        var lastCardContext = { lineEl: null, cardEl: null, ts: 0 };
+        var lastLongPressTs = 0;
+
+        function dispatchHoverEnter(dom) {
+            if (!dom) return;
+            var el = dom.jquery ? dom[0] : dom;
+            if (!el) return;
+            try {
+                var ev;
+                if (typeof CustomEvent === 'function') {
+                    ev = new CustomEvent('hover:enter', { bubbles: true, cancelable: true });
+                } else if (document.createEvent) {
+                    ev = document.createEvent('Event');
+                    ev.initEvent('hover:enter', true, true);
+                }
+                if (ev && el.dispatchEvent) {
+                    el.dispatchEvent(ev);
+                    return;
+                }
+            } catch (e) {}
+            try { $(el).trigger('hover:enter'); } catch (e2) {}
+        }
+
+        function findLineContainer(el) {
+            if (!el) return null;
+            var $el = el.jquery ? el : $(el);
+            if (!$el.length) return null;
+            if ($el.hasClass('card-more') || $el.closest('.card-more').length) return null;
+            var $line = $el.closest('.items-line, .tv-home-row');
+            return $line.length ? $line : null;
+        }
+
+        function isCardLike(el) {
+            if (!el) return false;
+            var $el = el.jquery ? el : $(el);
+            if (!$el.length) return false;
+            if ($el.hasClass('card-more') || $el.closest('.card-more').length) return false;
+            return $el.hasClass('card') ||
+                $el.hasClass('card-episode') ||
+                $el.hasClass('tv-home-card') ||
+                $el.hasClass('tv-home-wide') ||
+                $el.hasClass('selector') && $el.closest('.items-line__body, .tv-home-row__track').length > 0;
+        }
+
+        function resolveActiveLine() {
+            var $focused = $('.items-line .focus, .tv-home-row .focus').first();
+            if ($focused.length && isCardLike($focused)) {
+                var $fl = findLineContainer($focused);
+                if ($fl && $fl.length) return $fl;
+            }
+            if (lastCardContext.lineEl && (Date.now() - lastCardContext.ts) < 2500) {
+                var $ll = $(lastCardContext.lineEl);
+                if ($ll.length && document.body && document.body.contains($ll[0])) {
+                    return $ll;
+                }
+            }
+            return null;
+        }
+
+        function getMoreHandler($line) {
+            if (!$line || !$line.length) return null;
+
+            var customMore = $line.data('tv_more_fn');
+            if (typeof customMore === 'function') {
+                return customMore;
+            }
+
+            var lineRef = $line.data('tv_line_ref');
+            var $moreBtn = $line.find('.items-line__more, .card-more').first();
+
+            if (lineRef) {
+                var hasPages = lineRef.data && parseInt(lineRef.data.total_pages, 10) > 1;
+                var hasMoreObj = !!lineRef.more;
+                if (hasPages || hasMoreObj || $moreBtn.length) {
+                    return function () {
+                        if (typeof lineRef.emit === 'function') {
+                            lineRef.emit('more', lineRef.data);
+                        } else if ($moreBtn.length) {
+                            dispatchHoverEnter($moreBtn[0]);
+                        }
+                    };
+                }
+            }
+
+            if ($moreBtn.length) {
+                return function () {
+                    dispatchHoverEnter($moreBtn[0]);
+                };
+            }
+
+            return null;
+        }
+
+        function getLineTitle($line) {
+            if (!$line || !$line.length) return '';
+            var title = $line.find('.items-line__title, .tv-home-row__title').first().text();
+            if (title) title = String(title).replace(/\s+/g, ' ').replace(/^\s+|\s+$/g, '');
+            if (!title) {
+                var lineRef = $line.data('tv_line_ref');
+                if (lineRef && lineRef.data && lineRef.data.title) {
+                    title = String(lineRef.data.title);
+                }
+            }
+            return title || '';
+        }
+
+        function injectMoreItem(selectObj) {
+            if (!selectObj || !Array.isArray(selectObj.items) || !selectObj.items.length) return;
+            if (selectObj.__tv_skip_more) return;
+
+            for (var i = 0; i < selectObj.items.length; i++) {
+                if (selectObj.items[i] && selectObj.items[i].__tv_more_action) return;
+            }
+
+            var $line = resolveActiveLine();
+            if (!$line || !$line.length) return;
+
+            var invokeMore = getMoreHandler($line);
+            if (typeof invokeMore !== 'function') return;
+
+            var moreTitle = (Lampa.Lang && Lampa.Lang.translate('more')) || t('tv_home_more_action');
+            var lineTitle = getLineTitle($line);
+
+            var moreAction = {
+                title: moreTitle,
+                subtitle: lineTitle || t('tv_home_more_all'),
+                __tv_more_action: true,
+                onSelect: function () {
+                    setTimeout(function () {
+                        try {
+                            invokeMore();
+                        } catch (err) {
+                            if (window.console && console.error) console.error('[TV More]', err);
+                        }
+                    }, 35);
+                }
+            };
+
+            selectObj.items.unshift(moreAction);
+        }
+
+        function isContextMenuForSearch(selectObj) {
+            if (!selectObj || !Array.isArray(selectObj.items) || !selectObj.items.length) return false;
+            if (selectObj.__tv_skip_search) return false;
+            if (!Lampa.Search || typeof Lampa.Search.open !== 'function') return false;
+
+            try {
+                if ($('body').hasClass('search--open')) return false;
+            } catch (e) {}
+
+            try {
+                if (Lampa.Player && typeof Lampa.Player.opened === 'function' && Lampa.Player.opened()) return false;
+            } catch (e2) {}
+
+            var ctrlName = '';
+            try {
+                var en = Lampa.Controller && typeof Lampa.Controller.enabled === 'function' ? Lampa.Controller.enabled() : null;
+                ctrlName = en && en.name ? String(en.name) : '';
+            } catch (e3) {}
+
+            if (ctrlName === 'settings' || ctrlName === 'settings_component' || ctrlName === 'modal' || ctrlName === 'search' || ctrlName === 'player') {
+                return false;
+            }
+
+            for (var i = 0; i < selectObj.items.length; i++) {
+                if (selectObj.items[i] && selectObj.items[i].__tv_search_action) return false;
+            }
+
+            if ((Date.now() - lastLongPressTs) <= 1000) return true;
+
+            var actionTitle = (Lampa.Lang && typeof Lampa.Lang.translate === 'function')
+                ? String(Lampa.Lang.translate('title_action') || '')
+                : '';
+            if (actionTitle && selectObj.title && String(selectObj.title) === actionTitle) return true;
+
+            return false;
+        }
+
+        function injectSearchItem(selectObj) {
+            if (!isContextMenuForSearch(selectObj)) return;
+
+            var prevCtrl = '';
+            try {
+                var en = Lampa.Controller && typeof Lampa.Controller.enabled === 'function' ? Lampa.Controller.enabled() : null;
+                if (en && en.name && en.name !== 'select' && en.name !== 'search') prevCtrl = en.name;
+            } catch (e) {}
+
+            var searchTitle = (Lampa.Lang && Lampa.Lang.translate('search')) || t('tv_search_open_action');
+            var searchAction = {
+                title: searchTitle,
+                subtitle: t('tv_search_open_sub'),
+                __tv_search_action: true,
+                onSelect: function () {
+                    setTimeout(function () {
+                        try {
+                            if (Lampa.Search && typeof Lampa.Search.open === 'function') {
+                                if (prevCtrl && prevCtrl !== 'content') {
+                                    Lampa.Search.open({
+                                        onBack: function () {
+                                            Lampa.Controller.toggle(prevCtrl);
+                                        }
+                                    });
+                                } else {
+                                    Lampa.Search.open();
+                                }
+                            }
+                        } catch (err) {
+                            if (window.console && console.error) console.error('[TV Search]', err);
+                        }
+                    }, 35);
+                }
+            };
+
+            var insertAt = 0;
+            while (insertAt < selectObj.items.length &&
+                selectObj.items[insertAt] &&
+                (selectObj.items[insertAt].__tv_more_action || selectObj.items[insertAt].__tv_mark_watched_action)) {
+                insertAt++;
+            }
+            selectObj.items.splice(insertAt, 0, searchAction);
+        }
+
+        function onSelectPreshow(selectObj) {
+            injectMoreItem(selectObj);
+            injectSearchItem(selectObj);
+        }
+
+        function recordLongPressTarget(target) {
+            lastLongPressTs = Date.now();
+            if (!target) return;
+            var $line = findLineContainer(target);
+            if ($line && $line.length && isCardLike(target)) {
+                lastCardContext = { lineEl: $line[0], cardEl: target, ts: lastLongPressTs };
+            }
+        }
+
+        function init() {
+            if (initialized) return;
+            initialized = true;
+
+            if (Lampa.Listener && typeof Lampa.Listener.follow === 'function') {
+                Lampa.Listener.follow('line', function (e) {
+                    try {
+                        if (e && e.line && e.line.html) {
+                            $(e.line.html).data('tv_line_ref', e.line);
+                        }
+                    } catch (err) {}
+                });
+            }
+
+            try {
+                document.addEventListener('hover:long', function (ev) {
+                    recordLongPressTarget(ev && ev.target ? ev.target : null);
+                }, true);
+
+                document.addEventListener('contextmenu', function (ev) {
+                    recordLongPressTarget(ev && ev.target ? ev.target : null);
+                }, true);
+
+                document.addEventListener('hover:focus', function (ev) {
+                    var target = ev && ev.target ? ev.target : null;
+                    if (!target) return;
+                    var $line = findLineContainer(target);
+                    if ($line && $line.length && isCardLike(target)) {
+                        lastCardContext = { lineEl: $line[0], cardEl: target, ts: Date.now() };
+                    }
+                }, true);
+            } catch (e) {}
+
+            try {
+                $(document).on('hover:long contextmenu', function (ev) {
+                    recordLongPressTarget(ev && ev.target ? ev.target : null);
+                });
+            } catch (e2) {}
+
+            if (Lampa.Select && Lampa.Select.listener && typeof Lampa.Select.listener.follow === 'function') {
+                Lampa.Select.listener.follow('preshow', function (e) {
+                    try {
+                        if (e && e.active) onSelectPreshow(e.active);
+                    } catch (err) {}
+                });
+            } else if (Lampa.Select && typeof Lampa.Select.show === 'function' && !Lampa.Select.__tv_more_wrapped) {
+                Lampa.Select.__tv_more_wrapped = true;
+                var origShow = Lampa.Select.show;
+                Lampa.Select.show = function (params) {
+                    try { onSelectPreshow(params); } catch (err) {}
+                    return origShow.apply(this, arguments);
+                };
+            }
+        }
+
+        return {
+            init: init,
+            injectMoreItem: injectMoreItem,
+            injectSearchItem: injectSearchItem,
+            recordLongPressTarget: recordLongPressTarget,
+            dispatchHoverEnter: dispatchHoverEnter
+        };
+    })();
+
+    /* ------------------------------------------------------------------ *
+     * IMDb-рейтинги карточек (кэш 7 дней + приоритет IMDb) и жанры TMDB
+     * ------------------------------------------------------------------ */
+
+    var ImdbCardRatings = (function () {
+        var CACHE_KEY = 'tv_imdb_rating_cache';
+        var CACHE_TTL = 7 * 24 * 60 * 60 * 1000;
+        var CACHE_MAX = 300;
+        var memCache = null;
+
+        var GENRES_RU = {
+            28: 'Боевик', 12: 'Приключения', 16: 'Мультфильм', 35: 'Комедия',
+            80: 'Криминал', 99: 'Документальный', 18: 'Драма', 10751: 'Семейный',
+            14: 'Фэнтези', 36: 'История', 27: 'Ужасы', 10402: 'Музыка',
+            9648: 'Детектив', 10749: 'Мелодрама', 878: 'Фантастика', 10770: 'ТВ фильм',
+            53: 'Триллер', 10752: 'Военный', 37: 'Вестерн',
+            10759: 'Боевик и приключения', 10762: 'Детский', 10763: 'Новости',
+            10764: 'Реалити', 10765: 'Фантастика', 10766: 'Мелодрама',
+            10767: 'Ток-шоу', 10768: 'Военный'
+        };
+
+        var GENRES_EN = {
+            28: 'Action', 12: 'Adventure', 16: 'Animation', 35: 'Comedy',
+            80: 'Crime', 99: 'Documentary', 18: 'Drama', 10751: 'Family',
+            14: 'Fantasy', 36: 'History', 27: 'Horror', 10402: 'Music',
+            9648: 'Mystery', 10749: 'Romance', 878: 'Sci-Fi', 10770: 'TV Movie',
+            53: 'Thriller', 10752: 'War', 37: 'Western',
+            10759: 'Action & Adventure', 10762: 'Kids', 10763: 'News',
+            10764: 'Reality', 10765: 'Sci-Fi & Fantasy', 10766: 'Soap',
+            10767: 'Talk', 10768: 'War & Politics'
+        };
+
+        function loadCache() {
+            if (memCache) return memCache;
+            var stored = null;
+            try { stored = Lampa.Storage.get(CACHE_KEY, null); } catch (e) {}
+            memCache = (stored && typeof stored === 'object' && !Array.isArray(stored)) ? stored : {};
+            return memCache;
+        }
+
+        function saveCache(store) {
+            var now = Date.now();
+            var keys = Object.keys(store);
+            var valid = [];
+            for (var i = 0; i < keys.length; i++) {
+                var k = keys[i];
+                var e = store[k];
+                if (!e || !e.ts || (now - e.ts) > CACHE_TTL) delete store[k];
+                else valid.push(k);
+            }
+            if (valid.length > CACHE_MAX) {
+                valid.sort(function (a, b) { return (store[a].ts || 0) - (store[b].ts || 0); });
+                var over = valid.length - CACHE_MAX;
+                for (var r = 0; r < over; r++) delete store[valid[r]];
+            }
+            memCache = store;
+            try { Lampa.Storage.set(CACHE_KEY, store); } catch (e) {}
+        }
+
+        function cardKey(card) {
+            if (!card || !card.id) return '';
+            return (isSerialMovie(card) ? 'tv_' : 'mv_') + card.id;
+        }
+
+        function formatScore(val) {
+            var n = parseFloat(val);
+            if (!n || isNaN(n) || n <= 0) return '';
+            return n >= 10 ? '10' : n.toFixed(1);
+        }
+
+        function remember(card, score) {
+            var k = cardKey(card);
+            var sc = formatScore(score);
+            if (!k || !sc) return;
+            var store = loadCache();
+            if (store[k] && store[k].s === sc && (Date.now() - (store[k].ts || 0)) < 24 * 60 * 60 * 1000) return;
+            store[k] = { s: sc, ts: Date.now() };
+            saveCache(store);
+        }
+
+        function readExternalRatingPluginCache(card) {
+            if (!card || !card.id) return '';
+            try {
+                var ext = Lampa.Storage.cache('kp_rating', 500, {});
+                if (ext && ext[card.id] && ext[card.id].imdb) {
+                    var f = formatScore(ext[card.id].imdb);
+                    if (f) return f;
+                }
+            } catch (e) {}
+            try {
+                var favCard = Lampa.Favorite && typeof Lampa.Favorite.find === 'function' ? Lampa.Favorite.find({ id: card.id }) : null;
+                if (favCard && favCard.imdb_rating) {
+                    var ff = formatScore(favCard.imdb_rating);
+                    if (ff) return ff;
+                }
+            } catch (e2) {}
+            return '';
+        }
+
+        function getRating(card) {
+            if (!card) return { score: '', source: '' };
+
+            if (card.imdb_rating) {
+                var direct = formatScore(card.imdb_rating);
+                if (direct) {
+                    remember(card, direct);
+                    return { score: direct, source: 'IMDb' };
+                }
+            }
+
+            var k = cardKey(card);
+            var store = loadCache();
+            if (k && store[k] && store[k].s && (Date.now() - (store[k].ts || 0)) <= CACHE_TTL) {
+                return { score: store[k].s, source: 'IMDb' };
+            }
+
+            var ext = readExternalRatingPluginCache(card);
+            if (ext) {
+                remember(card, ext);
+                return { score: ext, source: 'IMDb' };
+            }
+
+            if (card.vote_average) {
+                var tmdb = formatScore(card.vote_average);
+                if (tmdb) return { score: tmdb, source: 'TMDB' };
+            }
+
+            return { score: '', source: '' };
+        }
+
+        function getCardGenres(card, maxCount) {
+            var out = [];
+            if (!card) return out;
+            var limit = maxCount || 3;
+            var lang = getTmdbLang();
+            var map = (lang === 'en') ? GENRES_EN : GENRES_RU;
+
+            if (Array.isArray(card.genres) && card.genres.length) {
+                for (var i = 0; i < card.genres.length && out.length < limit; i++) {
+                    var g = card.genres[i];
+                    var name = g && g.name ? String(g.name) : (typeof g === 'string' ? g : '');
+                    if (name) {
+                        name = name.charAt(0).toUpperCase() + name.slice(1);
+                        out.push(name);
+                    }
+                }
+            } else if (Array.isArray(card.genre_ids) && card.genre_ids.length) {
+                for (var j = 0; j < card.genre_ids.length && out.length < limit; j++) {
+                    var gid = card.genre_ids[j];
+                    if (map[gid]) out.push(map[gid]);
+                }
+            }
+            return out;
+        }
+
+        return {
+            remember: remember,
+            getRating: getRating,
+            getCardGenres: getCardGenres,
+            formatScore: formatScore
+        };
+    })();
+
+    /* ------------------------------------------------------------------ *
+     * «Продолжить просмотр» (фильтр <= 80% + скрытие по «Просмотрено»)
+     * ------------------------------------------------------------------ */
+
+    var ContinueWatching = (function () {
+        var HIDDEN_KEY = 'tv_home_watched_hidden';
+        var HIDDEN_MAX = 250;
+        var MAX_PERCENT = 80;
+
+        function loadHidden() {
+            var stored = null;
+            try { stored = Lampa.Storage.get(HIDDEN_KEY, null); } catch (e) {}
+            return (stored && typeof stored === 'object' && !Array.isArray(stored)) ? stored : {};
+        }
+
+        function saveHidden(map) {
+            var keys = Object.keys(map);
+            if (keys.length > HIDDEN_MAX) {
+                keys.sort(function (a, b) {
+                    return ((map[a] && map[a].ts) || 0) - ((map[b] && map[b].ts) || 0);
+                });
+                var over = keys.length - HIDDEN_MAX;
+                for (var i = 0; i < over; i++) delete map[keys[i]];
+            }
+            try { Lampa.Storage.set(HIDDEN_KEY, map); } catch (e) {}
+        }
+
+        function isHiddenEntry(hiddenMap, cardId, sig, updatedTs) {
+            var entry = hiddenMap[String(cardId)];
+            if (!entry) return false;
+            if (entry.sig !== sig) return false;
+            if (updatedTs && entry.ts && updatedTs > entry.ts + 2000) return false;
+            return true;
+        }
+
+        function makeEpisodeHash(card, season, episode) {
+            var orig = card.original_name || card.original_title || card.name || card.title || '';
+            return Lampa.Utils.hash([season, season > 10 ? ':' : '', episode, orig].join(''));
+        }
+
+        function formatRemainingTime(timeSec, durSec) {
+            var tSec = parseFloat(timeSec) || 0;
+            var dSec = parseFloat(durSec) || 0;
+            if (dSec <= 0 || dSec <= tSec) return '';
+            var leftMin = Math.max(1, Math.round((dSec - tSec) / 60));
+            var h = Math.floor(leftMin / 60);
+            var m = leftMin % 60;
+            var lang = getTmdbLang();
+            var hWord = (lang === 'en') ? 'h' : ((lang === 'uk') ? 'год' : 'ч');
+            var mWord = (lang === 'en') ? 'm' : ((lang === 'uk') ? 'хв' : 'мин');
+            if (h > 0 && m > 0) return t('tv_home_remaining') + ' ' + h + ' ' + hWord + ' ' + m + ' ' + mWord;
+            if (h > 0) return t('tv_home_remaining') + ' ' + h + ' ' + hWord;
+            return t('tv_home_remaining') + ' ' + m + ' ' + mWord;
+        }
+
+        function findBestSeriesEpisode(card) {
+            var best = null;
+            var checked = {};
+
+            function consider(s, e, tl, stillPath) {
+                if (!s || !e || !tl) return;
+                var pct = parseFloat(tl.percent) || 0;
+                if (pct <= 0) return;
+                var upd = parseFloat(tl.updated) || 0;
+                var score = upd > 0 ? upd : (s * 10000 + e);
+                if (!best || score > best._score) {
+                    best = {
+                        season: s,
+                        episode: e,
+                        percent: Math.min(100, Math.round(pct)),
+                        time: parseFloat(tl.time) || 0,
+                        duration: parseFloat(tl.duration) || 0,
+                        updated: upd,
+                        still_path: stillPath || '',
+                        hash: makeEpisodeHash(card, s, e),
+                        _score: score
+                    };
+                }
+            }
+
+            function checkSE(s, e, stillPath) {
+                var key = s + ':' + e;
+                if (checked[key]) return;
+                checked[key] = true;
+                var tl = getEpisodeTimeline(card, s, e);
+                if (tl && tl.percent > 0) {
+                    consider(s, e, tl, stillPath);
+                }
+            }
+
+            // 1. Проверяем последний сохранённый выбор Filmix (если есть)
+            try {
+                if (typeof Filmix !== 'undefined' && Filmix && typeof Filmix.getChoice === 'function') {
+                    var choice = Filmix.getChoice(card);
+                    if (choice && choice.season && choice.episode) {
+                        var cs = parseInt(choice.season, 10);
+                        var ce = parseInt(choice.episode, 10);
+                        if (cs > 0 && ce > 0) {
+                            checkSE(cs, ce, '');
+                            if (ce > 1) checkSE(cs, ce - 1, '');
+                            checkSE(cs, ce + 1, '');
+                        }
+                    }
+                }
+            } catch (e1) {}
+
+            // 2. Проверяем эпизоды из Lampa.TimeTable (если есть)
+            try {
+                if (Lampa.TimeTable && typeof Lampa.TimeTable.get === 'function') {
+                    var tt = Lampa.TimeTable.get(card);
+                    if (Array.isArray(tt)) {
+                        for (var i = 0; i < tt.length; i++) {
+                            var ep = tt[i];
+                            if (ep && ep.season_number && ep.episode_number) {
+                                checkSE(ep.season_number, ep.episode_number, ep.still_path || '');
+                            }
+                        }
+                    }
+                }
+            } catch (e2) {}
+
+            // 3. Проверяем встроенный Lampa.Timeline.watched (1-й сезон)
+            try {
+                if (Lampa.Timeline && typeof Lampa.Timeline.watched === 'function') {
+                    var wList = Lampa.Timeline.watched(card, true);
+                    if (Array.isArray(wList)) {
+                        for (var w = 0; w < wList.length; w++) {
+                            var entry = wList[w];
+                            if (entry && entry.ep && entry.view && entry.view.percent > 0) {
+                                consider(1, entry.ep, entry.view, '');
+                            }
+                        }
+                    }
+                }
+            } catch (e3) {}
+
+            // 4. Быстрый ограниченный проход по сезонам (если ещё не найдено или сезонов > 1)
+            var maxSeasons = Math.min(parseInt(card.number_of_seasons, 10) || 4, 10);
+            var maxEps = 24;
+            for (var s = 1; s <= maxSeasons; s++) {
+                var misses = 0;
+                for (var e = 1; e <= maxEps; e++) {
+                    var k = s + ':' + e;
+                    if (checked[k]) continue;
+                    checked[k] = true;
+                    var tl = getEpisodeTimeline(card, s, e);
+                    if (tl && tl.percent > 0) {
+                        consider(s, e, tl, '');
+                        misses = 0;
+                    } else {
+                        misses++;
+                        if (misses >= 6 && e > 6) break;
+                    }
+                }
+            }
+
+            return best;
+        }
+
+        function inspectMovieProgress(card) {
+            var hash = makeMovieTimelineHash(card);
+            var tl = null;
+            try {
+                if (Lampa.Timeline && typeof Lampa.Timeline.view === 'function') {
+                    tl = Lampa.Timeline.view(hash);
+                }
+            } catch (e) {}
+
+            if ((!tl || !tl.percent) && Lampa.Timeline && typeof Lampa.Timeline.watched === 'function') {
+                try {
+                    var w = Lampa.Timeline.watched(card, true);
+                    if (w && typeof w === 'object' && w.percent > 0) tl = w;
+                } catch (e2) {}
+            }
+
+            if (!tl) return null;
+            var pct = parseFloat(tl.percent) || 0;
+            if (pct <= 0) return null;
+
+            return {
+                percent: Math.min(100, Math.round(pct)),
+                time: parseFloat(tl.time) || 0,
+                duration: parseFloat(tl.duration) || 0,
+                updated: parseFloat(tl.updated) || 0,
+                hash: hash
+            };
+        }
+
+        function collectItems() {
+            var out = [];
+            if (!Lampa.Favorite || typeof Lampa.Favorite.get !== 'function') return out;
+
+            var history = Lampa.Favorite.get({ type: 'history' }) || [];
+            var continued = Lampa.Favorite.get({ type: 'continued' }) || [];
+            var viewed = Lampa.Favorite.get({ type: 'viewed' }) || [];
+            var thrown = Lampa.Favorite.get({ type: 'thrown' }) || [];
+            var hiddenMap = loadHidden();
+
+            var excludedIds = {};
+            var idx;
+            for (idx = 0; idx < viewed.length; idx++) {
+                if (viewed[idx] && viewed[idx].id) excludedIds[String(viewed[idx].id)] = true;
+            }
+            for (idx = 0; idx < thrown.length; idx++) {
+                if (thrown[idx] && thrown[idx].id) excludedIds[String(thrown[idx].id)] = true;
+            }
+
+            var merged = [];
+            var seenIds = {};
+            for (idx = 0; idx < history.length; idx++) {
+                var hc = history[idx];
+                if (hc && hc.id && !seenIds[String(hc.id)]) {
+                    seenIds[String(hc.id)] = true;
+                    merged.push(hc);
+                }
+            }
+            for (idx = 0; idx < continued.length; idx++) {
+                var cc = continued[idx];
+                if (cc && cc.id && !seenIds[String(cc.id)]) {
+                    seenIds[String(cc.id)] = true;
+                    merged.push(cc);
+                }
+            }
+
+            for (idx = 0; idx < merged.length && out.length < 20; idx++) {
+                var card = merged[idx];
+                if (!card || !card.id) continue;
+                if (excludedIds[String(card.id)]) continue;
+
+                var serial = isSerialMovie(card);
+                if (serial) {
+                    var ep = findBestSeriesEpisode(card);
+                    if (!ep || ep.percent <= 0 || ep.percent > MAX_PERCENT) continue;
+                    var epSig = 's' + ep.season + 'e' + ep.episode;
+                    if (isHiddenEntry(hiddenMap, card.id, epSig, ep.updated)) continue;
+
+                    var remEp = formatRemainingTime(ep.time, ep.duration);
+                    var subEp = t('tv_home_season_word') + ' ' + ep.season + ', ' + t('tv_home_episode_word') + ' ' + ep.episode;
+                    if (remEp) subEp += ' • ' + remEp;
+                    else subEp += ' • ' + ep.percent + '%';
+
+                    out.push({
+                        card: card,
+                        isSerial: true,
+                        season: ep.season,
+                        episode: ep.episode,
+                        percent: ep.percent,
+                        time: ep.time,
+                        duration: ep.duration,
+                        hash: ep.hash,
+                        sig: epSig,
+                        badge: 'S' + ep.season + ' • E' + ep.episode,
+                        subtitle: subEp,
+                        still_path: ep.still_path || ''
+                    });
+                } else {
+                    var mv = inspectMovieProgress(card);
+                    if (!mv || mv.percent <= 0 || mv.percent > MAX_PERCENT) continue;
+                    var mvSig = 'movie';
+                    if (isHiddenEntry(hiddenMap, card.id, mvSig, mv.updated)) continue;
+
+                    var remMv = formatRemainingTime(mv.time, mv.duration);
+                    var subMv = remMv || (t('tv_home_watched_pct') + ' ' + mv.percent + '%');
+                    var qual = card.release_quality ? String(card.release_quality).toUpperCase() : '';
+
+                    out.push({
+                        card: card,
+                        isSerial: false,
+                        season: 0,
+                        episode: 0,
+                        percent: mv.percent,
+                        time: mv.time,
+                        duration: mv.duration,
+                        hash: mv.hash,
+                        sig: mvSig,
+                        badge: qual,
+                        subtitle: subMv,
+                        still_path: ''
+                    });
+                }
+            }
+
+            return out;
+        }
+
+        function markAsWatched(item) {
+            if (!item || !item.card || !item.card.id) return;
+
+            // 1. Обновляем Lampa.Timeline до 100%
+            try {
+                if (Lampa.Timeline && typeof Lampa.Timeline.update === 'function' && item.hash) {
+                    var dur = item.duration > 0 ? item.duration : 100;
+                    Lampa.Timeline.update({
+                        hash: item.hash,
+                        percent: 100,
+                        time: dur,
+                        duration: dur,
+                        profile: 0
+                    });
+                }
+            } catch (e) {}
+
+            // 2. Сохраняем в локальный список скрытых просмотренных для надёжного скрытия
+            var hiddenMap = loadHidden();
+            hiddenMap[String(item.card.id)] = {
+                sig: item.sig || (item.isSerial ? ('s' + item.season + 'e' + item.episode) : 'movie'),
+                ts: Date.now()
+            };
+            saveHidden(hiddenMap);
+        }
+
+        function formatCountSubtitle(count) {
+            var n = Math.abs(parseInt(count, 10) || 0);
+            var lang = getTmdbLang();
+            if (lang === 'en') return n + (n === 1 ? ' title' : ' titles');
+            if (lang === 'uk') {
+                var m10u = n % 10;
+                var m100u = n % 100;
+                if (m10u === 1 && m100u !== 11) return n + ' фільм або серіал';
+                return n + ' фільмів і серіалів';
+            }
+            var m10 = n % 10;
+            var m100 = n % 100;
+            if (m10 === 1 && m100 !== 11) return n + ' фильм или сериал';
+            return n + ' фильмов и сериалов';
+        }
+
+        return {
+            MAX_PERCENT: MAX_PERCENT,
+            collectItems: collectItems,
+            markAsWatched: markAsWatched,
+            formatCountSubtitle: formatCountSubtitle
+        };
+    })();
+
+    /* ------------------------------------------------------------------ *
+     * Настройки главного экрана: порядок и скрытие блоков (HomeSections)
+     * ------------------------------------------------------------------ */
+
+    var HomeSections = (function () {
+        var HS_PREFIX = 'tv_home_';
+        var SUB_COMPONENT = 'tv_plugin_home';
+        var KNOWN_KEY = 'tv_home_known_blocks';
+
+        var BASE_BLOCKS = [
+            { id: 'now_watch', langKey: 'tv_home_block_now_watch', fallback: 'Сейчас смотрят' },
+            { id: 'continue_watching', langKey: 'tv_home_continue_title', fallback: 'Продолжить просмотр' },
+            { id: 'new_episodes', langKey: 'tv_home_new_episodes_title', fallback: 'Новые серии' },
+            { id: 'latest', langKey: 'tv_home_block_latest', fallback: 'Новинки' },
+            { id: 'fire', langKey: 'tv_home_block_fire', fallback: 'В огне' },
+            { id: 'high_quality', langKey: 'tv_home_block_high_quality', fallback: 'В высоком качестве' },
+            { id: 'top_movies', langKey: 'tv_home_block_top_movies', fallback: 'Топ 100 — Фильмы' },
+            { id: 'top_tv', langKey: 'tv_home_block_top_tv', fallback: 'Топ 100 — Сериалы' },
+            { id: 'trend_day', langKey: 'tv_home_block_trend_day', fallback: 'В тренде за день' },
+            { id: 'trend_week', langKey: 'tv_home_block_trend_week', fallback: 'В тренде за неделю' },
+            { id: 'upcoming', langKey: 'tv_home_block_upcoming', fallback: 'Скоро на экранах' },
+            { id: 'popular_movie', langKey: 'tv_home_block_popular_movie', fallback: 'Популярные фильмы' },
+            { id: 'popular_tv', langKey: 'tv_home_block_popular_tv', fallback: 'Популярные сериалы' }
+        ];
+
+        var BASE_BY_ID = {};
+        for (var i = 0; i < BASE_BLOCKS.length; i++) {
+            BASE_BY_ID[BASE_BLOCKS[i].id] = BASE_BLOCKS[i];
+        }
+
+        function hsBool(key, def) {
+            var val = Lampa.Storage.get(HS_PREFIX + key, def);
+            if (val === true || val === 'true') return true;
+            if (val === false || val === 'false') return false;
+            return !!def;
+        }
+
+        function isHomeEnabled() {
+            return hsBool('enabled', true);
+        }
+
+        function isHeroCarouselEnabled() {
+            return hsBool('hero_carousel', true);
+        }
+
+        function isBlockEnabled(blockId) {
+            return hsBool('show_' + blockId, true);
+        }
+
+        function loadKnownDynamic() {
+            var stored = null;
+            try { stored = Lampa.Storage.get(KNOWN_KEY, null); } catch (e) {}
+            return (stored && typeof stored === 'object' && !Array.isArray(stored)) ? stored : {};
+        }
+
+        function saveKnownDynamic(map) {
+            try { Lampa.Storage.set(KNOWN_KEY, map); } catch (e) {}
+        }
+
+        function registerDiscoveredBlock(blockId, title) {
+            if (!blockId || BASE_BY_ID[blockId]) return;
+            var map = loadKnownDynamic();
+            if (map[blockId] === title) return;
+            map[blockId] = title || blockId;
+            saveKnownDynamic(map);
+        }
+
+        function getAllKnownBlocks() {
+            var list = [];
+            var seen = {};
+            var idx;
+            for (idx = 0; idx < BASE_BLOCKS.length; idx++) {
+                list.push({
+                    id: BASE_BLOCKS[idx].id,
+                    title: t(BASE_BLOCKS[idx].langKey, BASE_BLOCKS[idx].fallback)
+                });
+                seen[BASE_BLOCKS[idx].id] = true;
+            }
+            var dyn = loadKnownDynamic();
+            var keys = Object.keys(dyn);
+            for (idx = 0; idx < keys.length; idx++) {
+                var k = keys[idx];
+                if (!seen[k]) {
+                    seen[k] = true;
+                    list.push({ id: k, title: dyn[k] || k });
+                }
+            }
+            return list;
+        }
+
+        function getBlockTitle(blockId) {
+            if (BASE_BY_ID[blockId]) {
+                return t(BASE_BY_ID[blockId].langKey, BASE_BY_ID[blockId].fallback);
+            }
+            var dyn = loadKnownDynamic();
+            return dyn[blockId] || blockId;
+        }
+
+        function getOrder() {
+            var all = getAllKnownBlocks();
+            var allById = {};
+            var idx;
+            for (idx = 0; idx < all.length; idx++) allById[all[idx].id] = true;
+
+            var raw = Lampa.Storage.get(HS_PREFIX + 'order', '');
+            var parsed = [];
+            if (Array.isArray(raw)) parsed = raw;
+            else if (raw && typeof raw === 'string') parsed = raw.split(',');
+
+            var result = [];
+            var seen = {};
+            for (idx = 0; idx < parsed.length; idx++) {
+                var id = String(parsed[idx]).replace(/^\s+|\s+$/g, '');
+                if (id && allById[id] && !seen[id]) {
+                    seen[id] = true;
+                    result.push(id);
+                }
+            }
+            for (idx = 0; idx < all.length; idx++) {
+                var bid = all[idx].id;
+                if (!seen[bid]) {
+                    seen[bid] = true;
+                    result.push(bid);
+                }
+            }
+            return result;
+        }
+
+        function saveOrder(orderIds) {
+            Lampa.Storage.set(HS_PREFIX + 'order', orderIds.join(','));
+            markHomeSettingsDirty();
+        }
+
+        function getRankMap() {
+            var order = getOrder();
+            var rank = {};
+            for (var r = 0; r < order.length; r++) rank[order[r]] = r;
+            return rank;
+        }
+
+        function normalizeStr(str) {
+            return String(str || '').toLowerCase().replace(/\s+/g, ' ').replace(/^\s+|\s+$/g, '');
+        }
+
+        function isNativeContinueRow(rowData) {
+            if (!rowData) return false;
+            var title = normalizeStr(rowData.title);
+            var contTitle = normalizeStr(Lampa.Lang && Lampa.Lang.translate('title_continue'));
+            var watchedTitle = normalizeStr(Lampa.Lang && Lampa.Lang.translate('title_watched'));
+            if (title && (title === contTitle || title === watchedTitle || title === 'продолжить просмотр' || title === 'продовжити перегляд' || title === 'continue watching')) {
+                return true;
+            }
+            return false;
+        }
+
+        function identifyApiRowBlockId(rowData) {
+            if (!rowData) return '';
+            var title = normalizeStr(rowData.title);
+            var url = normalizeStr(rowData.url);
+
+            function matchLang(key) {
+                var val = Lampa.Lang ? normalizeStr(Lampa.Lang.translate(key)) : '';
+                return val && title === val;
+            }
+
+            if (matchLang('title_now_watch') || url.indexOf('now_playing') >= 0) return 'now_watch';
+            if (matchLang('title_latest') || url.indexOf('sort=latest') >= 0 && url.indexOf('uhd=true') < 0) return 'latest';
+            if (matchLang('title_fire') || url.indexOf('top/fire') >= 0) return 'fire';
+            if (matchLang('title_in_high_quality') || url.indexOf('uhd=true') >= 0) return 'high_quality';
+            if (url.indexOf('top/hundred/movie') >= 0 || (title.indexOf('100') >= 0 && title.indexOf('фильм') >= 0)) return 'top_movies';
+            if (url.indexOf('top/hundred/tv') >= 0 || (title.indexOf('100') >= 0 && title.indexOf('сериал') >= 0)) return 'top_tv';
+            if (matchLang('title_trend_day') || url.indexOf('trending/movie/day') >= 0) return 'trend_day';
+            if (matchLang('title_trend_week') || url.indexOf('trending/movie/week') >= 0) return 'trend_week';
+            if (matchLang('title_upcoming') || url.indexOf('movie/upcoming') >= 0) return 'upcoming';
+            if (matchLang('title_popular_movie') || url.indexOf('movie/popular') >= 0) return 'popular_movie';
+            if (matchLang('title_popular_tv') || url.indexOf('trending/tv/week') >= 0 || url.indexOf('tv/popular') >= 0) return 'popular_tv';
+
+            var slugSrc = title || url || 'row';
+            var id = 'dyn_' + Lampa.Utils.hash(slugSrc);
+            registerDiscoveredBlock(id, rowData.title || id);
+            return id;
+        }
+
+        function moveInOrder(fromIndex, toIndex) {
+            var order = getOrder();
+            if (fromIndex < 0 || fromIndex >= order.length) return order;
+            if (toIndex < 0 || toIndex >= order.length) return order;
+            if (fromIndex === toIndex) return order;
+            var moved = order.splice(fromIndex, 1)[0];
+            order.splice(toIndex, 0, moved);
+            saveOrder(order);
+            return order;
+        }
+
+        function refreshSubsectionView(backIndex) {
+            Lampa.Settings.create(SUB_COMPONENT, {
+                onBack: function () {
+                    Lampa.Settings.create(PLUGIN_ID, { last_index: backIndex });
+                    $('.settings__title').text(t('tv_settings_title'));
+                }
+            });
+            $('.settings__title').text(t('tv_home_title'));
+        }
+
+        function rebuildDynamicSettingsParams(backIndex) {
+            try {
+                if (Lampa.SettingsApi && typeof Lampa.SettingsApi.removeParams === 'function') {
+                    Lampa.SettingsApi.removeParams(SUB_COMPONENT);
+                }
+            } catch (e) {}
+            addSettingsParams(backIndex);
+        }
+
+        function openOrderEditor(backIndex) {
+            var pickedIndex = -1;
+            var activeIndex = 0;
+            var modalBody = $('<div class="cs-order-editor"></div>');
+            var hintEl = $('<div class="cs-order-hint"></div>');
+            var listEl = $('<div class="cs-order-list"></div>');
+            modalBody.append(hintEl).append(listEl);
+
+            var modalOpen = false;
+            var scrollBox = null;
+
+            function syncFocusAndScroll(targetEl) {
+                if (!targetEl) return;
+                Lampa.Controller.collectionFocus(targetEl, modalBody);
+                if (scrollBox && typeof scrollBox.update === 'function') {
+                    scrollBox.update($(targetEl), true);
+                }
+            }
+
+            function renderList() {
+                var order = getOrder();
+                if (activeIndex < 0) activeIndex = 0;
+                if (activeIndex >= order.length) activeIndex = order.length - 1;
+
+                hintEl.text(pickedIndex >= 0 ? t('tv_home_order_move_hint') : t('tv_home_order_pick_hint'));
+                listEl.empty();
+
+                var items = [];
+                for (var idx = 0; idx < order.length; idx++) {
+                    (function (i, bid) {
+                        var enabled = isBlockEnabled(bid);
+                        var isPicked = (i === pickedIndex);
+                        var row = $('<div class="cs-order-item selector"></div>');
+                        if (!enabled) row.addClass('is-hidden-sec');
+                        if (isPicked) row.addClass('is-picked');
+
+                        var arrows = isPicked ? '<span class="cs-order-arrows">▲▼</span>' : '';
+                        var stateBadge = !enabled ? '<span class="cs-order-badge">' + t('card_sections_hidden_badge') + '</span>' : '';
+
+                        row.html(
+                            '<span class="cs-order-num">' + (i + 1) + '</span>' +
+                            '<span class="cs-order-name"></span>' +
+                            stateBadge + arrows
+                        );
+                        row.find('.cs-order-name').text(getBlockTitle(bid));
+
+                        row.on('hover:focus', function () {
+                            activeIndex = i;
+                            if (scrollBox && typeof scrollBox.update === 'function') {
+                                scrollBox.update(row, true);
+                            }
+                        });
+
+                        row.on('hover:enter', function () {
+                            if (pickedIndex === -1) {
+                                pickedIndex = i;
+                                activeIndex = i;
+                                renderList();
+                            } else {
+                                pickedIndex = -1;
+                                activeIndex = i;
+                                renderList();
+                            }
+                        });
+
+                        listEl.append(row);
+                        items.push(row[0]);
+                    })(idx, order[idx]);
+                }
+
+                if (modalOpen) {
+                    Lampa.Controller.collectionSet(modalBody);
+                    if (items[activeIndex]) syncFocusAndScroll(items[activeIndex]);
+                }
+            }
+
+            function moveStep(delta) {
+                var order = getOrder();
+                if (!order.length) return;
+                if (pickedIndex >= 0) {
+                    var target = pickedIndex + delta;
+                    if (target < 0 || target >= order.length) return;
+                    moveInOrder(pickedIndex, target);
+                    pickedIndex = target;
+                    activeIndex = target;
+                    renderList();
+                } else {
+                    var next = activeIndex + delta;
+                    if (next < 0 || next >= order.length) return;
+                    activeIndex = next;
+                    var el = listEl.find('.cs-order-item').eq(activeIndex)[0];
+                    if (el) syncFocusAndScroll(el);
+                }
+            }
+
+            function closeEditor() {
+                modalOpen = false;
+                Lampa.Modal.close();
+                Lampa.Controller.toggle('settings_component');
+            }
+
+            renderList();
+
+            Lampa.Modal.open({
+                title: t('tv_home_order_btn'),
+                html: modalBody,
+                size: 'medium',
+                onBack: function () {
+                    if (pickedIndex >= 0) {
+                        pickedIndex = -1;
+                        renderList();
+                    } else {
+                        closeEditor();
+                    }
+                }
+            });
+
+            modalOpen = true;
+            scrollBox = modalBody.closest('.scroll').data('scroll') || null;
+
+            Lampa.Controller.add('modal', {
+                toggle: function () {
+                    Lampa.Controller.collectionSet(modalBody);
+                    var el = listEl.find('.cs-order-item').eq(activeIndex)[0];
+                    if (el) syncFocusAndScroll(el);
+                },
+                up: function () { moveStep(-1); },
+                down: function () { moveStep(1); },
+                left: function () {
+                    if (pickedIndex >= 0) {
+                        pickedIndex = -1;
+                        renderList();
+                    }
+                },
+                right: function () {},
+                back: function () {
+                    if (pickedIndex >= 0) {
+                        pickedIndex = -1;
+                        renderList();
+                    } else {
+                        closeEditor();
+                    }
+                }
+            });
+            Lampa.Controller.toggle('modal');
+        }
+
+        function addSettingsParams(backIndex) {
+            Lampa.SettingsApi.addParam({
+                component: SUB_COMPONENT,
+                param: {
+                    name: HS_PREFIX + 'enabled',
+                    type: 'trigger',
+                    'default': true
+                },
+                field: {
+                    name: t('tv_home_enabled_title'),
+                    description: t('tv_home_enabled_descr')
+                },
+                onChange: markHomeSettingsDirty
+            });
+
+            Lampa.SettingsApi.addParam({
+                component: SUB_COMPONENT,
+                param: {
+                    name: HS_PREFIX + 'hero_carousel',
+                    type: 'trigger',
+                    'default': true
+                },
+                field: {
+                    name: t('tv_home_carousel_title'),
+                    description: t('tv_home_carousel_descr')
+                },
+                onChange: markHomeSettingsDirty
+            });
+
+            Lampa.SettingsApi.addParam({
+                component: SUB_COMPONENT,
+                param: {
+                    name: HS_PREFIX + 'order_editor',
+                    type: 'button'
+                },
+                field: {
+                    name: t('tv_home_order_btn'),
+                    description: t('tv_home_order_descr')
+                },
+                onChange: function () {
+                    openOrderEditor(backIndex);
+                }
+            });
+
+            Lampa.SettingsApi.addParam({
+                component: SUB_COMPONENT,
+                param: { type: 'title' },
+                field: { name: t('tv_home_blocks_title') }
+            });
+
+            var order = getOrder();
+            for (var idx = 0; idx < order.length; idx++) {
+                (function (bid) {
+                    Lampa.SettingsApi.addParam({
+                        component: SUB_COMPONENT,
+                        param: {
+                            name: HS_PREFIX + 'show_' + bid,
+                            type: 'trigger',
+                            'default': true
+                        },
+                        field: {
+                            name: getBlockTitle(bid)
+                        },
+                        onChange: markHomeSettingsDirty
+                    });
+                })(order[idx]);
+            }
+
+            Lampa.SettingsApi.addParam({
+                component: SUB_COMPONENT,
+                param: {
+                    name: HS_PREFIX + 'show_all',
+                    type: 'button'
+                },
+                field: { name: t('card_sections_show_all') },
+                onChange: function () {
+                    var all = getAllKnownBlocks();
+                    for (var i = 0; i < all.length; i++) {
+                        Lampa.Storage.set(HS_PREFIX + 'show_' + all[i].id, true);
+                    }
+                    markHomeSettingsDirty();
+                    refreshSubsectionView(backIndex);
+                }
+            });
+
+            Lampa.SettingsApi.addParam({
+                component: SUB_COMPONENT,
+                param: {
+                    name: HS_PREFIX + 'hide_all',
+                    type: 'button'
+                },
+                field: { name: t('card_sections_hide_all') },
+                onChange: function () {
+                    var all = getAllKnownBlocks();
+                    for (var i = 0; i < all.length; i++) {
+                        Lampa.Storage.set(HS_PREFIX + 'show_' + all[i].id, false);
+                    }
+                    markHomeSettingsDirty();
+                    refreshSubsectionView(backIndex);
+                }
+            });
+
+            Lampa.SettingsApi.addParam({
+                component: SUB_COMPONENT,
+                param: {
+                    name: HS_PREFIX + 'reset_order',
+                    type: 'button'
+                },
+                field: { name: t('card_sections_reset_order') },
+                onChange: function () {
+                    Lampa.Storage.set(HS_PREFIX + 'order', '');
+                    markHomeSettingsDirty();
+                    refreshSubsectionView(backIndex);
+                }
+            });
+        }
+
+        return {
+            SUB_COMPONENT: SUB_COMPONENT,
+            isHomeEnabled: isHomeEnabled,
+            isHeroCarouselEnabled: isHeroCarouselEnabled,
+            isBlockEnabled: isBlockEnabled,
+            getOrder: getOrder,
+            getRankMap: getRankMap,
+            getBlockTitle: getBlockTitle,
+            isNativeContinueRow: isNativeContinueRow,
+            identifyApiRowBlockId: identifyApiRowBlockId,
+            registerDiscoveredBlock: registerDiscoveredBlock,
+            rebuildDynamicSettingsParams: rebuildDynamicSettingsParams,
+            addSettingsParams: addSettingsParams
+        };
+    })();
+
+    /* ------------------------------------------------------------------ *
+     * Netflix-стиль главного экрана (Figma 169:3460 / 169:3501 / 169:3542)
+     * ------------------------------------------------------------------ */
+
+    var HomeScreen = (function () {
+        var origMainComponent = null;
+        var initialized = false;
+
+        function resolveImgUrl(path, size) {
+            if (!path) return '';
+            var p = String(path);
+            if (p.indexOf('http://') === 0 || p.indexOf('https://') === 0) return p;
+            if (p.charAt(0) !== '/') p = '/' + p;
+            try {
+                if (Lampa.TMDB && typeof Lampa.TMDB.image === 'function') {
+                    return Lampa.TMDB.image('t/p/' + (size || 'w500') + p);
+                }
+                if (Lampa.Api && typeof Lampa.Api.img === 'function') {
+                    return Lampa.Api.img(p, size || 'w500');
+                }
+            } catch (e) {}
+            return 'https://image.tmdb.org/t/p/' + (size || 'w500') + p;
+        }
+
+        function getCardTitle(card) {
+            if (!card) return '';
+            return card.title || card.name || card.original_title || card.original_name || '';
+        }
+
+        function getCardYear(card) {
+            if (!card) return '';
+            var d = card.release_date || card.first_air_date || '';
+            return d ? String(d).slice(0, 4) : '';
+        }
+
+        function getCardQualityBadge(card) {
+            if (!card) return '';
+            var q = card.release_quality || card.quality || '';
+            if (!q) return '';
+            q = String(q).toUpperCase().replace(/\s+/g, ' ').replace(/^\s+|\s+$/g, '');
+            if (q.length > 8) q = q.slice(0, 8);
+            return q;
+        }
+
+        function getCardEpisodeBadge(card) {
+            if (!card || !isSerialMovie(card)) return '';
+            var totalEp = parseInt(card.number_of_episodes, 10) || 0;
+            var watchedCount = 0;
+            try {
+                if (Lampa.Timeline && typeof Lampa.Timeline.watched === 'function') {
+                    watchedCount = parseInt(Lampa.Timeline.watched(card), 10) || 0;
+                }
+            } catch (e) {}
+            if (watchedCount > 0 && totalEp > 0) {
+                return watchedCount + '/' + totalEp + ' ' + t('tv_home_ep_short');
+            }
+            if (totalEp > 0) {
+                return totalEp + ' ' + t('tv_home_ep_short');
+            }
+            if (watchedCount > 0) {
+                return watchedCount + ' ' + t('tv_home_ep_short');
+            }
+            return '';
+        }
+
+        function getCardWatchPercent(card) {
+            if (!card) return 0;
+            try {
+                if (!isSerialMovie(card)) {
+                    var tl = Lampa.Timeline && typeof Lampa.Timeline.view === 'function'
+                        ? Lampa.Timeline.view(makeMovieTimelineHash(card))
+                        : null;
+                    return tl && tl.percent > 0 ? Math.min(100, Math.round(tl.percent)) : 0;
+                }
+                if (Lampa.Timeline && typeof Lampa.Timeline.watched === 'function') {
+                    var w = Lampa.Timeline.watched(card, true);
+                    if (Array.isArray(w) && w.length) {
+                        var last = w[w.length - 1];
+                        if (last && last.view && last.view.percent > 0) {
+                            return Math.min(100, Math.round(last.view.percent));
+                        }
+                    }
+                }
+            } catch (e) {}
+            return 0;
+        }
+
+        function formatShortDate(dateStr) {
+            if (!dateStr) return '';
+            try {
+                var d = Lampa.Utils && typeof Lampa.Utils.parseToDate === 'function'
+                    ? Lampa.Utils.parseToDate(dateStr)
+                    : new Date(dateStr);
+                if (!d || isNaN(d.getTime())) return '';
+                var monthsRu = ['Января', 'Февраля', 'Марта', 'Апреля', 'Мая', 'Июня', 'Июля', 'Августа', 'Сентября', 'Октября', 'Ноября', 'Декабря'];
+                var monthsUk = ['Січня', 'Лютого', 'Березня', 'Квітня', 'Травня', 'Червня', 'Липня', 'Серпня', 'Вересня', 'Жовтня', 'Листопада', 'Грудня'];
+                var monthsEn = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                var lang = getTmdbLang();
+                var mArr = lang === 'en' ? monthsEn : (lang === 'uk' ? monthsUk : monthsRu);
+                return d.getDate() + ' ' + mArr[d.getMonth()];
+            } catch (e) {
+                return '';
+            }
+        }
+
+        function formatHeroRuntime(card) {
+            if (!card) return '';
+            if (isSerialMovie(card)) {
+                var seasons = parseInt(card.number_of_seasons, 10) || 0;
+                if (seasons > 0) {
+                    var lang = getTmdbLang();
+                    if (lang === 'en') return seasons + (seasons === 1 ? ' season' : ' seasons');
+                    var m10 = seasons % 10;
+                    var m100 = seasons % 100;
+                    if (m10 === 1 && m100 !== 11) return seasons + ' сезон';
+                    if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return seasons + ' сезона';
+                    return seasons + ' сезонов';
+                }
+                return '';
+            }
+            var rt = parseInt(card.runtime, 10) || 0;
+            if (rt <= 0) return '';
+            var h = Math.floor(rt / 60);
+            var m = rt % 60;
+            var l = getTmdbLang();
+            var hw = l === 'en' ? 'h' : (l === 'uk' ? 'год' : 'ч');
+            var mw = l === 'en' ? 'm' : (l === 'uk' ? 'хв' : 'мин');
+            if (h > 0 && m > 0) return h + ' ' + hw + ' ' + m + ' ' + mw;
+            if (h > 0) return h + ' ' + hw;
+            return m + ' ' + mw;
+        }
+
+        function openMovieCard(card) {
+            if (!card) return;
+            if (Lampa.Router && typeof Lampa.Router.call === 'function') {
+                Lampa.Router.call('full', card);
+                return;
+            }
+            Lampa.Activity.push({
+                url: card.url || '',
+                component: 'full',
+                id: card.id,
+                method: isSerialMovie(card) ? 'tv' : 'movie',
+                card: card,
+                source: card.source || Lampa.Storage.field('source')
+            });
+        }
+
+        function openRowMore(rowData, sourceFallback) {
+            if (!rowData) return;
+            if (Lampa.Router && typeof Lampa.Router.call === 'function') {
+                Lampa.Router.call('category_full', rowData);
+                return;
+            }
+            Lampa.Activity.push({
+                url: rowData.url || '',
+                title: rowData.title || Lampa.Lang.translate('title_category'),
+                component: 'category_full',
+                genres: rowData.genres || '',
+                keywords: rowData.keywords || '',
+                companies: rowData.companies || '',
+                query: rowData.query || '',
+                filter: rowData.filter || '',
+                source: rowData.source || sourceFallback || Lampa.Storage.field('source'),
+                page: rowData.page || 1
+            });
+        }
+
+        function collectNewEpisodes() {
+            var list = [];
+            try {
+                if (Lampa.TimeTable && typeof Lampa.TimeTable.recently === 'function') {
+                    var recent = Lampa.TimeTable.recently() || [];
+                    for (var i = 0; i < recent.length && list.length < 18; i++) {
+                        var r = recent[i];
+                        if (!r || !r.card || !r.episode) continue;
+                        list.push({
+                            card: r.card,
+                            episode: r.episode,
+                            badge: 'S' + (r.episode.season_number || 1) + ' • E' + (r.episode.episode_number || 1),
+                            dateText: formatShortDate(r.episode.air_date),
+                            still_path: r.episode.still_path || ''
+                        });
+                    }
+                }
+            } catch (e) {}
+            return list;
+        }
+
+        function toggleFavoriteMark(type, card) {
+            if (!Lampa.Favorite || !card) return;
+            try {
+                if (typeof Lampa.Favorite.toggle === 'function') {
+                    Lampa.Favorite.toggle(type, card);
+                } else if (typeof Lampa.Favorite.add === 'function') {
+                    Lampa.Favorite.add(type, card);
+                }
+            } catch (e) {}
+        }
+
+        function hasFavoriteMark(type, card) {
+            if (!Lampa.Favorite || !card) return false;
+            try {
+                if (typeof Lampa.Favorite.check === 'function') {
+                    var res = Lampa.Favorite.check(card);
+                    return !!(res && res[type]);
+                }
+            } catch (e) {}
+            return false;
+        }
+
+        function NetflixMainComponent(object) {
+            var self = this;
+            this.__is_tv_home = true;
+
+            var destroyed = false;
+            var paused = false;
+            var built = false;
+            var nextBatchFn = null;
+            var loadingNext = false;
+
+            var rows = [];
+            var seenBlockIds = {};
+            var activeRow = 0;
+            var heroSeq = 0;
+            var heroDebounceTimer = null;
+            var carouselTimer = null;
+            var carouselSlides = [];
+            var carouselIdx = 0;
+            var currentHeroCardId = null;
+            var activeBgUrl = '';
+            var activeDecodedImg = null;
+            var bgTransitionSeq = 0;
+            var tmdbNetwork = null;
+
+            var $root = $(
+                '<div class="tv-home">' +
+                    '<div class="tv-home__bg">' +
+                        '<img class="tv-home__bg-img" alt="" />' +
+                        '<div class="tv-home__bg-grad-x"></div>' +
+                        '<div class="tv-home__bg-grad-y"></div>' +
+                    '</div>' +
+                    '<div class="tv-home__viewport">' +
+                        '<div class="tv-home__scroll">' +
+                            '<div class="tv-home-hero">' +
+                                '<div class="tv-home-hero__eyebrow hide">' +
+                                    '<span class="tv-home-hero__top-pill hide"></span>' +
+                                    '<span class="tv-home-hero__eyebrow-text"></span>' +
+                                '</div>' +
+                                '<div class="tv-home-hero__brand">' +
+                                    '<div class="tv-home-hero__title"></div>' +
+                                    '<img class="tv-home-hero__logo hide" alt="" />' +
+                                '</div>' +
+                                '<div class="tv-home-hero__meta"></div>' +
+                                '<div class="tv-home-hero__desc"></div>' +
+                            '</div>' +
+                            '<div class="tv-home__rows"></div>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>'
+            );
+
+            var $bgImg = $root.find('.tv-home__bg-img');
+            var $scroll = $root.find('.tv-home__scroll');
+            var $hero = $root.find('.tv-home-hero');
+            var $eyebrow = $hero.find('.tv-home-hero__eyebrow');
+            var $topPill = $hero.find('.tv-home-hero__top-pill');
+            var $eyebrowText = $hero.find('.tv-home-hero__eyebrow-text');
+            var $heroTitle = $hero.find('.tv-home-hero__title');
+            var $heroLogo = $hero.find('.tv-home-hero__logo');
+            var $heroMeta = $hero.find('.tv-home-hero__meta');
+            var $heroDesc = $hero.find('.tv-home-hero__desc');
+            var $rowsWrap = $root.find('.tv-home__rows');
+
+            function stopCarousel() {
+                if (carouselTimer) {
+                    clearInterval(carouselTimer);
+                    carouselTimer = null;
+                }
+            }
+
+            function abortTmdbNet() {
+                if (tmdbNetwork && typeof tmdbNetwork.clear === 'function') {
+                    try { tmdbNetwork.clear(); } catch (e) {}
+                }
+            }
+
+            function setHeroBackgroundSmooth(url, immediate) {
+                if (!url || destroyed) return;
+                if (url === activeBgUrl && $bgImg.hasClass('is-ready')) return;
+                var mySeq = ++bgTransitionSeq;
+
+                function applyDecoded(decodedImg) {
+                    if (destroyed || mySeq !== bgTransitionSeq) return;
+                    activeBgUrl = url;
+                    activeDecodedImg = decodedImg || null;
+
+                    var wasReady = $bgImg.hasClass('is-ready');
+                    if (immediate || !wasReady) {
+                        $bgImg.removeClass('is-fading');
+                        $bgImg.attr('src', url);
+                        requestAnimationFrame(function () {
+                            if (destroyed || mySeq !== bgTransitionSeq) return;
+                            $bgImg.addClass('is-ready');
+                        });
+                        return;
+                    }
+
+                    $bgImg.addClass('is-fading');
+                    setTimeout(function () {
+                        if (destroyed || mySeq !== bgTransitionSeq) return;
+                        var el = $bgImg[0];
+                        function reveal() {
+                            if (destroyed || mySeq !== bgTransitionSeq) return;
+                            requestAnimationFrame(function () {
+                                requestAnimationFrame(function () {
+                                    if (destroyed || mySeq !== bgTransitionSeq) return;
+                                    $bgImg.removeClass('is-fading').addClass('is-ready');
+                                });
+                            });
+                        }
+                        if (el) {
+                            el.onload = function () {
+                                el.onload = null;
+                                if (typeof el.decode === 'function') {
+                                    el.decode().then(reveal, reveal);
+                                } else {
+                                    reveal();
+                                }
+                            };
+                            el.src = url;
+                            if (el.complete && el.naturalWidth > 0) {
+                                el.onload = null;
+                                reveal();
+                            }
+                        } else {
+                            reveal();
+                        }
+                    }, 380);
+                }
+
+                preloadAndDecodeImage(url, applyDecoded, function () {});
+            }
+
+            function startCarousel(slides) {
+                stopCarousel();
+                carouselSlides = Array.isArray(slides) ? slides : [];
+                carouselIdx = 0;
+                if (!carouselSlides.length) return;
+
+                setHeroBackgroundSmooth(carouselSlides[0], !activeBgUrl);
+
+                if (!HomeSections.isHeroCarouselEnabled() || carouselSlides.length <= 1 || activeRow !== 0 || paused || destroyed) {
+                    return;
+                }
+
+                carouselTimer = setInterval(function () {
+                    if (destroyed || paused || activeRow !== 0 || carouselSlides.length <= 1) {
+                        stopCarousel();
+                        return;
+                    }
+                    carouselIdx = (carouselIdx + 1) % carouselSlides.length;
+                    setHeroBackgroundSmooth(carouselSlides[carouselIdx], false);
+                }, TMDB_BACKDROP_ROTATE_MS);
+            }
+
+            function showHeroLogo(logoUrl) {
+                if (!logoUrl || destroyed) return;
+                var mySeq = heroSeq;
+                preloadAndDecodeImage(logoUrl, function () {
+                    if (destroyed || mySeq !== heroSeq) return;
+                    $heroLogo.attr('src', logoUrl).removeClass('hide');
+                    requestAnimationFrame(function () {
+                        if (destroyed || mySeq !== heroSeq) return;
+                        $heroLogo.addClass('is-visible');
+                        $heroTitle.addClass('is-hidden');
+                    });
+                }, function () {});
+            }
+
+            function resetHeroBrandToTitle(titleText) {
+                $heroTitle.text(titleText || '').removeClass('is-hidden');
+                $heroLogo.removeClass('is-visible').addClass('hide').attr('src', '');
+            }
+
+            function applyCachedOrFetchedTmdbMedia(card, mySeq) {
+                if (!card || !card.id || destroyed || mySeq !== heroSeq) return;
+                var cached = getCachedTmdbImages(card);
+                if (cached) {
+                    if (cached.logo && getBoolSetting('tv_show_logo', true)) {
+                        showHeroLogo(Lampa.TMDB.image('t/p/w500' + cached.logo));
+                    }
+                    var cachedSlides = buildBackdropSlides(card, cached.backdrops, $root);
+                    if (cachedSlides.length) startCarousel(cachedSlides);
+                    return;
+                }
+
+                if (typeof Lampa.TMDB === 'undefined' || typeof Lampa.TMDB.api !== 'function') return;
+                abortTmdbNet();
+                if (!tmdbNetwork) tmdbNetwork = new Lampa.Reguest();
+                var method = isSerialMovie(card) ? 'tv' : 'movie';
+                var url = Lampa.TMDB.api(method + '/' + card.id + '/images?api_key=' + Lampa.TMDB.key() + '&include_image_language=' + getTmdbLang() + ',en,ru,null');
+                tmdbNetwork.silent(url, function (data) {
+                    if (destroyed || mySeq !== heroSeq) return;
+                    var bestLogo = pickBestLogo(card, data && data.logos);
+                    setCachedTmdbImages(card, data && data.backdrops, bestLogo);
+
+                    if (bestLogo && getBoolSetting('tv_show_logo', true)) {
+                        showHeroLogo(Lampa.TMDB.image('t/p/w500' + bestLogo));
+                    }
+                    var slides = buildBackdropSlides(card, data && data.backdrops, $root);
+                    if (slides.length) startCarousel(slides);
+                }, function () {});
+            }
+
+            function updateHeroForCard(card, cardIndex) {
+                if (!card || destroyed) return;
+                var cardKeyStr = (isSerialMovie(card) ? 'tv_' : 'mv_') + card.id;
+                if (cardKeyStr === currentHeroCardId && $heroTitle.text()) return;
+                currentHeroCardId = cardKeyStr;
+
+                var mySeq = ++heroSeq;
+                if (heroDebounceTimer) {
+                    clearTimeout(heroDebounceTimer);
+                    heroDebounceTimer = null;
+                }
+                stopCarousel();
+
+                // 1. Eyebrow (ТОП-10 + жанры)
+                var genres = ImdbCardRatings.getCardGenres(card, 3);
+                var rankNum = (typeof cardIndex === 'number' && cardIndex >= 0 && cardIndex < 10) ? (cardIndex + 1) : 0;
+                var eyebrowParts = [];
+                if (rankNum > 0) {
+                    $topPill.text(t('tv_home_top10_badge')).removeClass('hide');
+                    eyebrowParts.push('№' + rankNum + ' ' + t('tv_home_top_today'));
+                } else {
+                    $topPill.addClass('hide');
+                }
+                for (var g = 0; g < genres.length; g++) eyebrowParts.push(genres[g]);
+                if (eyebrowParts.length) {
+                    $eyebrowText.text(eyebrowParts.join(' • '));
+                    $eyebrow.removeClass('hide');
+                } else {
+                    $eyebrow.addClass('hide');
+                }
+
+                // 2. Название / кэшированный логотип
+                resetHeroBrandToTitle(getCardTitle(card));
+
+                // 3. Мета-строка (IMDb • 8.6, год, хронометраж/сезоны, PG, качество)
+                var metaHtml = '';
+                var ratingInfo = ImdbCardRatings.getRating(card);
+                if (ratingInfo.score) {
+                    metaHtml += '<span class="tv-home-hero__chip tv-home-hero__chip--rate">' +
+                        escapeHtml(ratingInfo.source) + ' • ' + escapeHtml(ratingInfo.score) +
+                        '</span>';
+                }
+                var yr = getCardYear(card);
+                if (yr) {
+                    metaHtml += '<span class="tv-home-hero__year">' + escapeHtml(yr) + '</span>';
+                }
+                var rt = formatHeroRuntime(card);
+                if (rt) {
+                    metaHtml += '<span class="tv-home-hero__dot">•</span><span class="tv-home-hero__runtime">' + escapeHtml(rt) + '</span>';
+                }
+                if (card.pg) {
+                    metaHtml += '<span class="tv-home-hero__chip">' + escapeHtml(String(card.pg)) + '</span>';
+                }
+                var qual = getCardQualityBadge(card);
+                if (qual) {
+                    metaHtml += '<span class="tv-home-hero__chip">' + escapeHtml(qual) + '</span>';
+                }
+                $heroMeta.html(metaHtml);
+
+                // 4. Описание (3 строки)
+                $heroDesc.text(card.overview || '');
+
+                // 5. Немедленный задник из карточки + дебаунс на TMDB /images (логотип + карусель)
+                var cached = getCachedTmdbImages(card);
+                if (cached) {
+                    applyCachedOrFetchedTmdbMedia(card, mySeq);
+                } else {
+                    if (card.backdrop_path) {
+                        var fallbackBg = resolveImgUrl(card.backdrop_path, getRequiredBackdropSize($root));
+                        setHeroBackgroundSmooth(fallbackBg, !activeBgUrl);
+                    }
+                    heroDebounceTimer = setTimeout(function () {
+                        heroDebounceTimer = null;
+                        applyCachedOrFetchedTmdbMedia(card, mySeq);
+                    }, 180);
+                }
+            }
+
+            function updateHorizontalScroll(rowObj) {
+                if (!rowObj || !rowObj.$track || !rowObj.elements.length) return;
+                var idx = rowObj.activeCardIdx;
+                if (idx < 0) idx = 0;
+                if (idx >= rowObj.elements.length) idx = rowObj.elements.length - 1;
+                var cardEl = rowObj.elements[idx];
+                if (!cardEl) return;
+
+                var viewportW = rowObj.$viewport ? rowObj.$viewport[0].clientWidth : window.innerWidth;
+                var trackW = rowObj.$track[0].scrollWidth;
+                var maxX = Math.max(0, trackW - viewportW);
+                var targetX = Math.max(0, cardEl.offsetLeft - 8);
+                if (targetX > maxX) targetX = maxX;
+                rowObj.$track.css({
+                    '-webkit-transform': 'translate3d(' + (-Math.round(targetX)) + 'px, 0, 0)',
+                    'transform': 'translate3d(' + (-Math.round(targetX)) + 'px, 0, 0)'
+                });
+            }
+
+            function updateVerticalScroll() {
+                if (!rows.length) return;
+                var isFirst = (activeRow === 0);
+                $root.toggleClass('tv-home--scrolled', !isFirst);
+
+                if (isFirst) {
+                    $scroll.css({
+                        '-webkit-transform': 'translate3d(0, 0, 0)',
+                        'transform': 'translate3d(0, 0, 0)'
+                    });
+                    if (!carouselTimer && carouselSlides.length > 1 && HomeSections.isHeroCarouselEnabled() && !paused && !destroyed) {
+                        startCarousel(carouselSlides);
+                    }
+                    return;
+                }
+
+                stopCarousel();
+                var rowObj = rows[activeRow];
+                if (!rowObj || !rowObj.$el || !rowObj.$el[0]) return;
+
+                var headOffset = Math.round((parseFloat($('body').css('font-size')) || 16) * 4.8);
+                var rowTop = rowObj.$el[0].offsetTop;
+                var targetY = Math.max(0, rowTop - headOffset);
+                $scroll.css({
+                    '-webkit-transform': 'translate3d(0, ' + (-Math.round(targetY)) + 'px, 0)',
+                    'transform': 'translate3d(0, ' + (-Math.round(targetY)) + 'px, 0)'
+                });
+            }
+
+            function openCardContextMenu(rowObj, card, cwItem, cardEl) {
+                if (!card) return;
+                var menu = [];
+
+                if (cwItem) {
+                    menu.push({
+                        title: t('tv_home_mark_watched'),
+                        subtitle: t('tv_home_mark_watched_sub'),
+                        __tv_mark_watched_action: true,
+                        onSelect: function () {
+                            ContinueWatching.markAsWatched(cwItem);
+                            removeContinueCard(rowObj, cardEl);
+                            Lampa.Noty.show(t('tv_home_marked_watched_noty'));
+                        }
+                    });
+                }
+
+                menu.push({
+                    title: t('tv_home_open_card'),
+                    onSelect: function () {
+                        openMovieCard(card);
+                    }
+                });
+
+                var marks = [
+                    { type: 'book', label: Lampa.Lang.translate('title_book') || 'Закладки' },
+                    { type: 'wath', label: Lampa.Lang.translate('title_wath') || 'Позже' },
+                    { type: 'like', label: Lampa.Lang.translate('title_like') || 'Нравится' }
+                ];
+                for (var m = 0; m < marks.length; m++) {
+                    (function (mk) {
+                        var active = hasFavoriteMark(mk.type, card);
+                        menu.push({
+                            title: mk.label,
+                            subtitle: active ? '✓' : '',
+                            onSelect: function () {
+                                toggleFavoriteMark(mk.type, card);
+                            }
+                        });
+                    })(marks[m]);
+                }
+
+                // Плагины с контекстным меню (например, Filmix)
+                try {
+                    if (Lampa.Manifest && Array.isArray(Lampa.Manifest.plugins)) {
+                        for (var p = 0; p < Lampa.Manifest.plugins.length; p++) {
+                            var pl = Lampa.Manifest.plugins[p];
+                            if (pl && pl.type === 'video' && typeof pl.onContextMenu === 'function' && typeof pl.onContextLauch === 'function') {
+                                (function (plugin) {
+                                    var meta = plugin.onContextMenu(card) || {};
+                                    menu.push({
+                                        title: meta.name || plugin.name || 'Plugin',
+                                        subtitle: meta.description || '',
+                                        onSelect: function () {
+                                            plugin.onContextLauch(card);
+                                        }
+                                    });
+                                })(pl);
+                            }
+                        }
+                    }
+                } catch (e) {}
+
+                var prevCtrl = Lampa.Controller.enabled() ? Lampa.Controller.enabled().name : 'content';
+
+                Lampa.Select.show({
+                    title: Lampa.Lang.translate('title_action') || 'Действие',
+                    items: menu,
+                    onBack: function () {
+                        Lampa.Controller.toggle(prevCtrl);
+                    },
+                    onBeforeClose: function () {
+                        Lampa.Controller.toggle(prevCtrl);
+                        return true;
+                    }
+                });
+            }
+
+            function removeContinueCard(rowObj, cardEl) {
+                if (!rowObj || !cardEl) return;
+                var idx = rowObj.elements.indexOf(cardEl);
+                if (idx === -1) return;
+
+                rowObj.elements.splice(idx, 1);
+                if (rowObj.items && rowObj.items.length > idx) {
+                    rowObj.items.splice(idx, 1);
+                }
+                $(cardEl).remove();
+
+                if (!rowObj.elements.length) {
+                    // Вся строка «Продолжить просмотр» стала пустой — удаляем строку и переводим фокус
+                    var rIdx = rows.indexOf(rowObj);
+                    if (rIdx >= 0) {
+                        rowObj.$el.remove();
+                        rows.splice(rIdx, 1);
+                        if (rows.length) {
+                            var nextRow = Math.min(rIdx, rows.length - 1);
+                            focusRowCard(nextRow, rows[nextRow].activeCardIdx || 0);
+                        }
+                    }
+                    return;
+                }
+
+                // Обновляем счётчик в заголовке и смещаем фокус на соседнюю карточку
+                if (rowObj.$sub) {
+                    rowObj.$sub.text(ContinueWatching.formatCountSubtitle(rowObj.elements.length));
+                }
+                var nextIdx = Math.min(idx, rowObj.elements.length - 1);
+                rowObj.activeCardIdx = nextIdx;
+                var curRowIdx = rows.indexOf(rowObj);
+                if (curRowIdx >= 0) {
+                    focusRowCard(curRowIdx, nextIdx);
+                }
+            }
+
+            function bindCardEvents($card, rowObj, card, cardIdx, cwItem, onEnterFn) {
+                var dom = $card[0];
+                $card.on('hover:focus', function () {
+                    var rIdx = rows.indexOf(rowObj);
+                    if (rIdx >= 0) activeRow = rIdx;
+                    var cIdx = rowObj.elements.indexOf(dom);
+                    if (cIdx >= 0) rowObj.activeCardIdx = cIdx;
+
+                    updateHorizontalScroll(rowObj);
+                    updateVerticalScroll();
+
+                    if (activeRow === 0 && card) {
+                        updateHeroForCard(card, cIdx >= 0 ? cIdx : cardIdx);
+                    }
+
+                    if (activeRow >= rows.length - 2) {
+                        maybeLoadNextBatch();
+                    }
+                });
+
+                $card.on('hover:enter', function () {
+                    if (typeof onEnterFn === 'function') onEnterFn();
+                    else if (card) openMovieCard(card);
+                });
+
+                $card.on('hover:long', function () {
+                    if (card) openCardContextMenu(rowObj, card, cwItem || null, dom);
+                });
+
+                $card.on('contextmenu', function (ev) {
+                    if (ev && ev.preventDefault) ev.preventDefault();
+                    if (card) openCardContextMenu(rowObj, card, cwItem || null, dom);
+                });
+            }
+
+            function createPosterCard(card, rowObj, cardIdx) {
+                var posterUrl = resolveImgUrl(card.poster_path || card.img, 'w342');
+                var ratingInfo = ImdbCardRatings.getRating(card);
+                var quality = getCardQualityBadge(card);
+                var epBadge = getCardEpisodeBadge(card);
+                var watchPct = getCardWatchPercent(card);
+                var title = getCardTitle(card);
+                var year = getCardYear(card);
+                var genres = ImdbCardRatings.getCardGenres(card, 1);
+                var metaText = year && genres.length ? (year + ' • ' + genres[0]) : (year || (genres[0] || ''));
+
+                var $card = $(
+                    '<div class="tv-home-card selector">' +
+                        '<div class="tv-home-card__box">' +
+                            '<img class="tv-home-card__img" loading="lazy" alt="" />' +
+                            '<div class="tv-home-card__top-left"></div>' +
+                            (ratingInfo.score ? '<div class="tv-home-card__rating">' + escapeHtml(ratingInfo.score) + '</div>' : '') +
+                            (watchPct > 0 ? '<div class="tv-home-card__progress"><div class="tv-home-card__progress-bar" style="width:' + watchPct + '%"></div></div>' : '') +
+                        '</div>' +
+                        '<div class="tv-home-card__title"></div>' +
+                        (metaText ? '<div class="tv-home-card__meta"></div>' : '') +
+                    '</div>'
+                );
+
+                var $tl = $card.find('.tv-home-card__top-left');
+                if (quality) $tl.append('<div class="tv-home-card__badge">' + escapeHtml(quality) + '</div>');
+                if (epBadge) $tl.append('<div class="tv-home-card__badge">' + escapeHtml(epBadge) + '</div>');
+
+                var $img = $card.find('.tv-home-card__img');
+                if (posterUrl) {
+                    $img.on('load', function () { $img.addClass('is-loaded'); });
+                    $img.attr('src', posterUrl);
+                }
+                $card.find('.tv-home-card__title').text(title);
+                if (metaText) $card.find('.tv-home-card__meta').text(metaText);
+
+                bindCardEvents($card, rowObj, card, cardIdx, null, function () {
+                    openMovieCard(card);
+                });
+
+                return $card;
+            }
+
+            function createContinueCard(cwItem, rowObj, cardIdx) {
+                var card = cwItem.card;
+                var imgPath = cwItem.still_path || card.backdrop_path || card.poster_path;
+                var imgUrl = resolveImgUrl(imgPath, 'w500');
+                var pct = Math.max(2, Math.min(80, cwItem.percent || 0));
+
+                var $card = $(
+                    '<div class="tv-home-wide selector">' +
+                        '<div class="tv-home-wide__box">' +
+                            '<img class="tv-home-wide__img" loading="lazy" alt="" />' +
+                            '<div class="tv-home-wide__vignette"></div>' +
+                            (cwItem.badge ? '<div class="tv-home-wide__badge">' + escapeHtml(cwItem.badge) + '</div>' : '') +
+                            '<div class="tv-home-wide__progress">' +
+                                '<div class="tv-home-wide__progress-bar" style="width:' + pct + '%"></div>' +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="tv-home-wide__title"></div>' +
+                        '<div class="tv-home-wide__sub"></div>' +
+                    '</div>'
+                );
+
+                var $img = $card.find('.tv-home-wide__img');
+                if (imgUrl) {
+                    $img.on('load', function () { $img.addClass('is-loaded'); });
+                    $img.attr('src', imgUrl);
+                }
+                $card.find('.tv-home-wide__title').text(getCardTitle(card));
+                $card.find('.tv-home-wide__sub').text(cwItem.subtitle || '');
+
+                bindCardEvents($card, rowObj, card, cardIdx, cwItem, function () {
+                    openMovieCard(card);
+                });
+
+                return $card;
+            }
+
+            function createNewEpisodeCard(epItem, rowObj, cardIdx) {
+                var card = epItem.card;
+                var imgPath = epItem.still_path || card.backdrop_path || card.poster_path;
+                var imgUrl = resolveImgUrl(imgPath, 'w500');
+
+                var $card = $(
+                    '<div class="tv-home-wide tv-home-wide--ep selector">' +
+                        '<div class="tv-home-wide__box">' +
+                            '<img class="tv-home-wide__img" loading="lazy" alt="" />' +
+                            '<div class="tv-home-wide__vignette"></div>' +
+                            (epItem.badge ? '<div class="tv-home-wide__badge">' + escapeHtml(epItem.badge) + '</div>' : '') +
+                            (epItem.dateText ? '<div class="tv-home-wide__date">' + escapeHtml(epItem.dateText) + '</div>' : '') +
+                        '</div>' +
+                        '<div class="tv-home-wide__title"></div>' +
+                    '</div>'
+                );
+
+                var $img = $card.find('.tv-home-wide__img');
+                if (imgUrl) {
+                    $img.on('load', function () { $img.addClass('is-loaded'); });
+                    $img.attr('src', imgUrl);
+                }
+                $card.find('.tv-home-wide__title').text(getCardTitle(card));
+
+                bindCardEvents($card, rowObj, card, cardIdx, null, function () {
+                    openMovieCard(card);
+                });
+
+                return $card;
+            }
+
+            function createMoreTile(rowObj, isWide, onMoreFn) {
+                var moreText = (Lampa.Lang && Lampa.Lang.translate('more')) || t('tv_home_more_action');
+                var $tile = $(
+                    '<div class="card-more tv-home-more selector' + (isWide ? ' tv-home-more--wide' : '') + '">' +
+                        '<div class="card-more__box tv-home-more__box">' +
+                            '<div class="card-more__title tv-home-more__title"></div>' +
+                        '</div>' +
+                    '</div>'
+                );
+                $tile.find('.tv-home-more__title').text(moreText);
+                var dom = $tile[0];
+                $tile.on('hover:focus', function () {
+                    var rIdx = rows.indexOf(rowObj);
+                    if (rIdx >= 0) activeRow = rIdx;
+                    var cIdx = rowObj.elements.indexOf(dom);
+                    if (cIdx >= 0) rowObj.activeCardIdx = cIdx;
+                    updateHorizontalScroll(rowObj);
+                    updateVerticalScroll();
+                });
+                $tile.on('hover:enter', function () {
+                    if (typeof onMoreFn === 'function') onMoreFn();
+                });
+                return $tile;
+            }
+
+            function buildRowObject(spec, isFirstRow) {
+                var $row = $(
+                    '<div class="tv-home-row' + (isFirstRow ? ' tv-home-row--first' : '') + '" data-block-id="' + escapeHtml(spec.id) + '">' +
+                        '<div class="tv-home-row__head' + (isFirstRow ? ' hide' : '') + '">' +
+                            '<div class="tv-home-row__title"></div>' +
+                            '<div class="tv-home-row__sub"></div>' +
+                        '</div>' +
+                        '<div class="tv-home-row__viewport">' +
+                            '<div class="tv-home-row__track"></div>' +
+                        '</div>' +
+                    '</div>'
+                );
+
+                var $title = $row.find('.tv-home-row__title');
+                var $sub = $row.find('.tv-home-row__sub');
+                var $viewport = $row.find('.tv-home-row__viewport');
+                var $track = $row.find('.tv-home-row__track');
+
+                $title.text(spec.title || '');
+                if (spec.subtitle) $sub.text(spec.subtitle);
+
+                var rowObj = {
+                    id: spec.id,
+                    type: spec.type,
+                    title: spec.title || '',
+                    data: spec.data || null,
+                    items: spec.items || [],
+                    $el: $row,
+                    $sub: $sub,
+                    $viewport: $viewport,
+                    $track: $track,
+                    elements: [],
+                    activeCardIdx: 0,
+                    onMore: spec.onMore || null
+                };
+
+                if (typeof spec.onMore === 'function') {
+                    $row.data('tv_more_fn', spec.onMore);
+                }
+
+                var i, $c;
+                if (spec.type === 'continue') {
+                    for (i = 0; i < spec.items.length; i++) {
+                        $c = createContinueCard(spec.items[i], rowObj, i);
+                        $track.append($c);
+                        rowObj.elements.push($c[0]);
+                    }
+                } else if (spec.type === 'new_episodes') {
+                    for (i = 0; i < spec.items.length; i++) {
+                        $c = createNewEpisodeCard(spec.items[i], rowObj, i);
+                        $track.append($c);
+                        rowObj.elements.push($c[0]);
+                    }
+                } else {
+                    var cards = spec.items || [];
+                    var maxCards = Math.min(cards.length, 24);
+                    for (i = 0; i < maxCards; i++) {
+                        $c = createPosterCard(cards[i], rowObj, i);
+                        $track.append($c);
+                        rowObj.elements.push($c[0]);
+                    }
+                    if (typeof spec.onMore === 'function') {
+                        var $more = createMoreTile(rowObj, false, spec.onMore);
+                        $track.append($more);
+                        rowObj.elements.push($more[0]);
+                    }
+                }
+
+                return rowObj;
+            }
+
+            function focusRowCard(rowIdx, cardIdx) {
+                if (!rows.length || destroyed) return;
+                if (rowIdx < 0) rowIdx = 0;
+                if (rowIdx >= rows.length) rowIdx = rows.length - 1;
+                var rowObj = rows[rowIdx];
+                if (!rowObj || !rowObj.elements.length) return;
+
+                if (cardIdx < 0) cardIdx = 0;
+                if (cardIdx >= rowObj.elements.length) cardIdx = rowObj.elements.length - 1;
+
+                activeRow = rowIdx;
+                rowObj.activeCardIdx = cardIdx;
+                var targetEl = rowObj.elements[cardIdx];
+
+                Lampa.Controller.collectionSet(rowObj.$track);
+                Lampa.Controller.collectionFocus(targetEl, rowObj.$track);
+
+                updateHorizontalScroll(rowObj);
+                updateVerticalScroll();
+
+                if (activeRow === 0) {
+                    var heroItem = rowObj.items && rowObj.items[cardIdx];
+                    var heroCard = heroItem && heroItem.card ? heroItem.card : heroItem;
+                    if (heroCard) updateHeroForCard(heroCard, cardIdx);
+                }
+
+                if (activeRow >= rows.length - 2) {
+                    maybeLoadNextBatch();
+                }
+            }
+
+            function appendSpecsOrdered(specs) {
+                if (!specs || !specs.length) return;
+                var rank = HomeSections.getRankMap();
+                var fallbackBase = 1000;
+
+                var filtered = [];
+                for (var i = 0; i < specs.length; i++) {
+                    var sp = specs[i];
+                    if (!sp || !sp.id || !sp.items || !sp.items.length) continue;
+                    if (seenBlockIds[sp.id]) continue;
+                    if (!HomeSections.isBlockEnabled(sp.id)) continue;
+                    seenBlockIds[sp.id] = true;
+                    filtered.push({
+                        spec: sp,
+                        rank: typeof rank[sp.id] === 'number' ? rank[sp.id] : (fallbackBase + i),
+                        seq: i
+                    });
+                }
+
+                filtered.sort(function (a, b) {
+                    if (a.rank !== b.rank) return a.rank - b.rank;
+                    return a.seq - b.seq;
+                });
+
+                for (var k = 0; k < filtered.length; k++) {
+                    var isFirst = (rows.length === 0);
+                    var rowObj = buildRowObject(filtered[k].spec, isFirst);
+                    if (rowObj.elements.length) {
+                        rows.push(rowObj);
+                        $rowsWrap.append(rowObj.$el);
+                    }
+                }
+            }
+
+            function buildApiSpecs(apiRows) {
+                var specs = [];
+                if (!Array.isArray(apiRows)) return specs;
+                for (var i = 0; i < apiRows.length; i++) {
+                    var r = apiRows[i];
+                    if (!r || !Array.isArray(r.results) || !r.results.length) continue;
+                    if (HomeSections.isNativeContinueRow(r)) continue;
+
+                    var blockId = HomeSections.identifyApiRowBlockId(r);
+                    var hasMore = (parseInt(r.total_pages, 10) > 1) || !!r.url;
+                    (function (rowData, bId, canMore) {
+                        specs.push({
+                            id: bId,
+                            type: 'poster',
+                            title: rowData.title || HomeSections.getBlockTitle(bId),
+                            subtitle: '',
+                            items: rowData.results,
+                            data: rowData,
+                            onMore: canMore ? function () {
+                                openRowMore(rowData, object && object.source);
+                            } : null
+                        });
+                    })(r, blockId, hasMore);
+                }
+                return specs;
+            }
+
+            function maybeLoadNextBatch() {
+                if (destroyed || loadingNext || typeof nextBatchFn !== 'function') return;
+                loadingNext = true;
+                try {
+                    nextBatchFn(function (moreData) {
+                        loadingNext = false;
+                        if (destroyed) return;
+                        var moreSpecs = buildApiSpecs(moreData);
+                        if (moreSpecs.length) {
+                            appendSpecsOrdered(moreSpecs);
+                        }
+                    }, function () {
+                        loadingNext = false;
+                        nextBatchFn = null;
+                    });
+                } catch (e) {
+                    loadingNext = false;
+                }
+            }
+
+            function refreshContinueRowLive() {
+                if (destroyed || !built) return;
+                if (!HomeSections.isBlockEnabled('continue_watching')) return;
+
+                var existingIdx = -1;
+                for (var i = 0; i < rows.length; i++) {
+                    if (rows[i].id === 'continue_watching') {
+                        existingIdx = i;
+                        break;
+                    }
+                }
+
+                var freshItems = ContinueWatching.collectItems();
+                if (!freshItems.length) {
+                    if (existingIdx >= 0) {
+                        rows[existingIdx].$el.remove();
+                        rows.splice(existingIdx, 1);
+                        if (activeRow >= rows.length) activeRow = Math.max(0, rows.length - 1);
+                    }
+                    return;
+                }
+
+                var newSpec = {
+                    id: 'continue_watching',
+                    type: 'continue',
+                    title: t('tv_home_continue_title'),
+                    subtitle: ContinueWatching.formatCountSubtitle(freshItems.length),
+                    items: freshItems
+                };
+
+                if (existingIdx >= 0) {
+                    var oldRow = rows[existingIdx];
+                    var isFirst = (existingIdx === 0);
+                    var rebuilt = buildRowObject(newSpec, isFirst);
+                    rebuilt.activeCardIdx = Math.min(oldRow.activeCardIdx, Math.max(0, rebuilt.elements.length - 1));
+                    oldRow.$el.replaceWith(rebuilt.$el);
+                    rows[existingIdx] = rebuilt;
+                }
+            }
+
+            function buildInitial(apiData) {
+                if (destroyed) return;
+                built = true;
+
+                var initialSpecs = buildApiSpecs(apiData);
+
+                var cwItems = ContinueWatching.collectItems();
+                if (cwItems.length) {
+                    initialSpecs.push({
+                        id: 'continue_watching',
+                        type: 'continue',
+                        title: t('tv_home_continue_title'),
+                        subtitle: ContinueWatching.formatCountSubtitle(cwItems.length),
+                        items: cwItems
+                    });
+                }
+
+                var epItems = collectNewEpisodes();
+                if (epItems.length) {
+                    initialSpecs.push({
+                        id: 'new_episodes',
+                        type: 'new_episodes',
+                        title: t('tv_home_new_episodes_title'),
+                        subtitle: t('tv_home_new_episodes_sub'),
+                        items: epItems
+                    });
+                }
+
+                appendSpecsOrdered(initialSpecs);
+
+                if (!rows.length && initialSpecs.length) {
+                    // Если пользователь скрыл все блоки — аккуратно покажем пустое состояние
+                    $rowsWrap.append('<div class="tv-home__empty">' + escapeHtml(Lampa.Lang.translate('empty_title') || 'Нет отображаемых блоков') + '</div>');
+                }
+
+                if (self.activity) {
+                    self.activity.loader(false);
+                    self.activity.toggle();
+                }
+
+                if (rows.length) {
+                    var firstItem = rows[0].items && rows[0].items[0];
+                    var firstCard = firstItem && firstItem.card ? firstItem.card : firstItem;
+                    if (firstCard) updateHeroForCard(firstCard, 0);
+                    setTimeout(function () {
+                        if (!destroyed && !paused) focusRowCard(0, 0);
+                    }, 30);
+                }
+            }
+
+            function onWheelHandler(ev) {
+                if (destroyed || paused || !rows.length) return;
+                if (Lampa.Select && typeof Lampa.Select.opened === 'function' && Lampa.Select.opened()) return;
+                var dy = ev.deltaY || (ev.originalEvent && ev.originalEvent.deltaY) || 0;
+                if (Math.abs(dy) < 10) return;
+                if (dy > 0) {
+                    if (activeRow < rows.length - 1) focusRowCard(activeRow + 1, rows[activeRow + 1].activeCardIdx || 0);
+                } else {
+                    if (activeRow > 0) focusRowCard(activeRow - 1, rows[activeRow - 1].activeCardIdx || 0);
+                }
+            }
+
+            this.create = function () {
+                if (self.activity) self.activity.loader(true);
+                $root.on('wheel', onWheelHandler);
+
+                var nextCall = Lampa.Api.main(object || {}, function (data) {
+                    buildInitial(data);
+                }, function () {
+                    if (destroyed) return;
+                    if (self.activity) {
+                        self.activity.loader(false);
+                        self.activity.toggle();
+                    }
+                    $rowsWrap.append('<div class="tv-home__empty">' + escapeHtml(Lampa.Lang.translate('empty_title') || 'Пусто') + '</div>');
+                });
+
+                if (typeof nextCall === 'function') nextBatchFn = nextCall;
+            };
+
+            this.start = function () {
+                paused = false;
+                $('body').addClass('tv-home-active');
+
+                if (built) {
+                    refreshContinueRowLive();
+                }
+
+                Lampa.Controller.add('content', {
+                    toggle: function () {
+                        if (rows.length) {
+                            var r = Math.min(activeRow, rows.length - 1);
+                            var c = Math.min(rows[r].activeCardIdx || 0, Math.max(0, rows[r].elements.length - 1));
+                            focusRowCard(r, c);
+                        } else {
+                            Lampa.Controller.collectionSet($root);
+                        }
+                    },
+                    left: function () {
+                        if (!rows.length) {
+                            Lampa.Controller.toggle('menu');
+                            return;
+                        }
+                        var rowObj = rows[activeRow];
+                        if (rowObj && rowObj.activeCardIdx > 0) {
+                            focusRowCard(activeRow, rowObj.activeCardIdx - 1);
+                        } else {
+                            Lampa.Controller.toggle('menu');
+                        }
+                    },
+                    right: function () {
+                        if (!rows.length) return;
+                        var rowObj = rows[activeRow];
+                        if (rowObj && rowObj.activeCardIdx < rowObj.elements.length - 1) {
+                            focusRowCard(activeRow, rowObj.activeCardIdx + 1);
+                        }
+                    },
+                    up: function () {
+                        if (activeRow > 0) {
+                            var targetRow = activeRow - 1;
+                            focusRowCard(targetRow, rows[targetRow].activeCardIdx || 0);
+                        } else {
+                            Lampa.Controller.toggle('head');
+                        }
+                    },
+                    down: function () {
+                        if (activeRow < rows.length - 1) {
+                            var targetRow = activeRow + 1;
+                            focusRowCard(targetRow, rows[targetRow].activeCardIdx || 0);
+                        } else {
+                            maybeLoadNextBatch();
+                        }
+                    },
+                    back: function () {
+                        if (activeRow > 0) {
+                            focusRowCard(0, rows[0].activeCardIdx || 0);
+                        } else {
+                            Lampa.Controller.toggle('menu');
+                        }
+                    }
+                });
+
+                Lampa.Controller.toggle('content');
+            };
+
+            this.pause = function () {
+                paused = true;
+                stopCarousel();
+                $('body').removeClass('tv-home-active');
+            };
+
+            this.stop = function () {
+                paused = true;
+                stopCarousel();
+                $('body').removeClass('tv-home-active');
+            };
+
+            this.render = function (js) {
+                return js ? $root[0] : $root;
+            };
+
+            this.destroy = function () {
+                destroyed = true;
+                paused = true;
+                stopCarousel();
+                abortTmdbNet();
+                if (heroDebounceTimer) {
+                    clearTimeout(heroDebounceTimer);
+                    heroDebounceTimer = null;
+                }
+                activeDecodedImg = null;
+                $('body').removeClass('tv-home-active');
+                $root.off('wheel', onWheelHandler);
+                $root.remove();
+            };
+        }
+
+        function init() {
+            if (initialized) return;
+            initialized = true;
+
+            if (!Lampa.Component || typeof Lampa.Component.get !== 'function' || typeof Lampa.Component.add !== 'function') {
+                return;
+            }
+
+            origMainComponent = Lampa.Component.get('main');
+
+            Lampa.Component.add('main', function (object) {
+                if (HomeSections.isHomeEnabled()) {
+                    return new NetflixMainComponent(object);
+                }
+                if (origMainComponent) {
+                    return new origMainComponent(object);
+                }
+                return new NetflixMainComponent(object);
+            });
+
+            // Если главный экран уже открыт на момент загрузки плагина — мягко перезапустим его в Netflix-стиле
+            try {
+                if (HomeSections.isHomeEnabled() && Lampa.Activity && typeof Lampa.Activity.active === 'function') {
+                    var act = Lampa.Activity.active();
+                    if (act && act.component === 'main') {
+                        var curComp = act.activity && typeof act.activity.component === 'function' ? act.activity.component() : null;
+                        if (!curComp || !curComp.__is_tv_home) {
+                            setTimeout(function () {
+                                try {
+                                    var nowAct = Lampa.Activity.active();
+                                    if (nowAct && nowAct.component === 'main') {
+                                        var nowComp = nowAct.activity && typeof nowAct.activity.component === 'function' ? nowAct.activity.component() : null;
+                                        if (!nowComp || !nowComp.__is_tv_home) {
+                                            Lampa.Activity.replace({});
+                                        }
+                                    }
+                                } catch (e2) {}
+                            }, 80);
+                        }
+                    }
+                }
+            } catch (e) {}
+        }
+
+        return {
+            init: init
+        };
+    })();
+
+    /* ------------------------------------------------------------------ *
      * Единый раздел настроек плагина с подразделами
      * ------------------------------------------------------------------ */
 
     var settingsDirty = false;
+    var homeSettingsDirty = false;
     var settingsRefreshTimer = null;
 
     function markSettingsDirty() {
         settingsDirty = true;
+    }
+
+    function markHomeSettingsDirty() {
+        homeSettingsDirty = true;
     }
 
     function refreshFullActivities() {
@@ -6361,13 +9187,39 @@
         }
     }
 
+    function refreshMainActivities() {
+        var active = Lampa.Activity && typeof Lampa.Activity.active === 'function' ? Lampa.Activity.active() : null;
+
+        if (Lampa.Activity && typeof Lampa.Activity.all === 'function') {
+            var all = Lampa.Activity.all() || [];
+            for (var i = 0; i < all.length; i++) {
+                var item = all[i];
+                if (!item || item.component !== 'main' || !item.activity || item === active) continue;
+                try {
+                    if (typeof item.activity.refresh === 'function') item.activity.refresh();
+                    else if (typeof item.activity.needRefresh === 'function') item.activity.needRefresh();
+                } catch (e) {}
+            }
+        }
+
+        if (active && active.component === 'main') {
+            try {
+                if (typeof Lampa.Activity.replace === 'function') Lampa.Activity.replace({});
+            } catch (e2) {}
+        }
+    }
+
     function maybeRefreshActiveCard() {
-        if (!settingsDirty) return;
+        if (!settingsDirty && !homeSettingsDirty) return;
+        var doFull = settingsDirty;
+        var doMain = homeSettingsDirty;
         settingsDirty = false;
+        homeSettingsDirty = false;
         if (settingsRefreshTimer) clearTimeout(settingsRefreshTimer);
         settingsRefreshTimer = setTimeout(function () {
             settingsRefreshTimer = null;
-            refreshFullActivities();
+            if (doFull) refreshFullActivities();
+            if (doMain) refreshMainActivities();
         }, 60);
     }
 
@@ -6397,6 +9249,7 @@
         Lampa.Template.add('settings_tv_plugin_ratings', '<div></div>');
         Lampa.Template.add('settings_tv_plugin_sections', '<div></div>');
         Lampa.Template.add('settings_tv_plugin_head', '<div></div>');
+        Lampa.Template.add('settings_tv_plugin_home', '<div></div>');
 
         function openSubSection(subId, subTitle, backIndex) {
             Lampa.Settings.create(subId, {
@@ -6467,6 +9320,21 @@
             onRender: function (item) {
                 item.on('hover:enter', function () {
                     openSubSection(HeadFilter.SUB_COMPONENT, t('tv_head_title'), 3);
+                });
+            }
+        });
+
+        Lampa.SettingsApi.addParam({
+            component: PLUGIN_ID,
+            param: { type: 'static' },
+            field: {
+                name: t('tv_home_title'),
+                description: t('tv_home_descr')
+            },
+            onRender: function (item) {
+                item.on('hover:enter', function () {
+                    HomeSections.rebuildDynamicSettingsParams(4);
+                    openSubSection(HomeSections.SUB_COMPONENT, t('tv_home_title'), 4);
                 });
             }
         });
@@ -6613,6 +9481,9 @@
 
         // --- Подраздел: Настройка шапки ---
         HeadFilter.addSettingsParams();
+
+        // --- Подраздел: Главный экран ---
+        HomeSections.addSettingsParams(4);
 
         // Обновляем открытую карточку при выходе из настроек, если что-то меняли
         if (Lampa.Settings && Lampa.Settings.listener) {
@@ -6854,8 +9725,99 @@
             '.online-empty-template{background-color:rgba(255,255,255,.3);padding:1em;display:-webkit-box;display:-webkit-flex;display:flex;-webkit-box-align:center;-webkit-align-items:center;align-items:center;border-radius:.3em}' +
             '.online-empty-template>*{background:rgba(0,0,0,.3);border-radius:.3em}.online-empty-template__ico{width:4em;height:4em;margin-right:2.4em}.online-empty-template__body{height:1.7em;width:70%}.online-empty-template+.online-empty-template{margin-top:1em}' +
 
+            /* --- Netflix Main Screen (Figma 169:3460 / 169:3501 / 169:3542 / 169:3663) --- */
+            'body.tv-home-active .background{opacity:0 !important;pointer-events:none !important}' +
+            'body.tv-home-active .wrap__content{padding-top:0 !important}' +
+            'body.tv-home-active .head{background:-webkit-linear-gradient(top,rgba(13,14,17,.78) 0%,rgba(13,14,17,0) 100%) !important;background:linear-gradient(180deg,rgba(13,14,17,.78) 0%,rgba(13,14,17,0) 100%) !important;z-index:20}' +
+            '.tv-home{position:relative;width:100%;height:100vh;background:#0d0e11;color:#fff;overflow:hidden;z-index:1}' +
+            '.tv-home__bg{position:absolute;top:0;left:0;right:0;height:78vh;overflow:hidden;z-index:0;pointer-events:none;-webkit-transition:opacity .45s ease;transition:opacity .45s ease}' +
+            '.tv-home--scrolled .tv-home__bg{opacity:.14}' +
+            '.tv-home__bg-img{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center 22%;opacity:0;-webkit-transition:opacity .65s ease;transition:opacity .65s ease;will-change:opacity}' +
+            '.tv-home__bg-img.is-ready{opacity:1}' +
+            '.tv-home__bg-img.is-fading{opacity:0 !important}' +
+            '.tv-home__bg-grad-x{position:absolute;top:0;left:0;right:0;bottom:0;background:-webkit-linear-gradient(left,rgba(13,14,17,.96) 0%,rgba(13,14,17,.72) 38%,rgba(13,14,17,.14) 78%,rgba(13,14,17,.04) 100%);background:linear-gradient(90deg,rgba(13,14,17,.96) 0%,rgba(13,14,17,.72) 38%,rgba(13,14,17,.14) 78%,rgba(13,14,17,.04) 100%)}' +
+            '.tv-home__bg-grad-y{position:absolute;top:0;left:0;right:0;bottom:0;background:-webkit-linear-gradient(top,rgba(13,14,17,.58) 0%,rgba(13,14,17,.08) 32%,rgba(13,14,17,.86) 80%,#0d0e11 100%);background:linear-gradient(180deg,rgba(13,14,17,.58) 0%,rgba(13,14,17,.08) 32%,rgba(13,14,17,.86) 80%,#0d0e11 100%)}' +
+            '.tv-home__viewport{position:relative;z-index:2;width:100%;height:100%;overflow:hidden}' +
+            '.tv-home__scroll{position:relative;padding:4.6em 0 8em 0;will-change:transform;-webkit-transition:-webkit-transform .34s cubic-bezier(.22,1,.36,1);transition:transform .34s cubic-bezier(.22,1,.36,1)}' +
+
+            /* Hero Featured Panel (169:3501 — без кнопок, с логотипом TMDB и каруселью задников) */
+            '.tv-home-hero{position:relative;padding:1.2em 3.6em 1.7em 3.6em;min-height:17.2em;display:-webkit-box;display:-webkit-flex;display:flex;-webkit-box-orient:vertical;-webkit-box-direction:normal;-webkit-flex-direction:column;flex-direction:column;-webkit-box-pack:end;-webkit-justify-content:flex-end;justify-content:flex-end;-webkit-transition:opacity .32s ease;transition:opacity .32s ease}' +
+            '.tv-home--scrolled .tv-home-hero{opacity:0;pointer-events:none}' +
+            '.tv-home-hero__eyebrow{display:-webkit-box;display:-webkit-flex;display:flex;-webkit-box-align:center;-webkit-align-items:center;align-items:center;margin-bottom:.75em;font-size:.92em;color:rgba(255,255,255,.86);font-weight:500;letter-spacing:.01em}' +
+            '.tv-home-hero__eyebrow.hide{display:none}' +
+            '.tv-home-hero__top-pill{display:inline-block;background:#e50914;color:#fff;font-size:.76em;font-weight:700;padding:.24em .58em;border-radius:.3em;letter-spacing:.06em;margin-right:.7em;text-transform:uppercase}' +
+            '.tv-home-hero__top-pill.hide{display:none}' +
+            '.tv-home-hero__brand{position:relative;min-height:4.4em;margin-bottom:.85em;display:-webkit-box;display:-webkit-flex;display:flex;-webkit-box-align:end;-webkit-align-items:flex-end;align-items:flex-end}' +
+            '.tv-home-hero__title{font-size:3.1em;font-weight:800;line-height:1.08;letter-spacing:-.015em;color:#fff;max-width:14em;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;-webkit-transition:opacity .3s ease;transition:opacity .3s ease}' +
+            '.tv-home-hero__title.is-hidden{opacity:0;position:absolute;pointer-events:none}' +
+            '.tv-home-hero__logo{max-height:5.8em;max-width:26em;width:auto;height:auto;object-fit:contain;object-position:left bottom;opacity:0;-webkit-transform:translateY(.22em);transform:translateY(.22em);-webkit-transition:opacity .42s ease,-webkit-transform .42s ease;transition:opacity .42s ease,transform .42s ease}' +
+            '.tv-home-hero__logo.is-visible{opacity:1;-webkit-transform:translateY(0);transform:translateY(0)}' +
+            '.tv-home-hero__logo.hide{display:none}' +
+            '.tv-home-hero__meta{display:-webkit-box;display:-webkit-flex;display:flex;-webkit-box-align:center;-webkit-align-items:center;align-items:center;-webkit-flex-wrap:wrap;flex-wrap:wrap;margin-bottom:.75em;font-size:.94em;color:rgba(255,255,255,.88)}' +
+            '.tv-home-hero__meta>*{margin-right:.65em;margin-bottom:.2em}' +
+            '.tv-home-hero__chip{display:inline-block;padding:.24em .6em;border-radius:.38em;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.32);font-size:.86em;font-weight:600;color:#fff;letter-spacing:.02em}' +
+            '.tv-home-hero__chip--rate{border-color:rgba(255,255,255,.46)}' +
+            '.tv-home-hero__year{font-weight:700;color:#fff}' +
+            '.tv-home-hero__dot{color:rgba(255,255,255,.45)}' +
+            '.tv-home-hero__runtime{color:rgba(255,255,255,.82)}' +
+            '.tv-home-hero__desc{max-width:36em;font-size:1em;line-height:1.45;color:rgba(255,255,255,.8);overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:3;line-clamp:3;-webkit-box-orient:vertical}' +
+
+            /* Home Rows */
+            '.tv-home__rows{position:relative;padding:0 3.6em}' +
+            '.tv-home__empty{padding:4em 0;font-size:1.4em;color:rgba(255,255,255,.6)}' +
+            '.tv-home-row{position:relative;margin-bottom:2.1em}' +
+            '.tv-home-row--first{margin-bottom:2.3em}' +
+            '.tv-home-row__head{display:-webkit-box;display:-webkit-flex;display:flex;-webkit-box-align:baseline;-webkit-align-items:baseline;align-items:baseline;margin-bottom:.9em}' +
+            '.tv-home-row__head.hide{display:none}' +
+            '.tv-home-row__title{font-size:1.38em;font-weight:700;color:#fff;letter-spacing:-.01em;margin-right:.8em}' +
+            '.tv-home-row__sub{font-size:.92em;color:rgba(255,255,255,.48);font-weight:500}' +
+            '.tv-home-row__viewport{position:relative;overflow:visible}' +
+            '.tv-home-row__track{display:-webkit-box;display:-webkit-flex;display:flex;-webkit-box-align:start;-webkit-align-items:flex-start;align-items:flex-start;will-change:transform;-webkit-transition:-webkit-transform .28s cubic-bezier(.22,1,.36,1);transition:transform .28s cubic-bezier(.22,1,.36,1)}' +
+
+            /* 2:3 Poster Cards (Figma 169:3460 + IMDb badge 169:3663) */
+            '.tv-home-card{position:relative;width:10.4em;-webkit-flex-shrink:0;flex-shrink:0;margin-right:1.15em;cursor:pointer;-webkit-transition:-webkit-transform .2s ease;transition:transform .2s ease}' +
+            '.tv-home-card__box{position:relative;width:100%;padding-bottom:150%;border-radius:.62em;overflow:hidden;background:#191b22;box-shadow:0 6px 20px rgba(0,0,0,.38);-webkit-transition:box-shadow .18s ease;transition:box-shadow .18s ease}' +
+            '.tv-home-card.focus{-webkit-transform:scale(1.045);transform:scale(1.045);z-index:5}' +
+            '.tv-home-card.focus .tv-home-card__box{box-shadow:0 0 0 .16em #fff,0 14px 32px rgba(0,0,0,.68)}' +
+            '.tv-home-card__img{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;opacity:0;-webkit-transition:opacity .28s ease;transition:opacity .28s ease}' +
+            '.tv-home-card__img.is-loaded{opacity:1}' +
+            '.tv-home-card__top-left{position:absolute;top:.5em;left:.5em;display:-webkit-box;display:-webkit-flex;display:flex;-webkit-box-orient:vertical;-webkit-box-direction:normal;-webkit-flex-direction:column;flex-direction:column;-webkit-box-align:start;-webkit-align-items:flex-start;align-items:flex-start;z-index:2}' +
+            '.tv-home-card__badge{background:rgba(0,0,0,.66);color:rgba(255,255,255,.94);font-size:.68em;font-weight:700;padding:.22em .46em;border-radius:.38em;margin-bottom:.3em;letter-spacing:.02em;line-height:1.1}' +
+            '.tv-home-card__rating{position:absolute;top:.5em;right:.5em;background:rgba(0,0,0,.62);color:#fff;font-size:.76em;font-weight:700;padding:.24em .48em;border-radius:.42em;line-height:1.1;z-index:2;letter-spacing:.01em}' +
+            '.tv-home-card__progress{position:absolute;left:.5em;right:.5em;bottom:.48em;height:.2em;background:rgba(255,255,255,.24);border-radius:99px;overflow:hidden;z-index:2}' +
+            '.tv-home-card__progress-bar{height:100%;background:#fff;border-radius:99px}' +
+            '.tv-home-card__title{margin-top:.55em;font-size:.94em;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.25}' +
+            '.tv-home-card__meta{margin-top:.18em;font-size:.78em;color:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2}' +
+
+            /* Wide 16:9 Cards — Продолжить просмотр (169:3542) и Новые серии */
+            '.tv-home-wide{position:relative;width:15.4em;-webkit-flex-shrink:0;flex-shrink:0;margin-right:1.2em;cursor:pointer;-webkit-transition:-webkit-transform .2s ease;transition:transform .2s ease}' +
+            '.tv-home-wide__box{position:relative;width:100%;padding-bottom:56.25%;border-radius:.68em;overflow:hidden;background:#191b22;box-shadow:0 6px 20px rgba(0,0,0,.38);-webkit-transition:box-shadow .18s ease;transition:box-shadow .18s ease}' +
+            '.tv-home-wide.focus{-webkit-transform:scale(1.045);transform:scale(1.045);z-index:5}' +
+            '.tv-home-wide.focus .tv-home-wide__box{box-shadow:0 0 0 .16em #fff,0 14px 32px rgba(0,0,0,.68)}' +
+            '.tv-home-wide__img{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;opacity:0;-webkit-transition:opacity .28s ease;transition:opacity .28s ease}' +
+            '.tv-home-wide__img.is-loaded{opacity:1}' +
+            '.tv-home-wide__vignette{position:absolute;left:0;right:0;bottom:0;height:52%;background:-webkit-linear-gradient(top,rgba(0,0,0,0) 0%,rgba(0,0,0,.74) 100%);background:linear-gradient(180deg,rgba(0,0,0,0) 0%,rgba(0,0,0,.74) 100%);pointer-events:none;z-index:1}' +
+            '.tv-home-wide__badge{position:absolute;top:.55em;right:.55em;background:rgba(0,0,0,.68);color:#fff;font-size:.74em;font-weight:700;padding:.26em .55em;border-radius:.4em;line-height:1.1;z-index:2;letter-spacing:.02em}' +
+            '.tv-home-wide__date{position:absolute;right:.65em;bottom:.55em;color:rgba(255,255,255,.9);font-size:.82em;font-weight:600;z-index:2;text-shadow:0 1px 4px rgba(0,0,0,.7)}' +
+            '.tv-home-wide__progress{position:absolute;left:.65em;right:.65em;bottom:.6em;height:.24em;background:rgba(255,255,255,.26);border-radius:99px;overflow:hidden;z-index:2}' +
+            '.tv-home-wide__progress-bar{height:100%;background:#fff;border-radius:99px}' +
+            '.tv-home-wide__title{margin-top:.55em;font-size:.98em;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.25}' +
+            '.tv-home-wide__sub{margin-top:.2em;font-size:.8em;color:rgba(255,255,255,.58);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2}' +
+
+            /* «Еще» tile inside Netflix Main Screen rows */
+            '.tv-home-more{position:relative;width:10.4em;-webkit-flex-shrink:0;flex-shrink:0;margin-right:1.15em;cursor:pointer;-webkit-transition:-webkit-transform .2s ease;transition:transform .2s ease}' +
+            '.tv-home-more__box{position:relative;width:100%;padding-bottom:150%;border-radius:.62em;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);-webkit-transition:background .18s ease,box-shadow .18s ease;transition:background .18s ease,box-shadow .18s ease}' +
+            '.tv-home-more.focus{-webkit-transform:scale(1.045);transform:scale(1.045);z-index:5}' +
+            '.tv-home-more.focus .tv-home-more__box{background:rgba(255,255,255,.16);box-shadow:0 0 0 .16em #fff}' +
+            '.tv-home-more__title{position:absolute;top:50%;left:0;right:0;-webkit-transform:translateY(-50%);transform:translateY(-50%);text-align:center;font-size:1.15em;font-weight:700;color:#fff}' +
+
             /* --- Responsive fallback for small screens --- */
             '@media screen and (max-width:767px){' +
+            '.tv-home-hero{padding:.8em 1.2em 1.2em 1.2em;min-height:14em}' +
+            '.tv-home__rows{padding:0 1.2em}' +
+            '.tv-home-hero__title{font-size:2em}' +
+            '.tv-home-card,.tv-home-more{width:8.6em}' +
+            '.tv-home-wide{width:13.2em}' +
             '.full-start-new.tv-card .full-start-new__body{height:auto;min-height:0;padding-top:3em}' +
             '.full-start-new.tv-card .tv-hero__columns{-webkit-box-orient:vertical;-webkit-box-direction:normal;-webkit-flex-direction:column;flex-direction:column;-webkit-box-align:start;-webkit-align-items:flex-start;align-items:flex-start;gap:1.5em}' +
             '.tv-hero__left{padding-right:0;width:100%}' +
@@ -6905,6 +9867,8 @@
 
         registerTemplatesAndStyles();
         HeadFilter.init();
+        GlobalMoreMenu.init();
+        HomeScreen.init();
 
         // Подписки на события карточки фильма/сериала
         Lampa.Listener.follow('full', function (e) {
