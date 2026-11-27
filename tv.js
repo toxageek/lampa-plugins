@@ -2553,6 +2553,17 @@
 
     var ytApiLoading = false;
     var ytApiCallbacks = [];
+    var ytApiPollTimer = null;
+
+    function flushYouTubeCallbacks() {
+        clearInterval(ytApiPollTimer);
+        ytApiPollTimer = null;
+        var list = ytApiCallbacks.slice();
+        ytApiCallbacks = [];
+        for (var i = 0; i < list.length; i++) {
+            try { list[i](); } catch (e) {}
+        }
+    }
 
     function ensureYouTubeApi(cb) {
         if (typeof window.YT !== 'undefined' && window.YT.Player) {
@@ -2568,17 +2579,30 @@
             if (typeof prevReady === 'function') {
                 try { prevReady(); } catch (e) {}
             }
-            var list = ytApiCallbacks.slice();
-            ytApiCallbacks = [];
-            for (var i = 0; i < list.length; i++) {
-                try { list[i](); } catch (e2) {}
-            }
+            flushYouTubeCallbacks();
         };
 
-        var script = document.createElement('script');
-        script.src = 'https://www.youtube.com/iframe_api';
-        script.async = true;
-        document.head.appendChild(script);
+        // Поллинг на случай, если Lampa уже подключила iframe_api до нашего плагина
+        var pollAttempts = 0;
+        ytApiPollTimer = setInterval(function () {
+            pollAttempts++;
+            if (typeof window.YT !== 'undefined' && window.YT.Player) {
+                flushYouTubeCallbacks();
+            } else if (pollAttempts >= 75) {
+                clearInterval(ytApiPollTimer);
+                ytApiPollTimer = null;
+                ytApiLoading = false;
+                ytApiCallbacks = [];
+            }
+        }, 200);
+
+        var existing = document.querySelector && document.querySelector('script[src*="youtube.com/iframe_api"]');
+        if (!existing) {
+            var script = document.createElement('script');
+            script.src = 'https://www.youtube.com/iframe_api';
+            script.async = true;
+            document.head.appendChild(script);
+        }
     }
 
     /* ------------------------------------------------------------------ *
@@ -2591,13 +2615,15 @@
         return (Lampa.Storage.field('tmdb_lang') || Lampa.Storage.get('language', 'ru') || 'ru').split('-')[0].toLowerCase();
     }
 
-    function pickLatestTrailerFromList(results) {
-        if (!Array.isArray(results) || !results.length) return null;
+    function sortTrailerCandidates(results) {
+        if (!Array.isArray(results) || !results.length) return [];
+        var seen = {};
         var items = [];
         for (var i = 0; i < results.length; i++) {
             var el = results[i];
-            if (!el || !el.key) continue;
+            if (!el || !el.key || seen[el.key]) continue;
             if (el.site && String(el.site).toLowerCase() !== 'youtube') continue;
+            seen[el.key] = true;
             items.push({
                 id: el.key,
                 lang: String(el.iso_639_1 || '').toLowerCase(),
@@ -2606,29 +2632,34 @@
                 time: el.published_at ? (new Date(el.published_at).getTime() || 0) : 0
             });
         }
-        if (!items.length) return null;
+        if (!items.length) return [];
+
+        var tmdbLang = getTmdbLang();
+
+        function scoreItem(x) {
+            var s = 0;
+            if (x.type === 'trailer') s += 100;
+            else if (x.type === 'teaser') s += 50;
+            if (x.lang === tmdbLang) s += 30;
+            else if (x.lang === 'en') s += 20;
+            if (x.official) s += 5;
+            return s;
+        }
 
         items.sort(function (a, b) {
+            var sa = scoreItem(a);
+            var sb = scoreItem(b);
+            if (sb !== sa) return sb - sa;
             return b.time - a.time;
         });
 
-        var trailersOnly = items.filter(function (x) { return x.type === 'trailer'; });
-        var pool = trailersOnly.length ? trailersOnly : items;
-
-        var tmdbLang = getTmdbLang();
-        var byLang = pool.filter(function (x) { return x.lang === tmdbLang; });
-        if (byLang.length) return byLang[0];
-
-        var byEn = pool.filter(function (x) { return x.lang === 'en'; });
-        if (byEn.length) return byEn[0];
-
-        return pool[0];
+        return items;
     }
 
-    function fetchTmdbLatestTrailer(movie, fallbackVideos, net, cb) {
+    function fetchTmdbTrailers(movie, fallbackVideos, net, cb) {
         var fallbackList = (fallbackVideos && Array.isArray(fallbackVideos.results)) ? fallbackVideos.results : [];
         if (!movie || !movie.id || !Lampa.TMDB || !Lampa.TMDB.api) {
-            cb(pickLatestTrailerFromList(fallbackList));
+            cb(sortTrailerCandidates(fallbackList));
             return;
         }
 
@@ -2646,22 +2677,22 @@
         }
 
         requestLang(userLang, function (primaryList) {
-            var primaryPick = pickLatestTrailerFromList(primaryList);
-            if (primaryPick && primaryPick.type === 'trailer') {
-                cb(primaryPick);
-                return;
-            }
-
             if (userLang !== 'en') {
                 requestLang('en', function (enList) {
-                    var combined = primaryList.concat(enList);
-                    var pick = pickLatestTrailerFromList(combined);
-                    cb(pick || pickLatestTrailerFromList(fallbackList));
+                    cb(sortTrailerCandidates(primaryList.concat(enList).concat(fallbackList)));
                 });
             } else {
-                cb(primaryPick || pickLatestTrailerFromList(fallbackList));
+                cb(sortTrailerCandidates(primaryList.concat(fallbackList)));
             }
         });
+    }
+
+    function getRequiredBackdropSize() {
+        var dpr = window.devicePixelRatio || 1;
+        return {
+            w: Math.round((window.innerWidth || 1280) * dpr),
+            h: Math.round((window.innerHeight || 720) * dpr)
+        };
     }
 
     function pickRandomBackdrop(movie, backdrops) {
@@ -2674,13 +2705,38 @@
         var cleanWide = valid.filter(function (b) {
             return (!b.iso_639_1) && (!b.aspect_ratio || b.aspect_ratio >= 1.5);
         });
-        var pool = cleanWide.length >= 2 ? cleanWide : valid.filter(function (b) {
+        var pool = cleanWide.length ? cleanWide : valid.filter(function (b) {
             return !b.aspect_ratio || b.aspect_ratio >= 1.5;
         });
         if (!pool.length) pool = valid;
 
-        var hdPool = pool.filter(function (b) { return b.width && b.width >= 1280; });
-        if (hdPool.length >= 2) pool = hdPool;
+        // Отбираем фото не меньше разрешения экрана; если таких нет — берём самые большие
+        var req = getRequiredBackdropSize();
+        var fitPool = pool.filter(function (b) {
+            return (b.width || 0) >= req.w && (b.height || 0) >= req.h;
+        });
+        if (fitPool.length) {
+            pool = fitPool;
+        } else {
+            var allFit = valid.filter(function (b) {
+                return (b.width || 0) >= req.w && (b.height || 0) >= req.h;
+            });
+            if (allFit.length) {
+                pool = allFit;
+            } else {
+                var maxArea = 0;
+                for (var mi = 0; mi < pool.length; mi++) {
+                    var area = (pool[mi].width || 0) * (pool[mi].height || 0);
+                    if (area > maxArea) maxArea = area;
+                }
+                if (maxArea > 0) {
+                    var largestPool = pool.filter(function (b) {
+                        return ((b.width || 0) * (b.height || 0)) >= maxArea * 0.95;
+                    });
+                    if (largestPool.length) pool = largestPool;
+                }
+            }
+        }
 
         // Исключаем последний показанный задник, чтобы каждый раз подгружался другой при наличии выбора
         var movieKey = String(movie.id);
@@ -2754,7 +2810,9 @@
             if (window.innerWidth > 790 && !Lampa.Storage.field('light_version') && json.backdrops && json.backdrops.length) {
                 var bgPath = pickRandomBackdrop(movie, json.backdrops);
                 if (bgPath) {
-                    var bgUrl = Lampa.TMDB.image('t/p/w1280' + bgPath);
+                    var reqSize = getRequiredBackdropSize();
+                    var sizeSeg = reqSize.w > 1280 ? 'original' : 'w1280';
+                    var bgUrl = Lampa.TMDB.image('t/p/' + sizeSeg + bgPath);
                     var preloadBg = new Image();
                     preloadBg.onload = function () {
                         if (isDestroyedFn()) return;
@@ -2793,48 +2851,65 @@
         }, function () {});
     }
 
-    function BackgroundTrailer(activityObj, $activityRoot, fullData) {
+    function BackgroundTrailer(activityObj, fullLink, $activityRoot, fullData) {
         var self = this;
         var destroyed = false;
-        var started = false;
+        var finished = false;
+        var scrolledDown = false;
+        var isPlaying = false;
+        var isPausedByScroll = false;
+        var seekAdjusted = false;
         var startTimer = null;
         var showTimer = null;
+        var watchdogTimer = null;
         var pollTimer = null;
         var ytPlayer = null;
         var $layer = null;
-        var video = null;
+        var candidates = [];
+        var candidateIdx = 0;
         var netVideos = new Lampa.Reguest();
 
         var START_OFFSET = 7;
         var END_CUTOFF = 7;
+        var MAX_TRIES = 5;
 
         function getBgEl() {
             return $activityRoot.find('.full-start__background');
         }
 
-        function isStillActiveAndTop() {
-            if (destroyed) return false;
-            var active = Lampa.Activity.active();
-            if (!active || active.activity !== activityObj.activity) return false;
-            if (Lampa.Player && Lampa.Player.opened && Lampa.Player.opened()) return false;
-            if ($('body').hasClass('settings--open') || $('body').hasClass('search--open') || $('body').hasClass('player--viewing')) return false;
+        function isAtTopOfCard() {
+            if (scrolledDown) return false;
+            if (fullLink && typeof fullLink.active === 'number' && fullLink.active > 0) return false;
             if (getBgEl().hasClass('dim')) return false;
             return true;
         }
 
-        function stopAndRestorePoster() {
-            clearTimeout(startTimer);
+        function isStillActiveAndTop() {
+            if (destroyed || finished) return false;
+            var active = Lampa.Activity.active();
+            if (!active || active.activity !== activityObj.activity) return false;
+            if (Lampa.Player && Lampa.Player.opened && Lampa.Player.opened()) return false;
+            if ($('body').hasClass('settings--open') || $('body').hasClass('search--open') || $('body').hasClass('player--viewing')) return false;
+            if (!isAtTopOfCard()) return false;
+            return true;
+        }
+
+        function cleanupCurrentPlayer() {
             clearTimeout(showTimer);
+            clearTimeout(watchdogTimer);
             clearInterval(pollTimer);
-            if ($layer) {
-                $layer.removeClass('tv-bg-trailer--visible');
-            }
-            getBgEl().removeClass('tv-bg--hidden');
+            isPlaying = false;
+            isPausedByScroll = false;
+            seekAdjusted = false;
 
             var playerRef = ytPlayer;
             var layerRef = $layer;
             ytPlayer = null;
             $layer = null;
+
+            if (layerRef) {
+                layerRef.removeClass('tv-bg-trailer--visible');
+            }
 
             setTimeout(function () {
                 if (playerRef) {
@@ -2842,100 +2917,183 @@
                     try { playerRef.destroy(); } catch (e2) {}
                 }
                 if (layerRef) layerRef.remove();
-            }, 500);
+            }, 450);
         }
 
-        function launch() {
-            if (started || !isStillActiveAndTop() || !video) return;
-            started = true;
+        function stopAndRestorePoster(markFinished) {
+            clearTimeout(startTimer);
+            if (markFinished) finished = true;
+            getBgEl().removeClass('tv-bg--hidden');
+            cleanupCurrentPlayer();
+        }
 
+        function pauseForScroll() {
+            clearTimeout(startTimer);
+            clearTimeout(showTimer);
+            clearInterval(pollTimer);
+            getBgEl().removeClass('tv-bg--hidden');
+            if ($layer) {
+                $layer.removeClass('tv-bg-trailer--visible').addClass('tv-bg-trailer--paused');
+            }
+            if (ytPlayer) {
+                isPausedByScroll = true;
+                try { ytPlayer.pauseVideo(); } catch (e) {}
+            }
+        }
+
+        function resumeFromScroll() {
+            if (destroyed || finished || !isStillActiveAndTop()) return;
+            if (ytPlayer && isPausedByScroll) {
+                isPausedByScroll = false;
+                if ($layer) $layer.removeClass('tv-bg-trailer--paused');
+                try {
+                    ytPlayer.mute();
+                    ytPlayer.setVolume(0);
+                    ytPlayer.playVideo();
+                } catch (e) {}
+            } else if (!ytPlayer && candidates.length && candidateIdx < Math.min(candidates.length, MAX_TRIES)) {
+                clearTimeout(startTimer);
+                startTimer = setTimeout(tryNextCandidate, 800);
+            }
+        }
+
+        function startPollLoop() {
+            clearInterval(pollTimer);
+            pollTimer = setInterval(function () {
+                if (!ytPlayer || destroyed || finished) {
+                    clearInterval(pollTimer);
+                    return;
+                }
+                if (!isStillActiveAndTop()) {
+                    pauseForScroll();
+                    return;
+                }
+                try {
+                    var duration = ytPlayer.getDuration();
+                    var current = ytPlayer.getCurrentTime();
+                    if (!seekAdjusted && duration > START_OFFSET + END_CUTOFF + 6 && current < 2) {
+                        seekAdjusted = true;
+                        ytPlayer.seekTo(START_OFFSET, true);
+                    }
+                    if (duration > END_CUTOFF + 8 && (duration - current) <= END_CUTOFF) {
+                        stopAndRestorePoster(true);
+                    }
+                } catch (e) {}
+            }, 400);
+        }
+
+        function tryNextCandidate() {
+            if (destroyed || finished || !isStillActiveAndTop()) return;
+            if (candidateIdx >= candidates.length || candidateIdx >= MAX_TRIES) {
+                stopAndRestorePoster(true);
+                return;
+            }
+
+            var currentVideo = candidates[candidateIdx++];
             ensureYouTubeApi(function () {
-                if (!isStillActiveAndTop()) return;
+                if (destroyed || finished || !isStillActiveAndTop()) return;
                 if (typeof window.YT === 'undefined' || !window.YT.Player) return;
 
+                cleanupCurrentPlayer();
+
                 var $bg = getBgEl();
-                var frameId = 'tv-yt-bg-' + Lampa.Utils.uid(8);
-                $layer = $('<div class="tv-bg-trailer"><div class="tv-bg-trailer__wrap"><div id="' + frameId + '"></div></div></div>');
-                if ($bg.length) $bg.after($layer);
+                $layer = $('<div class="tv-bg-trailer"><div class="tv-bg-trailer__wrap"><div class="tv-bg-trailer__frame"></div></div></div>');
+                if ($bg.length) $bg.before($layer);
                 else $activityRoot.prepend($layer);
 
+                var frameEl = $layer.find('.tv-bg-trailer__frame')[0];
+                var pVars = {
+                    autoplay: 1,
+                    mute: 1,
+                    controls: 0,
+                    showinfo: 0,
+                    autohide: 1,
+                    modestbranding: 1,
+                    iv_load_policy: 3,
+                    rel: 0,
+                    fs: 0,
+                    disablekb: 1,
+                    playsinline: 1,
+                    enablejsapi: 1,
+                    start: START_OFFSET
+                };
+                if (window.location && (window.location.protocol === 'http:' || window.location.protocol === 'https:')) {
+                    pVars.origin = window.location.origin;
+                }
+
+                // Если видео не начало играть за 8 сек (напр. заблокировано/не грузится) — пробуем следующий трейлер
+                clearTimeout(watchdogTimer);
+                watchdogTimer = setTimeout(function () {
+                    if (!isPlaying && !destroyed && !finished && isStillActiveAndTop()) {
+                        tryNextCandidate();
+                    }
+                }, 8000);
+
                 try {
-                    ytPlayer = new window.YT.Player(frameId, {
+                    ytPlayer = new window.YT.Player(frameEl, {
                         width: window.innerWidth,
                         height: window.innerHeight,
-                        videoId: video.id,
-                        playerVars: {
-                            autoplay: 1,
-                            mute: 1,
-                            controls: 0,
-                            showinfo: 0,
-                            autohide: 1,
-                            modestbranding: 1,
-                            iv_load_policy: 3,
-                            rel: 0,
-                            fs: 0,
-                            disablekb: 1,
-                            playsinline: 1,
-                            enablejsapi: 1,
-                            start: START_OFFSET
-                        },
+                        videoId: currentVideo.id,
+                        playerVars: pVars,
                         events: {
                             onReady: function (ev) {
-                                if (destroyed) {
-                                    stopAndRestorePoster();
+                                if (destroyed || finished) {
+                                    stopAndRestorePoster(true);
                                     return;
                                 }
                                 try {
+                                    var iframe = ev.target.getIframe && ev.target.getIframe();
+                                    if (iframe) {
+                                        iframe.setAttribute('allow', 'autoplay; encrypted-media; picture-in-picture');
+                                    }
                                     ev.target.mute();
                                     ev.target.setVolume(0);
                                     ev.target.setPlaybackQuality('hd1080');
-                                    var dur = ev.target.getDuration();
-                                    if (dur && dur > START_OFFSET + END_CUTOFF + 6) {
-                                        ev.target.seekTo(START_OFFSET, true);
+                                    if (isStillActiveAndTop()) {
+                                        ev.target.playVideo();
                                     }
-                                    ev.target.playVideo();
                                 } catch (e) {}
                             },
                             onStateChange: function (st) {
-                                if (destroyed) return;
+                                if (destroyed || finished) return;
                                 if (st.data === window.YT.PlayerState.PLAYING) {
+                                    isPlaying = true;
+                                    clearTimeout(watchdogTimer);
                                     try { st.target.mute(); st.target.setVolume(0); } catch (e) {}
+
+                                    if (!isStillActiveAndTop()) {
+                                        pauseForScroll();
+                                        return;
+                                    }
 
                                     clearTimeout(showTimer);
                                     showTimer = setTimeout(function () {
                                         if (!isStillActiveAndTop()) {
-                                            stopAndRestorePoster();
+                                            pauseForScroll();
                                             return;
                                         }
-                                        if ($layer) $layer.addClass('tv-bg-trailer--visible');
+                                        if ($layer) $layer.removeClass('tv-bg-trailer--paused').addClass('tv-bg-trailer--visible');
                                         getBgEl().addClass('tv-bg--hidden');
                                     }, 450);
 
-                                    clearInterval(pollTimer);
-                                    pollTimer = setInterval(function () {
-                                        if (!ytPlayer || !isStillActiveAndTop()) {
-                                            stopAndRestorePoster();
-                                            return;
-                                        }
-                                        try {
-                                            var duration = ytPlayer.getDuration();
-                                            var current = ytPlayer.getCurrentTime();
-                                            if (duration > END_CUTOFF + 8 && (duration - current) <= END_CUTOFF) {
-                                                stopAndRestorePoster();
-                                            }
-                                        } catch (e) {}
-                                    }, 400);
+                                    startPollLoop();
                                 } else if (st.data === window.YT.PlayerState.ENDED) {
-                                    stopAndRestorePoster();
+                                    stopAndRestorePoster(true);
                                 }
                             },
                             onError: function () {
-                                stopAndRestorePoster();
+                                clearTimeout(watchdogTimer);
+                                if (!destroyed && !finished && isStillActiveAndTop()) {
+                                    tryNextCandidate();
+                                } else {
+                                    stopAndRestorePoster(true);
+                                }
                             }
                         }
                     });
                 } catch (e) {
-                    stopAndRestorePoster();
+                    clearTimeout(watchdogTimer);
+                    tryNextCandidate();
                 }
             });
         }
@@ -2944,12 +3102,24 @@
             if (e.type === 'destroy' && e.object && e.object.activity === activityObj.activity) {
                 self.destroy();
             } else if (e.type === 'start' && e.object && e.object.activity !== activityObj.activity) {
-                stopAndRestorePoster();
+                stopAndRestorePoster(false);
+            }
+        }
+
+        function onControllerToggle(e) {
+            if (destroyed || finished) return;
+            var active = Lampa.Activity.active();
+            if (!active || active.activity !== activityObj.activity) return;
+
+            if (e && e.name === 'full_start' && !scrolledDown && (!fullLink || !fullLink.active)) {
+                resumeFromScroll();
+            } else if (fullLink && fullLink.active > 0) {
+                pauseForScroll();
             }
         }
 
         function onPlayerCreate() {
-            stopAndRestorePoster();
+            stopAndRestorePoster(false);
         }
 
         this.start = function () {
@@ -2958,33 +3128,44 @@
             if (fullData && fullData.movie && fullData.movie.adult) return;
 
             Lampa.Listener.follow('activity', onActivityEvent);
+            if (Lampa.Controller && Lampa.Controller.listener) {
+                Lampa.Controller.listener.follow('toggle', onControllerToggle);
+            }
             if (Lampa.Player && Lampa.Player.listener) {
                 Lampa.Player.listener.follow('create', onPlayerCreate);
             }
 
-            // Загружаем последний трейлер напрямую с TMDB
-            fetchTmdbLatestTrailer(fullData && fullData.movie, fullData && fullData.videos, netVideos, function (foundVideo) {
-                if (destroyed || !foundVideo) return;
-                video = foundVideo;
-                startTimer = setTimeout(launch, 1500);
+            // Загружаем список трейлеров с TMDB (с запасными кандидатами на случай запрета встраивания)
+            fetchTmdbTrailers(fullData && fullData.movie, fullData && fullData.videos, netVideos, function (list) {
+                if (destroyed || !list || !list.length) return;
+                candidates = list;
+                candidateIdx = 0;
+                startTimer = setTimeout(tryNextCandidate, 1200);
             });
         };
 
-        this.onScrollDim = function (isDim) {
-            if (isDim && (ytPlayer || $layer)) {
-                stopAndRestorePoster();
+        this.onScrollState = function (isDown) {
+            scrolledDown = !!isDown;
+            if (scrolledDown) {
+                pauseForScroll();
+            } else {
+                resumeFromScroll();
             }
         };
 
         this.destroy = function () {
             if (destroyed) return;
             destroyed = true;
+            finished = true;
             netVideos.clear();
             Lampa.Listener.remove('activity', onActivityEvent);
+            if (Lampa.Controller && Lampa.Controller.listener) {
+                Lampa.Controller.listener.remove('toggle', onControllerToggle);
+            }
             if (Lampa.Player && Lampa.Player.listener) {
                 Lampa.Player.listener.remove('create', onPlayerCreate);
             }
-            stopAndRestorePoster();
+            stopAndRestorePoster(true);
         };
     }
 
@@ -3830,15 +4011,15 @@
             return cardDestroyed;
         });
 
-        var bgTrailer = new BackgroundTrailer(e.object, $activityRoot, e.data);
+        var bgTrailer = new BackgroundTrailer(e.object, link, $activityRoot, e.data);
         bgTrailer.start();
 
-        // Останавливаем фоновый трейлер при скролле вниз и при необходимости подставляем отложенный series_choice
+        // Возвращаем задник при скролле вниз и при необходимости подставляем отложенный series_choice
         if (link.scroll) {
             var origOnScroll = link.scroll.onScroll;
             link.scroll.onScroll = function (pos) {
                 if (typeof origOnScroll === 'function') origOnScroll.apply(this, arguments);
-                bgTrailer.onScrollDim(pos > 0);
+                bgTrailer.onScrollState(Math.abs(pos) > 5);
                 if (pendingSeriesInsertIndex > 0 && link.items && link.items.length >= pendingSeriesInsertIndex) {
                     mountSeriesSectionAt(pendingSeriesInsertIndex);
                 }
@@ -4928,11 +5109,12 @@
             '.tv-head-hidden{display:none !important}' +
 
             /* --- Background & Trailer --- */
-            '.tv-card__background{left:0 !important;top:-5em !important;width:100% !important;height:105vh !important;object-fit:cover;-webkit-mask-image:-webkit-linear-gradient(top,#fff 48%,rgba(255,255,255,0) 98%) !important;mask-image:linear-gradient(to bottom,#fff 48%,rgba(255,255,255,0) 98%) !important;-webkit-transition:opacity .6s ease;transition:opacity .6s ease}' +
-            '.tv-card__background.loaded:not(.dim){opacity:1 !important}' +
+            '.tv-card__background{left:0 !important;top:-5em !important;width:100% !important;height:105vh !important;object-fit:cover;z-index:-1 !important;-webkit-mask-image:-webkit-linear-gradient(top,#fff 48%,rgba(255,255,255,0) 98%) !important;mask-image:linear-gradient(to bottom,#fff 48%,rgba(255,255,255,0) 98%) !important;-webkit-transition:opacity .6s ease;transition:opacity .6s ease}' +
+            '.tv-card__background.loaded:not(.dim):not(.tv-bg--hidden){opacity:1 !important}' +
             '.tv-card__background.tv-bg--hidden{opacity:0 !important}' +
-            '.tv-bg-trailer{position:absolute;left:0;top:-5em;width:100%;height:105vh;z-index:-1;overflow:hidden;pointer-events:none;opacity:0;-webkit-transition:opacity .7s ease;transition:opacity .7s ease;-webkit-mask-image:-webkit-linear-gradient(top,#fff 48%,rgba(255,255,255,0) 98%);mask-image:linear-gradient(to bottom,#fff 48%,rgba(255,255,255,0) 98%)}' +
-            '.tv-bg-trailer.tv-bg-trailer--visible{opacity:1}' +
+            '.tv-bg-trailer{position:absolute;left:0;top:-5em;width:100%;height:105vh;z-index:-2;overflow:hidden;pointer-events:none;opacity:.01;-webkit-transition:opacity .7s ease;transition:opacity .7s ease;-webkit-mask-image:-webkit-linear-gradient(top,#fff 48%,rgba(255,255,255,0) 98%);mask-image:linear-gradient(to bottom,#fff 48%,rgba(255,255,255,0) 98%)}' +
+            '.tv-bg-trailer.tv-bg-trailer--visible{opacity:1;z-index:-1}' +
+            '.tv-bg-trailer.tv-bg-trailer--paused{opacity:0 !important;z-index:-2}' +
             '.tv-bg-trailer__wrap{position:absolute;top:50%;left:50%;width:120vw;height:120vh;-webkit-transform:translate(-50%,-50%);transform:translate(-50%,-50%);pointer-events:none}' +
             '.tv-bg-trailer__wrap iframe{width:100%;height:100%;border:0;pointer-events:none}' +
 
@@ -4942,7 +5124,7 @@
             '.full-start-new.tv-card .tv-hero__columns{display:-webkit-box;display:-webkit-flex;display:flex;-webkit-box-align:end;-webkit-align-items:flex-end;align-items:flex-end;-webkit-box-pack:justify;-webkit-justify-content:space-between;justify-content:space-between;width:100%}' +
             '.tv-hero__left{-webkit-box-flex:1;-webkit-flex:1 1 auto;flex:1 1 auto;min-width:0;padding-right:2em}' +
             '.tv-hero__right{-webkit-flex-shrink:0;flex-shrink:0;display:-webkit-box;display:-webkit-flex;display:flex;-webkit-box-orient:vertical;-webkit-box-direction:normal;-webkit-flex-direction:column;flex-direction:column;-webkit-box-align:end;-webkit-align-items:flex-end;align-items:flex-end;padding-bottom:.3em}' +
-            '.full-start-new.tv-card .full-start-new__head{font-size:1.22em;color:rgba(255,255,255,.68);margin-bottom:.15em;text-shadow:0 1px 6px rgba(0,0,0,.45)}' +
+            '.full-start-new.tv-card .full-start-new__head{font-size:1.22em;color:rgba(255,255,255,.68);margin-bottom:.75em;text-shadow:0 1px 6px rgba(0,0,0,.45)}' +
             '.full-start-new.tv-card .full-start-new__head span{color:#fff}' +
             '.full-start-new.tv-card .full-start-new__title{font-size:4.1em;font-weight:600;line-height:1.15;margin-bottom:.25em;text-shadow:0 .06em .28em rgba(0,0,0,.45);max-width:100%}' +
             '.full-start-new.tv-card .full-start-new__title.tv-title--logo{display:block;overflow:visible;max-height:none;-webkit-line-clamp:unset;line-clamp:unset;margin-left:0;margin-bottom:.85em;font-size:1em}' +
