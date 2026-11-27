@@ -907,6 +907,48 @@
             uk: 'Онгоінги Shikimori',
             en: 'Shikimori Ongoing',
             be: 'Ангоінгі Shikimori'
+        },
+        tv_home_block_upcoming_episodes: {
+            ru: 'Ближайшие выходы эпизодов',
+            uk: 'Найближчі виходи епізодів',
+            en: 'Upcoming Episodes',
+            be: 'Бліжэйшыя выхады эпізодаў'
+        },
+        tv_home_card_size_title: {
+            ru: 'Размер карточек',
+            uk: 'Розмір карток',
+            en: 'Card size',
+            be: 'Памер картак'
+        },
+        tv_home_card_size_descr: {
+            ru: 'Ширина постерных карточек на главном экране',
+            uk: 'Ширина постерних карток на головному екрані',
+            en: 'Poster card width on the home screen',
+            be: 'Шырыня постерных картак на галоўным экране'
+        },
+        tv_home_card_size_small: {
+            ru: 'Маленькие',
+            uk: 'Маленькі',
+            en: 'Small',
+            be: 'Маленькія'
+        },
+        tv_home_card_size_default: {
+            ru: 'Стандарт',
+            uk: 'Стандарт',
+            en: 'Default',
+            be: 'Стандарт'
+        },
+        tv_home_card_size_large: {
+            ru: 'Большие',
+            uk: 'Великі',
+            en: 'Large',
+            be: 'Вялікія'
+        },
+        tv_home_card_size_xlarge: {
+            ru: 'Очень большие',
+            uk: 'Дуже великі',
+            en: 'Extra large',
+            be: 'Вельмі вялікія'
         }
     };
 
@@ -9964,6 +10006,7 @@
             { id: 'now_watch', langKey: 'tv_home_block_now_watch', fallback: 'Сейчас смотрят' },
             { id: 'continue_watching', langKey: 'tv_home_continue_title', fallback: 'Продолжить просмотр' },
             { id: 'new_episodes', langKey: 'tv_home_new_episodes_title', fallback: 'Новые серии' },
+            { id: 'upcoming_episodes', langKey: 'tv_home_block_upcoming_episodes', fallback: 'Ближайшие выходы эпизодов' },
             { id: 'shikimori_ongoing', langKey: 'tv_home_block_shikimori_ongoing', fallback: 'Онгоинги Shikimori' },
             { id: 'latest', langKey: 'tv_home_block_latest', fallback: 'Новинки' },
             { id: 'fire', langKey: 'tv_home_block_fire', fallback: 'В огне' },
@@ -9997,14 +10040,51 @@
             return hsBool('hero_carousel', true);
         }
 
+        function getCardSize() {
+            var val = String(Lampa.Storage.get(HS_PREFIX + 'card_size', 'default') || 'default');
+            if (val === 'small' || val === 'default' || val === 'large' || val === 'xlarge') return val;
+            return 'default';
+        }
+
+        function applyCardSizeClass($target) {
+            var size = getCardSize();
+            var $els = $target && $target.length ? $target : $('.tv-home');
+            if (!$els || !$els.length) return;
+            $els.removeClass('tv-home--size-small tv-home--size-default tv-home--size-large tv-home--size-xlarge')
+                .addClass('tv-home--size-' + size);
+        }
+
         function isBlockEnabled(blockId) {
             return hsBool('show_' + blockId, true);
+        }
+
+        function isObsoleteDynamicTitle(title) {
+            var n = normalizeStr(title);
+            if (!n) return false;
+            if (isNativeContinueRow({ title: title })) return true;
+            if (n.indexOf('shikimori') >= 0) return true;
+            var upTitle = normalizeStr(Lampa.Lang && Lampa.Lang.translate('title_upcoming_episodes'));
+            if (n === upTitle || n === 'ближайшие выходы эпизодов' || n === 'найближчі виходи епізодів' || n === 'upcoming episodes') {
+                return true;
+            }
+            return false;
         }
 
         function loadKnownDynamic() {
             var stored = null;
             try { stored = Lampa.Storage.get(KNOWN_KEY, null); } catch (e) {}
-            return (stored && typeof stored === 'object' && !Array.isArray(stored)) ? stored : {};
+            var map = (stored && typeof stored === 'object' && !Array.isArray(stored)) ? stored : {};
+            var keys = Object.keys(map);
+            var changed = false;
+            for (var i = 0; i < keys.length; i++) {
+                var k = keys[i];
+                if (BASE_BY_ID[k] || isObsoleteDynamicTitle(map[k])) {
+                    delete map[k];
+                    changed = true;
+                }
+            }
+            if (changed) saveKnownDynamic(map);
+            return map;
         }
 
         function saveKnownDynamic(map) {
@@ -10098,10 +10178,22 @@
 
         function isNativeContinueRow(rowData) {
             if (!rowData) return false;
+            if (rowData.name === 'continue_watch' || rowData.name === 'timetable_recently') return true;
             var title = normalizeStr(rowData.title);
             var contTitle = normalizeStr(Lampa.Lang && Lampa.Lang.translate('title_continue'));
             var watchedTitle = normalizeStr(Lampa.Lang && Lampa.Lang.translate('title_watched'));
-            if (title && (title === contTitle || title === watchedTitle || title === 'продолжить просмотр' || title === 'продовжити перегляд' || title === 'continue watching')) {
+            var recentEpTitle = normalizeStr(Lampa.Lang && Lampa.Lang.translate('title_recent_episodes'));
+            if (title && (
+                title === contTitle ||
+                title === watchedTitle ||
+                title === recentEpTitle ||
+                title === 'продолжить просмотр' ||
+                title === 'продовжити перегляд' ||
+                title === 'continue watching' ||
+                title === 'недавние выходы эпизодов' ||
+                title === 'нещодавні виходи епізодів' ||
+                title === 'recent episodes'
+            )) {
                 return true;
             }
             return false;
@@ -10119,6 +10211,9 @@
 
             if (title.indexOf('shikimori') >= 0 || (Array.isArray(rowData.results) && rowData.results[0] && rowData.results[0].shikimori)) {
                 return 'shikimori_ongoing';
+            }
+            if (matchLang('title_upcoming_episodes') || title === 'ближайшие выходы эпизодов' || title === 'найближчі виходи епізодів' || title === 'upcoming episodes') {
+                return 'upcoming_episodes';
             }
             if (matchLang('title_now_watch') || url.indexOf('now_playing') >= 0) return 'now_watch';
             if (matchLang('title_latest') || url.indexOf('sort=latest') >= 0 && url.indexOf('uhd=true') < 0) return 'latest';
@@ -10347,6 +10442,29 @@
             Lampa.SettingsApi.addParam({
                 component: SUB_COMPONENT,
                 param: {
+                    name: HS_PREFIX + 'card_size',
+                    type: 'select',
+                    values: {
+                        small: t('tv_home_card_size_small'),
+                        'default': t('tv_home_card_size_default'),
+                        large: t('tv_home_card_size_large'),
+                        xlarge: t('tv_home_card_size_xlarge')
+                    },
+                    'default': 'default'
+                },
+                field: {
+                    name: t('tv_home_card_size_title'),
+                    description: t('tv_home_card_size_descr')
+                },
+                onChange: function () {
+                    applyCardSizeClass();
+                    markHomeSettingsDirty();
+                }
+            });
+
+            Lampa.SettingsApi.addParam({
+                component: SUB_COMPONENT,
+                param: {
                     name: HS_PREFIX + 'order_editor',
                     type: 'button'
                 },
@@ -10436,6 +10554,8 @@
             SUB_COMPONENT: SUB_COMPONENT,
             isHomeEnabled: isHomeEnabled,
             isHeroCarouselEnabled: isHeroCarouselEnabled,
+            getCardSize: getCardSize,
+            applyCardSizeClass: applyCardSizeClass,
             isBlockEnabled: isBlockEnabled,
             getOrder: getOrder,
             getRankMap: getRankMap,
@@ -10943,7 +11063,7 @@
             var tmdbNetwork = null;
 
             var $root = $(
-                '<div class="tv-home">' +
+                '<div class="tv-home tv-home--size-' + HomeSections.getCardSize() + '">' +
                     '<div class="tv-home__bg">' +
                         '<img class="tv-home__bg-img" alt="" />' +
                         '<div class="tv-home__bg-grad-x"></div>' +
@@ -11505,7 +11625,12 @@
 
             function createPosterCard(card, rowObj, cardIdx) {
                 var isShiki = !!(card && card.shikimori);
-                var posterUrl = resolveImgUrl(card.poster_path || card.poster || card.img, 'w342');
+                var innerCard = (card && card.card && !card.poster_path && !card.poster) ? card.card : card;
+                var posterUrl = resolveImgUrl(
+                    card.poster_path || card.poster || card.img || card.still_path ||
+                    (innerCard ? (innerCard.poster_path || innerCard.poster || innerCard.backdrop_path || innerCard.img) : ''),
+                    'w342'
+                );
                 var ratingScore = isShiki
                     ? ImdbCardRatings.formatScore(card.shikimori.score || card.vote_average)
                     : ImdbCardRatings.getRating(card).score;
@@ -11612,7 +11737,7 @@
 
             function createNewEpisodeCard(epItem, rowObj, cardIdx) {
                 var card = epItem.card;
-                var imgPath = epItem.still_path || card.backdrop_path || card.poster_path;
+                var imgPath = epItem.still_path || card.backdrop_path || card.poster_path || card.poster || card.img;
                 var imgUrl = resolveImgUrl(imgPath, 'w500');
 
                 var $card = $(
@@ -11631,6 +11756,9 @@
                 if (imgUrl) {
                     $img.on('load', function () { $img.addClass('is-loaded'); });
                     $img.attr('src', imgUrl);
+                    if ($img[0] && $img[0].complete && $img[0].naturalWidth > 0) {
+                        $img.addClass('is-loaded');
+                    }
                 }
                 $card.find('.tv-home-wide__title').text(getCardTitle(card));
 
@@ -11811,6 +11939,37 @@
                     if (HomeSections.isNativeContinueRow(r)) continue;
 
                     var blockId = HomeSections.identifyApiRowBlockId(r);
+                    var isEpisodeRow = (blockId === 'upcoming_episodes') ||
+                        !!(r.results[0] && r.results[0].card && r.results[0].episode);
+
+                    if (isEpisodeRow) {
+                        var epCards = [];
+                        for (var eIdx = 0; eIdx < r.results.length && epCards.length < 20; eIdx++) {
+                            var entry = r.results[eIdx];
+                            if (!entry || !entry.card) continue;
+                            var epObj = entry.episode || entry;
+                            epCards.push({
+                                card: entry.card,
+                                episode: epObj,
+                                badge: 'S' + (epObj.season_number || 1) + ' • E' + (epObj.episode_number || 1),
+                                dateText: formatShortDate(epObj.air_date || entry.air_date),
+                                still_path: epObj.still_path || entry.still_path || ''
+                            });
+                        }
+                        if (epCards.length) {
+                            specs.push({
+                                id: blockId,
+                                type: 'new_episodes',
+                                title: r.title || HomeSections.getBlockTitle(blockId),
+                                subtitle: '',
+                                items: epCards,
+                                data: r,
+                                onMore: null
+                            });
+                        }
+                        continue;
+                    }
+
                     var customOnlyMore = r.params && r.params.emit && typeof r.params.emit.onlyMore === 'function'
                         ? r.params.emit.onlyMore
                         : null;
@@ -11976,6 +12135,7 @@
             this.start = function () {
                 paused = false;
                 $('body').addClass('tv-home-active');
+                HomeSections.applyCardSizeClass($root);
 
                 if (built) {
                     refreshContinueRowLive();
@@ -12767,6 +12927,10 @@
 
             /* 2:3 Poster Cards (Figma 169:3460 + IMDb badge 169:3663) */
             '.tv-home-card{position:relative;width:10.4em;-webkit-flex-shrink:0;flex-shrink:0;margin-right:1.15em;cursor:pointer;-webkit-transition:-webkit-transform .2s ease;transition:transform .2s ease}' +
+            '.tv-home--size-small .tv-home-card,.tv-home--size-small .tv-home-more{width:8.4em}' +
+            '.tv-home--size-default .tv-home-card,.tv-home--size-default .tv-home-more{width:10.4em}' +
+            '.tv-home--size-large .tv-home-card,.tv-home--size-large .tv-home-more{width:12.4em}' +
+            '.tv-home--size-xlarge .tv-home-card,.tv-home--size-xlarge .tv-home-more{width:14.4em}' +
             '.tv-home-card__box{position:relative;width:100%;padding-bottom:150%;border-radius:.62em;overflow:hidden;background:#191b22;box-shadow:0 6px 20px rgba(0,0,0,.38);-webkit-transition:box-shadow .18s ease;transition:box-shadow .18s ease}' +
             '.tv-home-card.focus{-webkit-transform:scale(1.045);transform:scale(1.045);z-index:5}' +
             '.tv-home-card.focus .tv-home-card__box{box-shadow:0 0 0 .16em #fff,0 14px 32px rgba(0,0,0,.68)}' +
